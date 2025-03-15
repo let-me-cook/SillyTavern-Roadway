@@ -17,7 +17,7 @@ module.exports = {
     externalsType: 'module',
     externals: [
         function({ context, request }, callback) {
-            if (request.includes('../../../..')) {
+            if (request.includes('../../..')) {
                 // Return the path as an external module import
                 return callback(null, `module ${request}`);
             }

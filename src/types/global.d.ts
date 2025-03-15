@@ -59,6 +59,8 @@ declare global {
       is_system?: boolean;
       extra?: {
         tool_invocations?: any[];
+        append_title?: boolean;
+        title?: string;
       };
     }[];
     getCharacterCardFields: () => {

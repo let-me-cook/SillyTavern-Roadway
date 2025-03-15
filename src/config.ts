@@ -13,23 +13,35 @@ import {
   characters,
   depth_prompt_role_default,
   depth_prompt_depth_default,
+  main_api,
   // @ts-ignore
 } from '../../../../../script.js';
 
 // @ts-ignore
-import { world_info_include_names, wi_anchor_position, world_info_position } from '../../../../world-info.js';
+import { world_info_include_names, wi_anchor_position } from '../../../../world-info.js';
 
 // @ts-ignore
 import { formatInstructModeExamples } from '../../../../instruct-mode.js';
 
 // @ts-ignore
-import { getPromptRole } from '../../../../openai.js';
+import { appendFileContent } from '../../../../chats.js';
+
+import {
+  getPromptRole,
+  prepareOpenAIMessages,
+  setOpenAIMessages,
+  setOpenAIMessageExamples,
+  // @ts-ignore
+} from '../../../../openai.js';
 
 // @ts-ignore
 import { metadata_keys } from '../../../../authors-note.js';
 
 // @ts-ignore
 import { getGroupDepthPrompts, selected_group } from '../../../../group-chats.js';
+
+// @ts-ignore
+import { regex_placement, getRegexedString } from '../../../regex/engine.js';
 
 export const context = SillyTavern.getContext();
 
@@ -91,6 +103,97 @@ export function st_getGroupDepthPrompts(
 }[] {
   return getGroupDepthPrompts(groupId, characterId);
 }
+
+export function st_prepareOpenAIMessages(
+  {
+    name2,
+    charDescription,
+    charPersonality,
+    Scenario,
+    worldInfoBefore,
+    worldInfoAfter,
+    bias,
+    type,
+    quietPrompt,
+    quietImage,
+    extensionPrompts,
+    cyclePrompt,
+    systemPromptOverride,
+    jailbreakPromptOverride,
+    personaDescription,
+    messages,
+    messageExamples,
+  }: {
+    name2: string;
+    charDescription: string;
+    charPersonality: string;
+    Scenario: string;
+    worldInfoBefore: string;
+    worldInfoAfter: string;
+    bias: string;
+    type: string;
+    quietPrompt?: string;
+    quietImage?: string;
+    cyclePrompt: string;
+    systemPromptOverride: string;
+    jailbreakPromptOverride: string;
+    personaDescription: string;
+    extensionPrompts: object;
+    messages: object[];
+    messageExamples: string[];
+  },
+  dryRun: any,
+): Promise<any[]> {
+  return prepareOpenAIMessages(
+    {
+      name2,
+      charDescription,
+      charPersonality,
+      Scenario,
+      worldInfoBefore,
+      worldInfoAfter,
+      bias,
+      type,
+      quietPrompt,
+      quietImage,
+      cyclePrompt,
+      systemPromptOverride,
+      jailbreakPromptOverride,
+      personaDescription,
+      extensionPrompts,
+      messages,
+      messageExamples,
+    },
+    dryRun,
+  );
+}
+
+export function st_setOpenAIMessages(chat: object[]): object[] {
+  return setOpenAIMessages(chat);
+}
+
+export function st_setOpenAIMessageExamples(mesExamplesArray: string[]): string[] {
+  return setOpenAIMessageExamples(mesExamplesArray);
+}
+
+export function st_getRegexedString(
+  rawString: string,
+  placement: regex_placement,
+  {
+    characterOverride,
+    isMarkdown,
+    isPrompt,
+    isEdit,
+    depth,
+  }: { characterOverride?: string; isMarkdown?: boolean; isPrompt?: boolean; isEdit?: boolean; depth?: number },
+): string {
+  return getRegexedString(rawString, placement, { characterOverride, isMarkdown, isPrompt, isEdit, depth });
+}
+
+export async function st_appendFileContent(message: object, messageText: string): Promise<string> {
+  return await appendFileContent(message, messageText);
+}
+
 export {
   persona_description_positions,
   name1,
@@ -103,4 +206,6 @@ export {
   characters,
   depth_prompt_role_default,
   depth_prompt_depth_default,
+  main_api,
+  regex_placement,
 };
