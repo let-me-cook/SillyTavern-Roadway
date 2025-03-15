@@ -22,6 +22,22 @@ declare global {
     reasoning?: string;
   }
 
+  interface ConnectionProfile {
+    id: string;
+    mode: string;
+    name?: string;
+    api?: string;
+    preset?: string;
+    model?: string;
+    proxy?: string;
+    instruct?: string;
+    context?: string;
+    instruct_state?: string;
+    tokenizer?: string;
+    stop_strings?: string;
+    exclude?: string[];
+  }
+
   interface SillyTavernContext {
     eventSource: EventEmitter;
     getRequestHeaders: () => {
@@ -38,6 +54,7 @@ declare global {
     extensionSettings: {
       roadway: {
         enabled: boolean;
+        profileId: string;
       };
     };
     saveSettingsDebounced: () => void;
@@ -93,6 +110,11 @@ declare global {
           includeInstruct?: boolean;
         },
       ) => Promise<ExtractedData>;
+      handleDropdown: (
+        selector: string,
+        initialSelectedProfileId: string,
+        onChange: (profile?: ConnectionProfile) => void,
+      ) => void;
     };
     extensionPrompts: Record<
       string,
