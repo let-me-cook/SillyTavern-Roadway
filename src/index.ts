@@ -99,7 +99,7 @@ async function handleUIChanges(): Promise<void> {
     const messageBlock = $(this).closest('.mes');
     const targetMessageId = Number(messageBlock.attr('mesid'));
 
-    const messages = await buildPrompt();
+    const messages = await buildPrompt(targetMessageId);
     messages.push({
       content: context.extensionSettings.roadway.prompt,
       role: 'system',

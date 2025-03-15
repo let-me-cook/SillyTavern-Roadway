@@ -39,7 +39,7 @@ export interface Message extends ChatCompletionMessage {
  *
  * Chat completion supported: All (i guess)
  */
-export async function buildPrompt(): Promise<Message[]> {
+export async function buildPrompt(targetMessageIndex: number): Promise<Message[]> {
   if (!['textgenerationwebui', 'openai'].includes(main_api)) {
     throw new Error('Unsupported API');
   }
@@ -47,7 +47,7 @@ export async function buildPrompt(): Promise<Message[]> {
   const context = SillyTavern.getContext();
   let messages: Message[] = [];
 
-  const chat = context.chat;
+  const chat = context.chat.slice(0, targetMessageIndex + 1);
 
   let { description, personality, persona, scenario, mesExamples, system, jailbreak } =
     context.getCharacterCardFields();
