@@ -1,17 +1,23 @@
 import {
+  characters,
   extension_prompt_types,
   name1,
   name2,
   persona_description_positions,
+  selected_group,
   st_baseChatReplace,
   st_formatInstructModeExamples,
   st_getAuthorNote,
+  depth_prompt_depth_default,
+  st_getGroupDepthPrompts,
   st_getMaxContextSize,
   st_getPromptRole,
   st_parseMesExamples,
   st_renderStoryString,
+  this_chid,
   wi_anchor_position,
   world_info_include_names,
+  depth_prompt_role_default,
 } from './config';
 import { ChatCompletionMessage } from './types/types';
 
@@ -24,6 +30,7 @@ export interface Message extends ChatCompletionMessage {
  * Handles system message (description, scenario, etc.)
  * Handles chat history
  * Handles world info
+ * Handles author note, char note.
  * TODO: extensionPrompt
  * Not planning to add: summarize, extensionPrompt[chromadb,vectordb,databank]
  */
@@ -112,10 +119,34 @@ export async function buildPrompt(): Promise<Message[]> {
     ];
   }
 
+  const groupDepthPrompts = st_getGroupDepthPrompts(selected_group, Number(this_chid));
+
+  if (selected_group && Array.isArray(groupDepthPrompts) && groupDepthPrompts.length > 0) {
+    groupDepthPrompts.forEach((value, index) => {
+      messages = [
+        ...messages.slice(0, messages.length - value.depth),
+        { role: value.role, content: value.text },
+        ...messages.slice(messages.length - value.depth),
+      ];
+    });
+  } else {
+    const depthPromptText =
+      st_baseChatReplace(characters[this_chid]?.data?.extensions?.depth_prompt?.prompt?.trim(), name1, name2) || '';
+    const depthPromptDepth = depth_prompt_depth_default;
+    const depthPromptRole = characters[this_chid]?.data?.extensions?.depth_prompt?.role ?? depth_prompt_role_default;
+
+    messages = [
+      ...messages.slice(0, messages.length - depthPromptDepth),
+      { role: st_getPromptRole(depthPromptRole), content: depthPromptText },
+      ...messages.slice(messages.length - depthPromptDepth),
+    ];
+  }
+
   // TODO: We should respect interval and world info scanning
   const authorNote = st_getAuthorNote();
   let authorNoteIndex = -1;
   if (authorNote.prompt) {
+    authorNote.prompt = st_baseChatReplace(authorNote.prompt, name1, name2);
     switch (authorNote.position) {
       case extension_prompt_types.IN_PROMPT: // After first message
         messages = [...messages.slice(0, 1), { role: 'user', content: authorNote.prompt }, ...messages.slice(1)];
