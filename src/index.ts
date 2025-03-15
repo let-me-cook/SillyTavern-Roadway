@@ -83,7 +83,7 @@ async function handleUIChanges(): Promise<void> {
   });
 
   const roadwayButton = $(
-    `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-hexagon-nodes interactable" tabindex="0"></div>`,
+    `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-road interactable" tabindex="0"></div>`,
   );
   $('#message_template .mes_buttons .extraMesButtons').prepend(roadwayButton);
   $(document).on('click', '.mes_magic_roadway_button', async function () {
