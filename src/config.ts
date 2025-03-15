@@ -7,7 +7,8 @@ import {
   getMaxContextSize,
   parseMesExamples,
   baseChatReplace,
-  extension_prompt_roles,
+  chat_metadata,
+  extension_prompt_types,
   // @ts-ignore
 } from '../../../../../script.js';
 
@@ -16,6 +17,12 @@ import { world_info_include_names, wi_anchor_position } from '../../../../world-
 
 // @ts-ignore
 import { formatInstructModeExamples } from '../../../../instruct-mode.js';
+
+// @ts-ignore
+import { getPromptRole, getPromptPosition } from '../../../../openai.js';
+
+// @ts-ignore
+import { metadata_keys } from '../../../../authors-note.js';
 
 export const context = SillyTavern.getContext();
 
@@ -47,15 +54,24 @@ export function st_renderStoryString(params: object): string {
   return renderStoryString(params);
 }
 
-export function st_getRoleString(role: number): string {
-  if (role === extension_prompt_roles.SYSTEM) {
-    return 'system';
-  } else if (role === extension_prompt_roles.USER) {
-    return 'user';
-  } else if (role === extension_prompt_roles.ASSISTANT) {
-    return 'assistant';
-  }
-  return 'unknown';
+export function st_getPromptRole(role: number): string {
+  return getPromptRole(role);
+}
+
+export function st_getAuthorNote(): {
+  prompt: string;
+  interval: number;
+  position: number;
+  depth: number;
+  role: number;
+} {
+  return {
+    prompt: chat_metadata[metadata_keys.prompt],
+    interval: chat_metadata[metadata_keys.interval],
+    position: chat_metadata[metadata_keys.position],
+    depth: chat_metadata[metadata_keys.depth],
+    role: chat_metadata[metadata_keys.role],
+  };
 }
 
 export {
@@ -64,5 +80,5 @@ export {
   name2,
   world_info_include_names,
   wi_anchor_position,
-  extension_prompt_roles,
+  extension_prompt_types,
 };

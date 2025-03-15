@@ -1,11 +1,13 @@
 import {
+  extension_prompt_types,
   name1,
   name2,
   persona_description_positions,
   st_baseChatReplace,
   st_formatInstructModeExamples,
+  st_getAuthorNote,
   st_getMaxContextSize,
-  st_getRoleString,
+  st_getPromptRole,
   st_parseMesExamples,
   st_renderStoryString,
   wi_anchor_position,
@@ -21,8 +23,9 @@ export interface Message extends ChatCompletionMessage {
  * It is for text completion.
  * Handles system message (description, scenario, etc.)
  * Handles chat history
- * Handles world info (except author note)
- * TODO: extensionPrompt, author note
+ * Handles world info
+ * TODO: extensionPrompt
+ * Not planning to add: summarize, extensionPrompt[chromadb,vectordb,databank]
  */
 export async function buildPrompt(): Promise<Message[]> {
   const context = SillyTavern.getContext();
@@ -40,7 +43,7 @@ export async function buildPrompt(): Promise<Message[]> {
   const canUseTools = context.ToolManager.isToolCallingSupported();
   let coreChat = chat.filter((x) => !x.is_system || (canUseTools && Array.isArray(x.extra?.tool_invocations)));
   const chatForWI = coreChat.map((x) => (world_info_include_names ? `${x.name}: ${x.mes}` : x.mes)).reverse();
-  const { worldInfoString, worldInfoBefore, worldInfoAfter, worldInfoExamples, worldInfoDepth } =
+  const { worldInfoString, worldInfoBefore, worldInfoAfter, worldInfoExamples, worldInfoDepth, anBefore, anAfter } =
     await context.getWorldInfoPrompt(chatForWI, this_max_context, false);
 
   // Add message example WI
@@ -104,9 +107,55 @@ export async function buildPrompt(): Promise<Message[]> {
   for (const worldInfo of worldInfoDepth) {
     messages = [
       ...messages.slice(0, messages.length - worldInfo.depth),
-      { role: st_getRoleString(worldInfo.role), content: worldInfo.entries.join('\n') },
+      { role: st_getPromptRole(worldInfo.role), content: worldInfo.entries.join('\n') },
       ...messages.slice(messages.length - worldInfo.depth),
     ];
+  }
+
+  // TODO: We should respect interval and world info scanning
+  const authorNote = st_getAuthorNote();
+  let authorNoteIndex = -1;
+  if (authorNote.prompt) {
+    switch (authorNote.position) {
+      case extension_prompt_types.IN_PROMPT: // After first message
+        messages = [...messages.slice(0, 1), { role: 'user', content: authorNote.prompt }, ...messages.slice(1)];
+        authorNoteIndex = 1;
+        break;
+      case extension_prompt_types.IN_CHAT: // Depth + role in chat
+        messages = [
+          ...messages.slice(0, messages.length - authorNote.depth),
+          { role: st_getPromptRole(authorNote.role), content: authorNote.prompt },
+          ...messages.slice(messages.length - authorNote.depth),
+        ];
+        authorNoteIndex = messages.length - authorNote.depth - 1;
+        break;
+      case extension_prompt_types.BEFORE_PROMPT: // Before first message
+        messages.unshift({ role: 'user', content: authorNote.prompt });
+        authorNoteIndex = 0;
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Add world info to author note
+  if (authorNoteIndex >= 0) {
+    if (anBefore.length > 0) {
+      messages = [
+        ...messages.slice(0, authorNoteIndex),
+        { role: 'system', content: anBefore.join('\n') },
+        ...messages.slice(authorNoteIndex),
+      ];
+      authorNoteIndex++;
+    }
+
+    if (anAfter.length > 0) {
+      messages = [
+        ...messages.slice(0, authorNoteIndex + 1),
+        { role: 'system', content: anAfter.join('\n') },
+        ...messages.slice(authorNoteIndex + 1),
+      ];
+    }
   }
 
   return messages;

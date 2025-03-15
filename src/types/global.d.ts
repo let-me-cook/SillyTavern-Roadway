@@ -13,6 +13,8 @@ declare global {
       role: number;
       entries: string[];
     }[];
+    anBefore: string[];
+    anAfter: string[];
   }
 
   interface ExtractedData {
@@ -90,6 +92,15 @@ declare global {
         },
       ) => Promise<ExtractedData>;
     };
+    extensionPrompts: Record<
+      string,
+      {
+        value: string;
+        role: number;
+        position: number;
+        identifier: string;
+      }
+    >;
   }
 
   const SillyTavern: {
