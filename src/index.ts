@@ -101,7 +101,7 @@ async function handleUIChanges(): Promise<void> {
     const rest = await context.ConnectionManagerRequestService.sendRequest(
       context.extensionSettings.roadway.profileId,
       messages,
-      150,
+      500,
     );
     console.log(rest);
   });
