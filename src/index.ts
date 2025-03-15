@@ -11,13 +11,13 @@ const DEFAULT_SETTINGS: { enabled: boolean; profileId: string; prompt: string } 
 
 Output ONLY a numbered list of the possible actions. Each action should be a clear, actionable, and concise sentence written in plain text. Include actions that relate to multiple domains (e.g., observation, manipulation, dialogue, combat, deduction.) Do not include greetings, farewells, or polite thanks in the list. Do not use words like "you". Use exact 10 actions.
 
-Use this template:
+Example:
 
-1. [Action 1]
-2. [Action 2]
-3. [Action 3]
-4. [Action 4]
-5. [Action 5]`,
+1. Examine the ground for any signs of footprints or disturbed earth.
+2. Ask Mrs. Abernathy about any local rumors regarding the strange symbol.
+3. Search Mr. Peterson's abandoned house for any hidden messages or clues.
+4. Attempt to pick the lock on the neighbor's shed, hoping to find something related to their disappearances.
+5. Show the photo of the symbol to the local bartender for information.`,
 };
 
 function initializeDefaultSettings(): void {
