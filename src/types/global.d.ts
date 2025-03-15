@@ -55,6 +55,7 @@ declare global {
       roadway: {
         enabled: boolean;
         profileId: string;
+        prompt: string;
       };
     };
     saveSettingsDebounced: () => void;

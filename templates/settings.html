@@ -16,6 +16,28 @@
                 title="Select a Connection Profile"
                 data-i18n="[title]Select a Connection Profile"
             ></select>
+            <div class="title_restorable">
+                <label for="prompt">Prompt</label>
+                <button
+                    class="menu_button fa-solid fa-undo interactable restore_default"
+                    data-i18n="[title]Restore default"
+                    title="Restore default"
+                ></button>
+            </div>
+
+            <textarea class="text_pole textarea_compact prompt" rows="4">
+                You are an AI assistant designed to generate creative possible actions in a roleplaying scenario. Given the following context, suggest a diverse list of options for the player to take.
+
+                Output ONLY a numbered list of the possible actions. Each action should be a clear, actionable, and concise sentence written in plain text. Include actions that relate to multiple domains (e.g., observation, manipulation, dialogue, combat, deduction.) Do not include greetings, farewells, or polite thanks in the list. Do not use words like "you". Use at least 5 actions.
+
+                Use this template:
+
+                1. [Action 1]
+                2. [Action 2]
+                3. [Action 3]
+                4. [Action 4]
+                5. [Action 5]
+            </textarea>
             <div>
                 <button class="menu_button test">Test</button>
             </div>
