@@ -1,4 +1,4 @@
-import { st_echo } from './config';
+import { st_echo, system_avatar, systemUserName } from './config';
 import { buildPrompt } from './prompt-builder';
 
 const extensionName = 'SillyTavern-Roadway';
@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS: { enabled: boolean; profileId: string; prompt: string } 
   profileId: '',
   prompt: `You are an AI assistant designed to generate creative possible actions in a roleplaying scenario. Given the following context, suggest a diverse list of options for the player to take.
 
-Output ONLY a numbered list of the possible actions. Each action should be a clear, actionable, and concise sentence written in plain text. Include actions that relate to multiple domains (e.g., observation, manipulation, dialogue, combat, deduction.) Do not include greetings, farewells, or polite thanks in the list. Do not use words like "you". Use at least 5 actions.
+Output ONLY a numbered list of the possible actions. Each action should be a clear, actionable, and concise sentence written in plain text. Include actions that relate to multiple domains (e.g., observation, manipulation, dialogue, combat, deduction.) Do not include greetings, farewells, or polite thanks in the list. Do not use words like "you". Use exact 10 actions.
 
 Use this template:
 
@@ -82,7 +82,11 @@ async function handleUIChanges(): Promise<void> {
     promptElement.trigger('change');
   });
 
-  settingsContainer.find('.test').on('click', async function () {
+  const roadwayButton = $(
+    `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-hexagon-nodes interactable" tabindex="0"></div>`,
+  );
+  $('#message_template .mes_buttons .extraMesButtons').prepend(roadwayButton);
+  $(document).on('click', '.mes_magic_roadway_button', async function () {
     const context = SillyTavern.getContext();
     if (!context.extensionSettings.roadway.profileId) {
       await st_echo('error', 'Please select a connection profile first in the settings.');
@@ -92,6 +96,8 @@ async function handleUIChanges(): Promise<void> {
       await st_echo('error', 'Please enter a prompt first in the settings.');
       return;
     }
+    const messageBlock = $(this).closest('.mes');
+    const targetMessageId = Number(messageBlock.attr('mesid'));
 
     const messages = await buildPrompt();
     messages.push({
@@ -103,8 +109,40 @@ async function handleUIChanges(): Promise<void> {
       messages,
       500,
     );
-    console.log(rest);
+
+    const existMessage = context.chat.find((mes) => mes.extra?.roadway_target_chat === targetMessageId);
+    let newMessage: (typeof context.chat)[0] = existMessage ?? {
+      mes: formatResponse(rest.content),
+      name: systemUserName,
+      force_avatar: system_avatar,
+      is_system: true,
+      is_user: false,
+      extra: {
+        isSmallSys: true,
+        roadway_target_chat: targetMessageId,
+      },
+    };
+    if (existMessage) {
+      newMessage.mes = formatResponse(rest.content);
+      const index = context.chat.indexOf(existMessage);
+      const existMessageTextBlock = $(`[mesid="${index}"] .mes_text`);
+      existMessageTextBlock.html(newMessage.mes);
+    } else {
+      context.chat.push(newMessage);
+      context.addOneMessage(newMessage);
+    }
+    await context.saveChat();
   });
+
+  function formatResponse(response: string): string {
+    const detailsElement = document.createElement('details');
+    const summaryElement = document.createElement('summary');
+    const preElement = document.createElement('pre');
+    summaryElement.textContent = 'Roadway';
+    preElement.textContent = response;
+    detailsElement.append(summaryElement, preElement);
+    return detailsElement.outerHTML;
+  }
 }
 
 function initializeEvents() {}

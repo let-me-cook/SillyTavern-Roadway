@@ -75,10 +75,13 @@ declare global {
       mes: string;
       is_user?: boolean;
       is_system?: boolean;
+      force_avatar?: string;
       extra?: {
         tool_invocations?: any[];
         append_title?: boolean;
         title?: string;
+        isSmallSys?: boolean;
+        roadway_target_chat: number;
       };
     }[];
     getCharacterCardFields: () => {
@@ -126,6 +129,8 @@ declare global {
         identifier: string;
       }
     >;
+    addOneMessage(mes: object): void;
+    saveChat: () => Promise<void>;
   }
 
   const SillyTavern: {

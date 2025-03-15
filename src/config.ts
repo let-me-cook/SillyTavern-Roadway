@@ -14,6 +14,8 @@ import {
   depth_prompt_role_default,
   depth_prompt_depth_default,
   main_api,
+  systemUserName,
+  system_avatar,
   // @ts-ignore
 } from '../../../../../script.js';
 
@@ -208,4 +210,6 @@ export {
   depth_prompt_depth_default,
   main_api,
   regex_placement,
+  systemUserName,
+  system_avatar,
 };
