@@ -1,5 +1,6 @@
 import { buildPrompt } from 'sillytavern-utils-lib/prompt-builder';
 import { st_echo, system_avatar, systemUserName } from 'sillytavern-utils-lib/config';
+import { ChatMessage } from 'sillytavern-utils-lib/types';
 
 const extensionName = 'SillyTavern-Roadway';
 const globalContext = SillyTavern.getContext();
@@ -111,7 +112,7 @@ async function handleUIChanges(): Promise<void> {
     );
 
     const existMessage = context.chat.find((mes) => mes.extra?.roadway_target_chat === targetMessageId);
-    let newMessage: (typeof context.chat)[0] = existMessage ?? {
+    let newMessage: ChatMessage = existMessage ?? {
       mes: formatResponse(rest.content),
       name: systemUserName,
       force_avatar: system_avatar,
@@ -129,7 +130,7 @@ async function handleUIChanges(): Promise<void> {
       existMessageTextBlock.html(newMessage.mes);
     } else {
       context.chat.push(newMessage);
-      context.addOneMessage(newMessage);
+      context.addOneMessage(newMessage, { insertAfter: targetMessageId });
     }
     await context.saveChat();
   });
