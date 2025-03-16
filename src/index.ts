@@ -121,8 +121,11 @@ async function handleUIChanges(): Promise<void> {
     }
     const messageBlock = $(this).closest('.mes');
     const targetMessageId = Number(messageBlock.attr('mesid'));
+    const presetName = (context.extensionSettings.connectionManager?.profiles || []).find(
+      (profile) => profile.id === settings.profileId,
+    )?.preset;
 
-    const messages = await buildPrompt(targetMessageId);
+    const messages = await buildPrompt(targetMessageId, presetName);
     messages.push({
       content: settings.prompt,
       role: 'system',
