@@ -129,42 +129,49 @@ async function handleUIChanges(): Promise<void> {
     const instructName = profile?.instruct;
     const syspromptName = profile?.sysprompt;
 
-    const messages = await buildPrompt(targetMessageId, {
-      presetName,
-      contextName,
-      instructName,
-      syspromptName
-    });
-    messages.push({
-      content: settings.prompt,
-      role: 'system',
-    });
-    const rest = await context.ConnectionManagerRequestService.sendRequest(settings.profileId, messages, 500);
+    const apiMap = profile?.api ? context.CONNECT_API_MAP[profile.api] : null;
 
-    const existMessage = context.chat.find((mes) => mes.extra?.[EXTRA_TARGET_KEY] === targetMessageId);
-    let newMessage: ChatMessage = existMessage ?? {
-      mes: formatResponse(rest.content),
-      name: systemUserName,
-      force_avatar: system_avatar,
-      is_system: true,
-      is_user: false,
-      extra: {
-        isSmallSys: true,
-        [EXTRA_TARGET_KEY]: targetMessageId,
-        [EXTRA_RAW_CONTENT_KEY]: rest.content,
-      },
-    };
-    if (existMessage) {
-      newMessage.mes = formatResponse(rest.content);
-      newMessage.extra![EXTRA_RAW_CONTENT_KEY] = rest.content;
-      const index = context.chat.indexOf(existMessage);
-      const existMessageTextBlock = $(`[mesid="${index}"] .mes_text pre`);
-      existMessageTextBlock.text(rest.content);
-    } else {
-      context.chat.push(newMessage);
-      context.addOneMessage(newMessage, { insertAfter: targetMessageId });
+    try {
+      const messages = await buildPrompt(apiMap?.selected, targetMessageId, {
+        presetName,
+        contextName,
+        instructName,
+        syspromptName,
+      });
+      messages.push({
+        content: settings.prompt,
+        role: 'system',
+      });
+      const rest = await context.ConnectionManagerRequestService.sendRequest(settings.profileId, messages, 500);
+
+      const existMessage = context.chat.find((mes) => mes.extra?.[EXTRA_TARGET_KEY] === targetMessageId);
+      let newMessage: ChatMessage = existMessage ?? {
+        mes: formatResponse(rest.content),
+        name: systemUserName,
+        force_avatar: system_avatar,
+        is_system: true,
+        is_user: false,
+        extra: {
+          isSmallSys: true,
+          [EXTRA_TARGET_KEY]: targetMessageId,
+          [EXTRA_RAW_CONTENT_KEY]: rest.content,
+        },
+      };
+      if (existMessage) {
+        newMessage.mes = formatResponse(rest.content);
+        newMessage.extra![EXTRA_RAW_CONTENT_KEY] = rest.content;
+        const index = context.chat.indexOf(existMessage);
+        const existMessageTextBlock = $(`[mesid="${index}"] .mes_text pre`);
+        existMessageTextBlock.text(rest.content);
+      } else {
+        context.chat.push(newMessage);
+        context.addOneMessage(newMessage, { insertAfter: targetMessageId });
+      }
+      await context.saveChat();
+    } catch (error) {
+      console.error(error);
+      await st_echo('error', `Error: ${error}`);
     }
-    await context.saveChat();
   });
 
   function formatResponse(response: string): string {
