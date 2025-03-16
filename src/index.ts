@@ -1,5 +1,5 @@
-import { st_echo, system_avatar, systemUserName } from './config';
-import { buildPrompt } from './prompt-builder';
+import { buildPrompt } from 'sillytavern-utils-lib/prompt-builder';
+import { st_echo, system_avatar, systemUserName } from 'sillytavern-utils-lib/config';
 
 const extensionName = 'SillyTavern-Roadway';
 const globalContext = SillyTavern.getContext();
