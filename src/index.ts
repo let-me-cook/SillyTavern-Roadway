@@ -16,6 +16,11 @@ interface ExtensionSettings {
   prompt: string;
 }
 
+function getExtensionSettings(): ExtensionSettings {
+  const context = SillyTavern.getContext();
+  return context.extensionSettings[EXTENSION_SETTINGS_KEY] as ExtensionSettings;
+}
+
 const DEFAULT_SETTINGS: ExtensionSettings = {
   enabled: true,
   profileId: '',
@@ -63,31 +68,33 @@ async function handleUIChanges(): Promise<void> {
 
   settingsContainer
     .find('#roadway_enabled')
-    .prop('checked', globalContext.extensionSettings[EXTENSION_SETTINGS_KEY].enabled)
+    .prop('checked', getExtensionSettings().enabled)
     .on('change', async function () {
       const context = SillyTavern.getContext();
-      context.extensionSettings[EXTENSION_SETTINGS_KEY].enabled =
-        !context.extensionSettings[EXTENSION_SETTINGS_KEY].enabled;
+      const settings = getExtensionSettings();
+      settings.enabled = !settings.enabled;
       context.saveSettingsDebounced();
     });
 
   globalContext.ConnectionManagerRequestService.handleDropdown(
     '.roadway_settings .connection_profile',
-    globalContext.extensionSettings[EXTENSION_SETTINGS_KEY].profileId,
+    getExtensionSettings().profileId,
     (profile) => {
       const context = SillyTavern.getContext();
-      context.extensionSettings[EXTENSION_SETTINGS_KEY].profileId = profile ? profile.id : '';
+      const settings = getExtensionSettings();
+      settings.profileId = profile ? profile.id : '';
       context.saveSettingsDebounced();
     },
   );
 
   const promptElement = settingsContainer.find('.prompt');
-  promptElement.val(globalContext.extensionSettings[EXTENSION_SETTINGS_KEY].prompt);
+  promptElement.val(getExtensionSettings().prompt);
   promptElement.on('change', function () {
     const context = SillyTavern.getContext();
     const template = promptElement.val() as string;
-    if (template !== context.extensionSettings[EXTENSION_SETTINGS_KEY].prompt) {
-      context.extensionSettings[EXTENSION_SETTINGS_KEY].prompt = template;
+    const settings = getExtensionSettings();
+    if (template !== settings.prompt) {
+      settings.prompt = template;
       context.saveSettingsDebounced();
     }
   });
@@ -103,11 +110,12 @@ async function handleUIChanges(): Promise<void> {
   $('#message_template .mes_buttons .extraMesButtons').prepend(roadwayButton);
   $(document).on('click', '.mes_magic_roadway_button', async function () {
     const context = SillyTavern.getContext();
-    if (!context.extensionSettings[EXTENSION_SETTINGS_KEY].profileId) {
+    const settings = getExtensionSettings();
+    if (!settings.profileId) {
       await st_echo('error', 'Please select a connection profile first in the settings.');
       return;
     }
-    if (!context.extensionSettings[EXTENSION_SETTINGS_KEY].prompt) {
+    if (!settings.prompt) {
       await st_echo('error', 'Please enter a prompt first in the settings.');
       return;
     }
@@ -116,14 +124,10 @@ async function handleUIChanges(): Promise<void> {
 
     const messages = await buildPrompt(targetMessageId);
     messages.push({
-      content: context.extensionSettings[EXTENSION_SETTINGS_KEY].prompt,
+      content: settings.prompt,
       role: 'system',
     });
-    const rest = await context.ConnectionManagerRequestService.sendRequest(
-      context.extensionSettings[EXTENSION_SETTINGS_KEY].profileId,
-      messages,
-      500,
-    );
+    const rest = await context.ConnectionManagerRequestService.sendRequest(settings.profileId, messages, 500);
 
     const existMessage = context.chat.find((mes) => mes.extra?.[EXTRA_TARGET_KEY] === targetMessageId);
     let newMessage: ChatMessage = existMessage ?? {
