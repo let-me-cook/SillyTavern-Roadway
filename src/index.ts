@@ -16,6 +16,7 @@ interface ExtensionSettings {
   prompt: string;
   maxContextType: 'profile' | 'sampler' | 'custom';
   maxContextValue: number;
+  maxResponseToken: number;
 }
 
 function getExtensionSettings(): ExtensionSettings {
@@ -28,6 +29,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   profileId: '',
   maxContextType: 'profile',
   maxContextValue: 16384,
+  maxResponseToken: 500,
   prompt: `You are an AI assistant designed to generate creative possible actions in a roleplaying scenario. Given the following context, suggest a diverse list of options for the player to take.
 
 Output ONLY a numbered list of the possible actions. Each action should be a clear, actionable, and concise sentence written in plain text. Include actions that relate to multiple domains (e.g., observation, manipulation, dialogue, combat, deduction.) Do not include greetings, farewells, or polite thanks in the list. Do not use words like "you". Use exact 10 actions.
@@ -135,6 +137,15 @@ async function handleUIChanges(): Promise<void> {
     context.saveSettingsDebounced();
   });
 
+  const maxResponseTokenElement = settingsContainer.find('.max_response_tokens');
+  maxResponseTokenElement.val(getExtensionSettings().maxResponseToken);
+  maxResponseTokenElement.on('change', function () {
+    const context = SillyTavern.getContext();
+    const settings = getExtensionSettings();
+    settings.maxResponseToken = Number($(this).val());
+    context.saveSettingsDebounced();
+  });
+
   const roadwayButton = $(
     `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-road interactable" tabindex="0"></div>`,
   );
@@ -179,7 +190,11 @@ async function handleUIChanges(): Promise<void> {
         content: settings.prompt,
         role: 'system',
       });
-      const rest = await context.ConnectionManagerRequestService.sendRequest(settings.profileId, messages, 500);
+      const rest = await context.ConnectionManagerRequestService.sendRequest(
+        settings.profileId,
+        messages,
+        settings.maxResponseToken,
+      );
 
       const existMessage = context.chat.find((mes) => mes.extra?.[EXTRA_TARGET_KEY] === targetMessageId);
       let newMessage: ChatMessage = existMessage ?? {
