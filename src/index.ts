@@ -121,11 +121,20 @@ async function handleUIChanges(): Promise<void> {
     }
     const messageBlock = $(this).closest('.mes');
     const targetMessageId = Number(messageBlock.attr('mesid'));
-    const presetName = (context.extensionSettings.connectionManager?.profiles || []).find(
+    const profile = context.extensionSettings.connectionManager?.profiles?.find(
       (profile) => profile.id === settings.profileId,
-    )?.preset;
+    );
+    const presetName = profile?.preset;
+    const contextName = profile?.context;
+    const instructName = profile?.instruct;
+    const syspromptName = profile?.sysprompt;
 
-    const messages = await buildPrompt(targetMessageId, presetName);
+    const messages = await buildPrompt(targetMessageId, {
+      presetName,
+      contextName,
+      instructName,
+      syspromptName
+    });
     messages.push({
       content: settings.prompt,
       role: 'system',
