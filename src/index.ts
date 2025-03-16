@@ -14,6 +14,8 @@ interface ExtensionSettings {
   enabled: boolean;
   profileId: string;
   prompt: string;
+  maxContextType: 'profile' | 'sampler' | 'custom';
+  maxContextValue: number;
 }
 
 function getExtensionSettings(): ExtensionSettings {
@@ -24,6 +26,8 @@ function getExtensionSettings(): ExtensionSettings {
 const DEFAULT_SETTINGS: ExtensionSettings = {
   enabled: true,
   profileId: '',
+  maxContextType: 'profile',
+  maxContextValue: 16384,
   prompt: `You are an AI assistant designed to generate creative possible actions in a roleplaying scenario. Given the following context, suggest a diverse list of options for the player to take.
 
 Output ONLY a numbered list of the possible actions. Each action should be a clear, actionable, and concise sentence written in plain text. Include actions that relate to multiple domains (e.g., observation, manipulation, dialogue, combat, deduction.) Do not include greetings, farewells, or polite thanks in the list. Do not use words like "you". Use exact 10 actions.
@@ -104,6 +108,33 @@ async function handleUIChanges(): Promise<void> {
     promptElement.trigger('change');
   });
 
+  const maxContextTypeElement = settingsContainer.find('.max_context_type');
+  const maxContextValueElement = settingsContainer.find('.max_context_value');
+  const maxContextCustomDiv = settingsContainer.find('.max_context_custom');
+
+  maxContextTypeElement.val(getExtensionSettings().maxContextType);
+  maxContextValueElement.val(getExtensionSettings().maxContextValue);
+
+  if (getExtensionSettings().maxContextType === 'custom') {
+    maxContextCustomDiv.show();
+  }
+
+  maxContextTypeElement.on('change', function () {
+    const context = SillyTavern.getContext();
+    const settings = getExtensionSettings();
+    const newType = $(this).val() as 'profile' | 'sampler' | 'custom';
+    settings.maxContextType = newType;
+    maxContextCustomDiv.toggle(newType === 'custom');
+    context.saveSettingsDebounced();
+  });
+
+  maxContextValueElement.on('change', function () {
+    const context = SillyTavern.getContext();
+    const settings = getExtensionSettings();
+    settings.maxContextValue = Number($(this).val());
+    context.saveSettingsDebounced();
+  });
+
   const roadwayButton = $(
     `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-road interactable" tabindex="0"></div>`,
   );
@@ -137,6 +168,12 @@ async function handleUIChanges(): Promise<void> {
         contextName,
         instructName,
         syspromptName,
+        maxContext:
+          settings.maxContextType === 'custom'
+            ? settings.maxContextValue
+            : settings.maxContextType === 'profile'
+              ? 'preset'
+              : 'active',
       });
       messages.push({
         content: settings.prompt,

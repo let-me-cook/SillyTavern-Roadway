@@ -29,6 +29,25 @@
             </div>
 
             <textarea class="text_pole textarea_compact prompt" rows="4"></textarea>
+
+            <div>
+                <label>Max Context</label>
+            </div>
+            <select class="text_pole max_context_type" title="Select Max Context Type">
+                <option value="profile">Use profile preset</option>
+                <option value="sampler">Use active preset in sampler settings</option>
+                <option value="custom">Custom</option>
+            </select>
+
+            <div class="max_context_custom" style="display: none; margin-top: 10px">
+                <input
+                    type="number"
+                    class="text_pole max_context_value"
+                    min="1"
+                    step="1"
+                    placeholder="Enter max tokens"
+                />
+            </div>
         </div>
     </div>
 </div>
