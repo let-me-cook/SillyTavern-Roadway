@@ -1,7 +1,7 @@
 import { buildPrompt } from 'sillytavern-utils-lib/prompt-builder';
 import { buildPresetSelect } from 'sillytavern-utils-lib/preset-select';
-import { st_echo, system_avatar, systemUserName } from 'sillytavern-utils-lib/config';
-import { ChatMessage } from 'sillytavern-utils-lib/types';
+import { st_echo, st_runCommandCallback, system_avatar, systemUserName } from 'sillytavern-utils-lib/config';
+import { ChatMessage, EventNames } from 'sillytavern-utils-lib/types';
 
 const extensionName = 'SillyTavern-Roadway';
 const globalContext = SillyTavern.getContext();
@@ -32,7 +32,9 @@ function getExtensionSettings(): ExtensionSettings {
   const context = SillyTavern.getContext();
   return context.extensionSettings[EXTENSION_SETTINGS_KEY] as ExtensionSettings;
 }
-const DEFAULT_IMPERSONATE = `Continue as {{user}}. This what {{user}} selected:\n\n{{roadway_selected}}`;
+const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
+
+{{roadwaySelected}}`;
 
 const DEFAULT_PROMPT = `You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences. Given the following context, your task is to generate an *unpredictable* and *engaging* list of options for the player.
 
@@ -333,7 +335,7 @@ async function handleUIChanges(): Promise<void> {
 
       const existMessage = context.chat.find((mes) => mes.extra?.[EXTRA_TARGET_KEY] === targetMessageId);
       let newMessage: ChatMessage = existMessage ?? {
-        mes: formatResponse(innerText),
+        mes: formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined),
         name: systemUserName,
         force_avatar: system_avatar,
         is_system: true,
@@ -347,7 +349,7 @@ async function handleUIChanges(): Promise<void> {
       };
 
       if (existMessage) {
-        newMessage.mes = formatResponse(innerText);
+        newMessage.mes = formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined);
         newMessage.extra![EXTRA_RAW_CONTENT_KEY] = rest.content;
         newMessage.extra![EXTRA_OPTIONS_KEY] = actions;
         const index = context.chat.indexOf(existMessage);
@@ -361,6 +363,7 @@ async function handleUIChanges(): Promise<void> {
       if (!detailsElement.attr('open')) {
         detailsElement.attr('open', '');
       }
+      attachRoadwayOptionHandlers(targetMessageId + 1);
 
       await context.saveChat();
     } catch (error) {
@@ -372,14 +375,33 @@ async function handleUIChanges(): Promise<void> {
     }
   });
 
-  function formatResponse(response: string): string {
+  function formatResponse(response: string, options?: string[]): string {
+    const context = SillyTavern.getContext();
     const detailsElement = document.createElement('details');
     const summaryElement = document.createElement('summary');
-    const preElement = document.createElement('pre');
-    preElement.classList.add('roadway_pre');
     summaryElement.textContent = 'Roadway';
-    preElement.textContent = response;
-    detailsElement.append(summaryElement, preElement);
+    detailsElement.appendChild(summaryElement);
+
+    if (options?.length) {
+      const optionsDiv = document.createElement('div');
+      optionsDiv.classList.add('roadway_options');
+
+      options.forEach((option, index) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.classList.add('roadway_option');
+        optionDiv.textContent = `${index + 1}. ${option}`;
+        optionDiv.style.cursor = 'pointer';
+        optionsDiv.appendChild(optionDiv);
+      });
+
+      detailsElement.appendChild(optionsDiv);
+    } else {
+      const preElement = document.createElement('pre');
+      preElement.classList.add('roadway_pre');
+      preElement.textContent = response;
+      detailsElement.appendChild(preElement);
+    }
+
     return detailsElement.outerHTML;
   }
 }
@@ -391,7 +413,55 @@ function extractBulletPoints(text: string): string[] {
   });
 }
 
-function initializeEvents() {}
+function attachRoadwayOptionHandlers(roadwayMessageId: number) {
+  // Remove existing event handlers
+  $(`[mesid="${roadwayMessageId}"] .custom-roadway_options .custom-roadway_option`).off();
+
+  const context = SillyTavern.getContext();
+
+  $(`[mesid="${roadwayMessageId}"] .custom-roadway_options .custom-roadway_option`).on('click', async function () {
+    const message = context.chat.find((mes, index) => roadwayMessageId === index);
+    if (!message) {
+      return;
+    }
+
+    const preset = getExtensionSettings().promptPresets[context.extensionSettings[EXTENSION_SETTINGS_KEY].promptPreset];
+    if (!preset || !preset.impersonate) {
+      await st_echo('error', 'Preset not found. Please check the extension settings.');
+      return;
+    }
+
+    const index = $(`[mesid="${roadwayMessageId}"] .custom-roadway_options .custom-roadway_option`).index(this);
+
+    const impersonate = context.substituteParams(
+      preset.impersonate,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      {
+        roadwaySelected: message.extra?.[EXTRA_OPTIONS_KEY]?.[index],
+      },
+      undefined,
+    );
+    st_runCommandCallback('impersonate', undefined, impersonate);
+  });
+}
+
+function initializeEvents() {
+  // If last message is roadway, add event listener
+  globalContext.eventSource.on(EventNames.CHAT_CHANGED, () => {
+    const context = SillyTavern.getContext();
+    if (!context.chat.length) {
+      return;
+    }
+    const lastMessage = context.chat[context.chat.length - 1];
+    if (typeof lastMessage.extra?.[EXTRA_TARGET_KEY] === 'number') {
+      attachRoadwayOptionHandlers(context.chat.length - 1);
+    }
+  });
+}
 
 initializeDefaultSettings();
 handleUIChanges();

@@ -13,3 +13,21 @@
 .mes_magic_roadway_button.spinning {
   animation: spin 2s linear infinite;
 }
+
+.custom-roadway_options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.custom-roadway_option {
+  padding: 10px;
+  border-radius: 5px;
+  background-color: var(--SmartThemeBlurTintColor);
+  cursor: pointer;
+  transition: background-color var(--animation-duration);
+}
+.custom-roadway_option:hover {
+  background-color: var(--SmartThemeBorderColor);
+}
