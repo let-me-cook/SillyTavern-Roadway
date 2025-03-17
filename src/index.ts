@@ -12,7 +12,6 @@ const EXTRA_RAW_CONTENT_KEY = 'roadway_raw_content';
 const EXTENSION_SETTINGS_KEY = 'roadway';
 
 interface ExtensionSettings {
-  enabled: boolean;
   profileId: string;
   maxContextType: 'profile' | 'sampler' | 'custom';
   maxContextValue: number;
@@ -26,20 +25,23 @@ function getExtensionSettings(): ExtensionSettings {
   return context.extensionSettings[EXTENSION_SETTINGS_KEY] as ExtensionSettings;
 }
 
-const DEFAULT_PROMPT = `You are an AI assistant designed to generate creative possible actions in a roleplaying scenario. Given the following context, suggest a diverse list of options for the player to take.
+const DEFAULT_PROMPT = `You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences. Given the following context, your task is to generate an *unpredictable* and *engaging* list of options for the player.
 
-Output ONLY a numbered list of the possible actions. Each action should be a clear, actionable, and concise sentence written in plain text. Include actions that relate to multiple domains (e.g., observation, manipulation, dialogue, combat, deduction.) Do not include greetings, farewells, or polite thanks in the list. Do not use words like "you". Use exact 10 actions.
+Output ONLY a numbered list of possible actions. Each action should be a clear, actionable, concise, and *creative* sentence written in plain text.
 
-Example:
+Prioritize *varied* actions that span multiple domains:
 
-1. Examine the ground for any signs of footprints or disturbed earth.
-2. Ask Mrs. Abernathy about any local rumors regarding the strange symbol.
-3. Search Mr. Peterson's abandoned house for any hidden messages or clues.
-4. Attempt to pick the lock on the neighbor's shed, hoping to find something related to their disappearances.
-5. Show the photo of the symbol to the local bartender for information.`;
+{Observation/Investigation; Dialogue/Persuasion; Stealth/Intrigue; Combat/Conflict; Crafting/Repair; Knowledge/Lore; Movement/Traversal; Deception/Manipulation; Performance/Entertainment; Technical/Mechanical}.
+
+Avoid obvious or repetitive actions. Push the boundaries of the situation. Challenge the player's expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 10 actions. The actions must be written in plain text.
+
+Here are a few example actions to inspire creativity:
+
+1. Attempt to communicate with the forest creatures to learn the location of hidden trails.
+2. Bribe the corrupt city guard with a song and a dance.
+3. Stage a fake ambush to draw out a hidden enemy.`;
 
 const DEFAULT_SETTINGS: ExtensionSettings = {
-  enabled: true,
   profileId: '',
   maxContextType: 'profile',
   maxContextValue: 16384,
@@ -80,16 +82,6 @@ async function handleUIChanges(): Promise<void> {
   $('#extensions_settings').append(settingsHtml);
 
   const settingsContainer = $('.roadway_settings');
-
-  settingsContainer
-    .find('#roadway_enabled')
-    .prop('checked', getExtensionSettings().enabled)
-    .on('change', async function () {
-      const context = SillyTavern.getContext();
-      const settings = getExtensionSettings();
-      settings.enabled = !settings.enabled;
-      context.saveSettingsDebounced();
-    });
 
   globalContext.ConnectionManagerRequestService.handleDropdown(
     '.roadway_settings .connection_profile',
@@ -289,6 +281,7 @@ async function handleUIChanges(): Promise<void> {
     const detailsElement = document.createElement('details');
     const summaryElement = document.createElement('summary');
     const preElement = document.createElement('pre');
+    preElement.classList.add('roadway_pre');
     summaryElement.textContent = 'Roadway';
     preElement.textContent = response;
     detailsElement.append(summaryElement, preElement);
