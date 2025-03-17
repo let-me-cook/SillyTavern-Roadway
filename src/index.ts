@@ -247,7 +247,7 @@ async function handleUIChanges(): Promise<void> {
               : 'active',
       });
       messages.push({
-        content: settings.promptPresets[settings.promptPreset].content,
+        content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
         role: 'system',
       });
       const rest = await context.ConnectionManagerRequestService.sendRequest(
