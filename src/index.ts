@@ -201,6 +201,7 @@ async function handleUIChanges(): Promise<void> {
     `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-road interactable" tabindex="0"></div>`,
   );
   $('#message_template .mes_buttons .extraMesButtons').prepend(roadwayButton);
+  const pendingRequests = new Set<number>();
   $(document).on('click', '.mes_magic_roadway_button', async function () {
     const context = SillyTavern.getContext();
     const settings = getExtensionSettings();
@@ -225,6 +226,13 @@ async function handleUIChanges(): Promise<void> {
     const apiMap = profile?.api ? context.CONNECT_API_MAP[profile.api] : null;
 
     try {
+      if (pendingRequests.has(targetMessageId)) {
+        await st_echo('warning', 'A request for this message is already in progress. Please wait.');
+        return;
+      }
+
+      pendingRequests.add(targetMessageId);
+
       const messages = await buildPrompt(apiMap?.selected, targetMessageId, {
         presetName,
         contextName,
@@ -274,6 +282,8 @@ async function handleUIChanges(): Promise<void> {
     } catch (error) {
       console.error(error);
       await st_echo('error', `Error: ${error}`);
+    } finally {
+      pendingRequests.delete(targetMessageId);
     }
   });
 
@@ -289,7 +299,7 @@ async function handleUIChanges(): Promise<void> {
   }
 }
 
-function initializeEvents() {}
+function initializeEvents() { }
 
 initializeDefaultSettings();
 handleUIChanges();
