@@ -8,6 +8,7 @@ const globalContext = SillyTavern.getContext();
 
 const EXTRA_TARGET_KEY = 'roadway_target_chat';
 const EXTRA_RAW_CONTENT_KEY = 'roadway_raw_content';
+const EXTRA_OPTIONS_KEY = 'roadway_options';
 
 const EXTENSION_SETTINGS_KEY = 'roadway';
 
@@ -17,7 +18,13 @@ interface ExtensionSettings {
   maxContextValue: number;
   maxResponseToken: number;
   promptPreset: string;
-  promptPresets: Record<string, { content: string }>;
+  promptPresets: Record<
+    string,
+    {
+      content: string;
+      extractionStrategy: 'bullet' | 'none';
+    }
+  >;
 }
 
 function getExtensionSettings(): ExtensionSettings {
@@ -50,6 +57,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
+      extractionStrategy: 'bullet',
     },
   },
 };
@@ -58,18 +66,25 @@ function initializeDefaultSettings(): void {
   globalContext.extensionSettings[EXTENSION_SETTINGS_KEY] =
     globalContext.extensionSettings?.[EXTENSION_SETTINGS_KEY] || {};
 
-  let anyChange: boolean = false;
-  for (const key of Object.keys(DEFAULT_SETTINGS)) {
-    // @ts-ignore
-    if (globalContext.extensionSettings[EXTENSION_SETTINGS_KEY][key] === undefined) {
-      // @ts-ignore
-      globalContext.extensionSettings[EXTENSION_SETTINGS_KEY][key] =
-        DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS];
-      anyChange = true;
+  function initializeRecursively(target: any, defaults: any): boolean {
+    let anyChange = false;
+
+    for (const key of Object.keys(defaults)) {
+      if (target[key] === undefined) {
+        target[key] = defaults[key];
+        anyChange = true;
+      } else if (typeof defaults[key] === 'object' && defaults[key] !== null) {
+        target[key] = target[key] || {};
+        if (initializeRecursively(target[key], defaults[key])) {
+          anyChange = true;
+        }
+      }
     }
+
+    return anyChange;
   }
 
-  if (anyChange) {
+  if (initializeRecursively(globalContext.extensionSettings[EXTENSION_SETTINGS_KEY], DEFAULT_SETTINGS)) {
     globalContext.saveSettingsDebounced();
   }
 }
@@ -104,6 +119,7 @@ async function handleUIChanges(): Promise<void> {
       settings = getExtensionSettings();
       settings.promptPreset = newValue ?? 'default';
       promptElement.val(settings.promptPresets[settings.promptPreset]?.content || '');
+      extractionStrategyElement.val(settings.promptPresets[settings.promptPreset]?.extractionStrategy);
       globalContext.saveSettingsDebounced();
     },
     create: {
@@ -111,6 +127,7 @@ async function handleUIChanges(): Promise<void> {
         settings = getExtensionSettings();
         settings.promptPresets[value] = {
           content: settings.promptPresets[settings.promptPreset]?.content || DEFAULT_PROMPT,
+          extractionStrategy: settings.promptPresets[settings.promptPreset]?.extractionStrategy,
         };
         globalContext.saveSettingsDebounced();
       },
@@ -140,6 +157,23 @@ async function handleUIChanges(): Promise<void> {
     settings.promptPresets[settings.promptPreset].content = template;
     globalContext.saveSettingsDebounced();
   });
+
+  const extractionStrategyElement = settingsContainer.find('select.extraction_strategy');
+  function updateExtractionStrategy() {
+    const settings = getExtensionSettings();
+    extractionStrategyElement.val(settings.promptPresets[settings.promptPreset]?.extractionStrategy);
+  }
+  updateExtractionStrategy();
+
+  extractionStrategyElement.on('change', function () {
+    settings = getExtensionSettings();
+    const value = $(this).val() as 'bullet' | 'none';
+    settings.promptPresets[settings.promptPreset].extractionStrategy = value;
+    globalContext.saveSettingsDebounced();
+  });
+
+  // Update extraction strategy when preset changes
+  select.addEventListener('change', updateExtractionStrategy);
 
   settingsContainer.find('.restore_default').on('click', async function () {
     const confirm = await globalContext.Popup.show.confirm(
@@ -256,9 +290,22 @@ async function handleUIChanges(): Promise<void> {
         settings.maxResponseToken,
       );
 
+      let actions: string[] = [];
+      const extractionStrategy = settings.promptPresets[settings.promptPreset]?.extractionStrategy;
+      if (extractionStrategy === 'bullet') {
+        actions = extractBulletPoints(rest.content);
+        if (actions.length === 0) {
+          await st_echo('warning', 'Could not extract any bullet points from the response. Using original response.');
+        }
+      }
+
+      const innerText = actions?.length
+        ? actions.map((action, index) => `${index + 1}. ${action}`).join('\n')
+        : rest.content;
+
       const existMessage = context.chat.find((mes) => mes.extra?.[EXTRA_TARGET_KEY] === targetMessageId);
       let newMessage: ChatMessage = existMessage ?? {
-        mes: formatResponse(rest.content),
+        mes: formatResponse(innerText),
         name: systemUserName,
         force_avatar: system_avatar,
         is_system: true,
@@ -266,15 +313,18 @@ async function handleUIChanges(): Promise<void> {
         extra: {
           isSmallSys: true,
           [EXTRA_TARGET_KEY]: targetMessageId,
-          [EXTRA_RAW_CONTENT_KEY]: rest.content,
+          [EXTRA_RAW_CONTENT_KEY]: innerText,
+          [EXTRA_OPTIONS_KEY]: actions,
         },
       };
+
       if (existMessage) {
-        newMessage.mes = formatResponse(rest.content);
+        newMessage.mes = formatResponse(innerText);
         newMessage.extra![EXTRA_RAW_CONTENT_KEY] = rest.content;
+        newMessage.extra![EXTRA_OPTIONS_KEY] = actions;
         const index = context.chat.indexOf(existMessage);
         const existMessageTextBlock = $(`[mesid="${index}"] .mes_text pre`);
-        existMessageTextBlock.text(rest.content);
+        existMessageTextBlock.text(innerText);
       } else {
         context.chat.push(newMessage);
         context.addOneMessage(newMessage, { insertAfter: targetMessageId });
@@ -306,7 +356,14 @@ async function handleUIChanges(): Promise<void> {
   }
 }
 
-function initializeEvents() { }
+function extractBulletPoints(text: string): string[] {
+  const matches = text.match(/^(?:\d+\.(?:\s+|(?=\S))|-\s+)(.*)$/gm) || [];
+  return matches.map((line) => {
+    return line.replace(/^(?:\d+\.(?:\s+|(?=\S))|-\s+)/, '').trim();
+  });
+}
+
+function initializeEvents() {}
 
 initializeDefaultSettings();
 handleUIChanges();
