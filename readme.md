@@ -38,10 +38,6 @@ Long-time RP users would know:
 RP models haven't revolutionized like other fields since last year. Programmers now get Claude 3.5 Sonnet. Reason models became very popular. We still have the same crippy llama/mistral fine-tunes.
 - In the author's note, there could be Create interactive scenarios for the player. Keep scenes moving. note for a better story. But in my experience, most 12B fine-tunes suggest the same things. Models have biases. Even when I swipe, I get similar responses. This is frustrating.
 
->I decided to use the action _3_. What am I going to do? Copy paste?
-
-Well, if you have [Guided Generations](https://github.com/Samueras/Guided-Generations) extension, I suggest using _Impersonate_ with copy-pasted action.
-
 >So is this just a simple LLM request?
 
 Yes. You can do the same thing with:
