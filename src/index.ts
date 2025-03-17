@@ -232,6 +232,7 @@ async function handleUIChanges(): Promise<void> {
       }
 
       pendingRequests.add(targetMessageId);
+      $(this).addClass('spinning');
 
       const messages = await buildPrompt(apiMap?.selected, targetMessageId, {
         presetName,
@@ -284,6 +285,7 @@ async function handleUIChanges(): Promise<void> {
       await st_echo('error', `Error: ${error}`);
     } finally {
       pendingRequests.delete(targetMessageId);
+      $('.mes_magic_roadway_button').removeClass('spinning');
     }
   });
 
