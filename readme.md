@@ -42,10 +42,6 @@ RP models haven't revolutionized like other fields since last year. Programmers 
 
 Well, if you have [Guided Generations](https://github.com/Samueras/Guided-Generations) extension, I suggest using _Impersonate_ with copy-pasted action.
 
->Don't let me copy/paste. I want to click buttons, I WANT INTERACTIVITY.
-
-Step by step. Currently, ST backend is not ready for this.
-
 >So is this just a simple LLM request?
 
 Yes. You can do the same thing with:
