@@ -386,10 +386,10 @@ async function handleUIChanges(): Promise<void> {
       const optionsDiv = document.createElement('div');
       optionsDiv.classList.add('roadway_options');
 
-      options.forEach((option, index) => {
+      options.forEach((option, _index) => {
         const optionDiv = document.createElement('div');
         optionDiv.classList.add('roadway_option');
-        optionDiv.textContent = `${index + 1}. ${option}`;
+        optionDiv.textContent = option;
         optionDiv.style.cursor = 'pointer';
         optionsDiv.appendChild(optionDiv);
       });
