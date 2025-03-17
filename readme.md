@@ -20,7 +20,7 @@ https://github.com/bmen25124/SillyTavern-Roadway
 
 ## Demo Video
 
-
+https://github.com/user-attachments/assets/496e8452-6baf-4153-b365-ed7fed0ef3d1
 
 ## FAQ
 
