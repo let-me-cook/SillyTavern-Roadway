@@ -36,7 +36,7 @@ const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if
 
 {{roadwaySelected}}`;
 
-const DEFAULT_PROMPT = `You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences. Given the following context, your task is to generate an *unpredictable* and *engaging* list of options for the player.
+const DEFAULT_PROMPT = `You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences, **building upon the established context from our previous conversation.** Your task is to generate an *unpredictable* and *engaging* list of options for the player, specifically tailored to their character, the world, and the current situation as established in our previous dialogue.
 
 Output ONLY a numbered list of possible actions. Each action should be a clear, actionable, concise, and *creative* sentence written in plain text.
 
@@ -44,7 +44,7 @@ Prioritize *varied* actions that span multiple domains:
 
 {Observation/Investigation; Dialogue/Persuasion; Stealth/Intrigue; Combat/Conflict; Crafting/Repair; Knowledge/Lore; Movement/Traversal; Deception/Manipulation; Performance/Entertainment; Technical/Mechanical}.
 
-Avoid obvious or repetitive actions. Push the boundaries of the situation. Challenge the player's expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 10 actions. The actions must be written in plain text.
+Avoid obvious or repetitive actions **that have already been explored or are contrary to the established character/world**. Push the boundaries of the situation. Challenge the player's expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 10 actions. The actions must be written in plain text.
 
 Here are a few example actions to inspire creativity:
 
