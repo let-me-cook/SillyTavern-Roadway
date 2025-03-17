@@ -35,8 +35,8 @@ My main purpose is to make this tool efficient with [connection profiles](https:
 >What is the purpose of this?
 
 Long-time RP users would know:
-RP models haven't revolutionized like other fields since last year. Programmers now get Claude 3.5 Sonnet. Reason models became very popular. We still have the same crippy llama/mistral fine-tunes.
-- In the author's note, there could be Create interactive scenarios for the player. Keep scenes moving. note for a better story. But in my experience, most 12B fine-tunes suggest the same things. Models have biases. Even when I swipe, I get similar responses. This is frustrating.
+- RP models haven't revolutionized like other fields since last year. Programmers now get Claude 3.5 Sonnet. Reason models became very popular. We still have the same crippy llama/mistral fine-tunes.
+- In the author's note, there could be `Create interactive scenarios for the player. Keep scenes moving.` note for a better story. But in my experience, most 12B fine-tunes suggest the same things. Models have biases. Even when I swipe, I get similar responses. This is frustrating.
 
 >So is this just a simple LLM request?
 
