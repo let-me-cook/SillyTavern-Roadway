@@ -1,4 +1,5 @@
 import { buildPrompt } from 'sillytavern-utils-lib/prompt-builder';
+import { buildPresetSelect } from 'sillytavern-utils-lib/preset-select';
 import { st_echo, system_avatar, systemUserName } from 'sillytavern-utils-lib/config';
 import { ChatMessage } from 'sillytavern-utils-lib/types';
 
@@ -13,10 +14,11 @@ const EXTENSION_SETTINGS_KEY = 'roadway';
 interface ExtensionSettings {
   enabled: boolean;
   profileId: string;
-  prompt: string;
   maxContextType: 'profile' | 'sampler' | 'custom';
   maxContextValue: number;
   maxResponseToken: number;
+  promptPreset: string;
+  promptPresets: Record<string, { content: string }>;
 }
 
 function getExtensionSettings(): ExtensionSettings {
@@ -24,13 +26,7 @@ function getExtensionSettings(): ExtensionSettings {
   return context.extensionSettings[EXTENSION_SETTINGS_KEY] as ExtensionSettings;
 }
 
-const DEFAULT_SETTINGS: ExtensionSettings = {
-  enabled: true,
-  profileId: '',
-  maxContextType: 'profile',
-  maxContextValue: 16384,
-  maxResponseToken: 500,
-  prompt: `You are an AI assistant designed to generate creative possible actions in a roleplaying scenario. Given the following context, suggest a diverse list of options for the player to take.
+const DEFAULT_PROMPT = `You are an AI assistant designed to generate creative possible actions in a roleplaying scenario. Given the following context, suggest a diverse list of options for the player to take.
 
 Output ONLY a numbered list of the possible actions. Each action should be a clear, actionable, and concise sentence written in plain text. Include actions that relate to multiple domains (e.g., observation, manipulation, dialogue, combat, deduction.) Do not include greetings, farewells, or polite thanks in the list. Do not use words like "you". Use exact 10 actions.
 
@@ -40,7 +36,20 @@ Example:
 2. Ask Mrs. Abernathy about any local rumors regarding the strange symbol.
 3. Search Mr. Peterson's abandoned house for any hidden messages or clues.
 4. Attempt to pick the lock on the neighbor's shed, hoping to find something related to their disappearances.
-5. Show the photo of the symbol to the local bartender for information.`,
+5. Show the photo of the symbol to the local bartender for information.`;
+
+const DEFAULT_SETTINGS: ExtensionSettings = {
+  enabled: true,
+  profileId: '',
+  maxContextType: 'profile',
+  maxContextValue: 16384,
+  maxResponseToken: 500,
+  promptPreset: 'default',
+  promptPresets: {
+    default: {
+      content: DEFAULT_PROMPT,
+    },
+  },
 };
 
 function initializeDefaultSettings(): void {
@@ -64,11 +73,11 @@ function initializeDefaultSettings(): void {
 }
 
 async function handleUIChanges(): Promise<void> {
-  const settings: string = await globalContext.renderExtensionTemplateAsync(
+  const settingsHtml: string = await globalContext.renderExtensionTemplateAsync(
     `third-party/${extensionName}`,
     'templates/settings',
   );
-  $('#extensions_settings').append(settings);
+  $('#extensions_settings').append(settingsHtml);
 
   const settingsContainer = $('.roadway_settings');
 
@@ -93,21 +102,71 @@ async function handleUIChanges(): Promise<void> {
     },
   );
 
-  const promptElement = settingsContainer.find('.prompt');
-  promptElement.val(getExtensionSettings().prompt);
-  promptElement.on('change', function () {
-    const context = SillyTavern.getContext();
-    const template = promptElement.val() as string;
-    const settings = getExtensionSettings();
-    if (template !== settings.prompt) {
-      settings.prompt = template;
-      context.saveSettingsDebounced();
-    }
+  let settings = getExtensionSettings();
+  const { select } = buildPresetSelect('.roadway_settings select.prompt', {
+    label: 'prompt',
+    initialValue: settings.promptPreset,
+    initialList: Object.keys(settings.promptPresets),
+    readOnlyValues: ['default'],
+    onSelectChange: async (previousValue, newValue) => {
+      settings = getExtensionSettings();
+      settings.promptPreset = newValue ?? 'default';
+      promptElement.val(settings.promptPresets[settings.promptPreset]?.content || '');
+      globalContext.saveSettingsDebounced();
+    },
+    create: {
+      onAfterCreate: (value) => {
+        settings = getExtensionSettings();
+        settings.promptPresets[value] = {
+          content: settings.promptPresets[settings.promptPreset]?.content || DEFAULT_PROMPT,
+        };
+        globalContext.saveSettingsDebounced();
+      },
+    },
+    rename: {
+      onAfterRename: (previousValue, newValue) => {
+        settings = getExtensionSettings();
+        settings.promptPresets[newValue] = settings.promptPresets[previousValue];
+        delete settings.promptPresets[previousValue];
+        globalContext.saveSettingsDebounced();
+      },
+    },
+    delete: {
+      onAfterDelete: (value) => {
+        settings = getExtensionSettings();
+        delete settings.promptPresets[value];
+        globalContext.saveSettingsDebounced();
+      },
+    },
   });
 
-  settingsContainer.find('.restore_default').on('click', function () {
-    promptElement.val(DEFAULT_SETTINGS.prompt);
-    promptElement.trigger('change');
+  const promptElement = settingsContainer.find('textarea.prompt');
+  promptElement.val(settings.promptPresets[settings.promptPreset]?.content || '');
+  promptElement.on('change', function () {
+    settings = getExtensionSettings();
+    const template = promptElement.val() as string;
+    settings.promptPresets[settings.promptPreset].content = template;
+    globalContext.saveSettingsDebounced();
+  });
+
+  settingsContainer.find('.restore_default').on('click', async function () {
+    const confirm = await globalContext.Popup.show.confirm(
+      'Are you sure you want to restore the default prompt?',
+      'Restore default',
+    );
+    if (!confirm) {
+      return;
+    }
+
+    const settings = getExtensionSettings();
+    settings.promptPresets['default'].content = DEFAULT_PROMPT;
+    promptElement.val(DEFAULT_PROMPT);
+    if (select.value !== 'default') {
+      select.value = 'default';
+      select.dispatchEvent(new Event('change'));
+    } else {
+      globalContext.saveSettingsDebounced();
+    }
   });
 
   const maxContextTypeElement = settingsContainer.find('.max_context_type');
@@ -157,7 +216,7 @@ async function handleUIChanges(): Promise<void> {
       await st_echo('error', 'Please select a connection profile first in the settings.');
       return;
     }
-    if (!settings.prompt) {
+    if (!settings.promptPreset) {
       await st_echo('error', 'Please enter a prompt first in the settings.');
       return;
     }
@@ -187,7 +246,7 @@ async function handleUIChanges(): Promise<void> {
               : 'active',
       });
       messages.push({
-        content: settings.prompt,
+        content: settings.promptPresets[settings.promptPreset].content,
         role: 'system',
       });
       const rest = await context.ConnectionManagerRequestService.sendRequest(
