@@ -279,6 +279,11 @@ async function handleUIChanges(): Promise<void> {
         context.chat.push(newMessage);
         context.addOneMessage(newMessage, { insertAfter: targetMessageId });
       }
+      const detailsElement = $(`[mesid="${targetMessageId + 1}"] .mes_text details`);
+      if (!detailsElement.attr('open')) {
+        detailsElement.attr('open', '');
+      }
+
       await context.saveChat();
     } catch (error) {
       console.error(error);
