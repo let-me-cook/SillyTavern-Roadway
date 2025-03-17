@@ -352,9 +352,10 @@ async function handleUIChanges(): Promise<void> {
         newMessage.mes = formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined);
         newMessage.extra![EXTRA_RAW_CONTENT_KEY] = rest.content;
         newMessage.extra![EXTRA_OPTIONS_KEY] = actions;
-        const index = context.chat.indexOf(existMessage);
-        const existMessageTextBlock = $(`[mesid="${index}"] .mes_text pre`);
-        existMessageTextBlock.text(innerText);
+        const detailsElement = $(`[mesid="${targetMessageId + 1}"] .mes_text`);
+        detailsElement.html(
+          formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined, 'custom-'),
+        );
       } else {
         context.chat.push(newMessage);
         context.addOneMessage(newMessage, { insertAfter: targetMessageId });
@@ -375,8 +376,7 @@ async function handleUIChanges(): Promise<void> {
     }
   });
 
-  function formatResponse(response: string, options?: string[]): string {
-    const context = SillyTavern.getContext();
+  function formatResponse(response: string, options?: string[], classPrefix = ''): string {
     const detailsElement = document.createElement('details');
     const summaryElement = document.createElement('summary');
     summaryElement.textContent = 'Roadway';
@@ -384,20 +384,43 @@ async function handleUIChanges(): Promise<void> {
 
     if (options?.length) {
       const optionsDiv = document.createElement('div');
-      optionsDiv.classList.add('roadway_options');
+      optionsDiv.classList.add(`${classPrefix}roadway_options`);
 
       options.forEach((option, _index) => {
         const optionDiv = document.createElement('div');
-        optionDiv.classList.add('roadway_option');
-        optionDiv.textContent = option;
-        optionDiv.style.cursor = 'pointer';
+        optionDiv.classList.add(`${classPrefix}roadway_option`);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.classList.add(`${classPrefix}option_content`);
+        contentDiv.textContent = option;
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.classList.add(`${classPrefix}option_actions`);
+
+        // Create impersonate button
+        const impersonateButton = document.createElement('div');
+        impersonateButton.classList.add(`${classPrefix}action_button`, `${classPrefix}impersonate_action`);
+        impersonateButton.innerHTML = '✍️';
+        impersonateButton.title = 'Impersonate';
+
+        // Create edit button
+        const editButton = document.createElement('div');
+        editButton.classList.add(`${classPrefix}action_button`, `${classPrefix}edit_action`);
+        editButton.innerHTML = '✏️';
+        editButton.title = 'Edit';
+
+        actionsDiv.appendChild(impersonateButton);
+        actionsDiv.appendChild(editButton);
+
+        optionDiv.appendChild(contentDiv);
+        optionDiv.appendChild(actionsDiv);
         optionsDiv.appendChild(optionDiv);
       });
 
       detailsElement.appendChild(optionsDiv);
     } else {
       const preElement = document.createElement('pre');
-      preElement.classList.add('roadway_pre');
+      preElement.classList.add(`${classPrefix}roadway_pre`);
       preElement.textContent = response;
       detailsElement.appendChild(preElement);
     }
@@ -414,12 +437,16 @@ function extractBulletPoints(text: string): string[] {
 }
 
 function attachRoadwayOptionHandlers(roadwayMessageId: number) {
-  // Remove existing event handlers
-  $(`[mesid="${roadwayMessageId}"] .custom-roadway_options .custom-roadway_option`).off();
+  const optionsContainer = $(`[mesid="${roadwayMessageId}"] .custom-roadway_options`);
+  optionsContainer.find('.custom-action_button').off();
 
   const context = SillyTavern.getContext();
 
-  $(`[mesid="${roadwayMessageId}"] .custom-roadway_options .custom-roadway_option`).on('click', async function () {
+  // Handle impersonate action
+  optionsContainer.find('.custom-impersonate_action').on('click', async function () {
+    const parentOption = $(this).closest('.custom-roadway_option');
+    const index = optionsContainer.find('.custom-roadway_option').index(parentOption);
+
     const message = context.chat.find((mes, index) => roadwayMessageId === index);
     if (!message) {
       return;
@@ -430,8 +457,6 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       await st_echo('error', 'Preset not found. Please check the extension settings.');
       return;
     }
-
-    const index = $(`[mesid="${roadwayMessageId}"] .custom-roadway_options .custom-roadway_option`).index(this);
 
     const impersonate = context.substituteParams(
       preset.impersonate,
@@ -446,6 +471,50 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       undefined,
     );
     st_runCommandCallback('impersonate', undefined, impersonate);
+  });
+
+  // Handle edit action
+  optionsContainer.find('.custom-edit_action').on('click', async function () {
+    const parentOption = $(this).closest('.custom-roadway_option');
+    const contentDiv = parentOption.find('.custom-option_content');
+    const originalText = contentDiv.text();
+
+    // Create input for editing
+    const input = $('<textarea>').val(originalText).css({
+      width: '100%',
+      minHeight: '50px',
+      resize: 'vertical',
+      backgroundColor: 'var(--SmartThemeBlurTintColor)',
+      color: 'var(--SmartThemeBodyColor)',
+      border: '1px solid var(--SmartThemeBorderColor)',
+      borderRadius: 'var(--avatar-base-border-radius)',
+      padding: 'calc(var(--mainFontSize) * 0.5)',
+    });
+
+    contentDiv.empty().append(input);
+    input.trigger('focus');
+
+    // Handle save on blur
+    input.on('blur', function () {
+      const newText = input.val() as string;
+      contentDiv.text(newText);
+
+      // Update the stored options
+      const message = context.chat.find((_mes, index) => roadwayMessageId === index);
+      if (message?.extra?.[EXTRA_OPTIONS_KEY]) {
+        const index = optionsContainer.find('.custom-roadway_option').index(parentOption);
+        message.extra[EXTRA_OPTIONS_KEY][index] = newText;
+        context.saveChat();
+      }
+    });
+
+    // Handle save on enter (shift+enter for new line)
+    input.on('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        input.trigger('blur');
+      }
+    });
   });
 }
 
