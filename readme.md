@@ -10,6 +10,10 @@ A [SillyTavern](https://docs.sillytavern.app/) extension that helps you to make 
 
 ![main1](images/main1.png)
 
+**If you are using a _Text Completion_ profile, make sure your profile contains api, preset, model, system promp, instruct template, context template.**
+
+**If you are using a _Chat Completion_ profile, api, settings, model would be enough.**
+
 ## Installation
 
 Install via the SillyTavern extension installer:
