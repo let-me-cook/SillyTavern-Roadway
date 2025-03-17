@@ -23,6 +23,7 @@ interface ExtensionSettings {
     {
       content: string;
       extractionStrategy: 'bullet' | 'none';
+      impersonate?: string;
     }
   >;
 }
@@ -31,6 +32,7 @@ function getExtensionSettings(): ExtensionSettings {
   const context = SillyTavern.getContext();
   return context.extensionSettings[EXTENSION_SETTINGS_KEY] as ExtensionSettings;
 }
+const DEFAULT_IMPERSONATE = `Continue as {{user}}. This what {{user}} selected:\n\n{{roadway_selected}}`;
 
 const DEFAULT_PROMPT = `You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences. Given the following context, your task is to generate an *unpredictable* and *engaging* list of options for the player.
 
@@ -58,6 +60,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
     default: {
       content: DEFAULT_PROMPT,
       extractionStrategy: 'bullet',
+      impersonate: DEFAULT_IMPERSONATE,
     },
   },
 };
@@ -120,6 +123,11 @@ async function handleUIChanges(): Promise<void> {
       settings.promptPreset = newValue ?? 'default';
       promptElement.val(settings.promptPresets[settings.promptPreset]?.content || '');
       extractionStrategyElement.val(settings.promptPresets[settings.promptPreset]?.extractionStrategy);
+      impersonateElement.val(settings.promptPresets[settings.promptPreset]?.impersonate || '');
+      impersonateSection.css(
+        'display',
+        settings.promptPresets[settings.promptPreset]?.extractionStrategy === 'none' ? 'none' : 'block',
+      );
       globalContext.saveSettingsDebounced();
     },
     create: {
@@ -127,7 +135,8 @@ async function handleUIChanges(): Promise<void> {
         settings = getExtensionSettings();
         settings.promptPresets[value] = {
           content: settings.promptPresets[settings.promptPreset]?.content || DEFAULT_PROMPT,
-          extractionStrategy: settings.promptPresets[settings.promptPreset]?.extractionStrategy,
+          extractionStrategy: settings.promptPresets[settings.promptPreset]?.extractionStrategy || 'bullet',
+          impersonate: settings.promptPresets[settings.promptPreset]?.impersonate || DEFAULT_IMPERSONATE,
         };
         globalContext.saveSettingsDebounced();
       },
@@ -159,9 +168,16 @@ async function handleUIChanges(): Promise<void> {
   });
 
   const extractionStrategyElement = settingsContainer.find('select.extraction_strategy');
+  const impersonateSection = settingsContainer.find('.impersonate_section');
+  const impersonateElement = settingsContainer.find('textarea.impersonate');
+
   function updateExtractionStrategy() {
     const settings = getExtensionSettings();
-    extractionStrategyElement.val(settings.promptPresets[settings.promptPreset]?.extractionStrategy);
+    const preset = settings.promptPresets[settings.promptPreset];
+    extractionStrategyElement.val(preset?.extractionStrategy);
+    const isNone = preset?.extractionStrategy === 'none';
+    impersonateSection.toggle(!isNone);
+    impersonateElement.val(preset?.impersonate || '');
   }
   updateExtractionStrategy();
 
@@ -169,6 +185,14 @@ async function handleUIChanges(): Promise<void> {
     settings = getExtensionSettings();
     const value = $(this).val() as 'bullet' | 'none';
     settings.promptPresets[settings.promptPreset].extractionStrategy = value;
+    const isNone = value === 'none';
+    impersonateSection.toggle(!isNone);
+    globalContext.saveSettingsDebounced();
+  });
+
+  impersonateElement.on('change', function () {
+    settings = getExtensionSettings();
+    settings.promptPresets[settings.promptPreset].impersonate = $(this).val() as string;
     globalContext.saveSettingsDebounced();
   });
 
@@ -186,7 +210,11 @@ async function handleUIChanges(): Promise<void> {
 
     const settings = getExtensionSettings();
     settings.promptPresets['default'].content = DEFAULT_PROMPT;
+    settings.promptPresets['default'].extractionStrategy = 'bullet';
+    settings.promptPresets['default'].impersonate = DEFAULT_IMPERSONATE;
     promptElement.val(DEFAULT_PROMPT);
+    extractionStrategyElement.val('bullet');
+    impersonateElement.val(DEFAULT_IMPERSONATE);
     if (select.value !== 'default') {
       select.value = 'default';
       select.dispatchEvent(new Event('change'));
