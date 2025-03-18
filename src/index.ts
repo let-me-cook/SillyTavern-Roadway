@@ -1,6 +1,13 @@
 import { buildPrompt } from 'sillytavern-utils-lib/prompt-builder';
 import { buildPresetSelect } from 'sillytavern-utils-lib/preset-select';
-import { st_echo, st_runCommandCallback, system_avatar, systemUserName } from 'sillytavern-utils-lib/config';
+import {
+  characters,
+  selected_group,
+  st_echo,
+  st_runCommandCallback,
+  system_avatar,
+  systemUserName,
+} from 'sillytavern-utils-lib/config';
 import { ChatMessage, EventNames } from 'sillytavern-utils-lib/types';
 
 const extensionName = 'SillyTavern-Roadway';
@@ -299,6 +306,14 @@ async function handleUIChanges(): Promise<void> {
     const syspromptName = profile?.sysprompt;
 
     const apiMap = profile?.api ? context.CONNECT_API_MAP[profile.api] : null;
+    const targetMessage = context.chat.find((_mes, index) => index === targetMessageId);
+    if (!targetMessage) {
+      return;
+    }
+    let characterId: number | undefined = characters.findIndex(
+      (char: any) => char.avatar === targetMessage.original_avatar,
+    );
+    characterId = characterId !== -1 ? characterId : undefined;
 
     try {
       if (pendingRequests.has(targetMessageId)) {
@@ -309,7 +324,7 @@ async function handleUIChanges(): Promise<void> {
       pendingRequests.add(targetMessageId);
       $(this).addClass('spinning');
 
-      const messages = await buildPrompt(apiMap?.selected, targetMessageId, {
+      const messages = await buildPrompt(apiMap?.selected, targetMessageId, characterId, {
         presetName,
         contextName,
         instructName,
@@ -320,6 +335,7 @@ async function handleUIChanges(): Promise<void> {
             : settings.maxContextType === 'profile'
               ? 'preset'
               : 'active',
+        includeNames: !!selected_group,
       });
       messages.push({
         content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
@@ -542,11 +558,13 @@ function initializeEvents() {
     }
   });
 
+  let lastRenderedMessageId = -1;
   // Auto trigger when new character message is received
   // @ts-ignore
-  globalContext.eventSource.makeFirst(EventNames.CHARACTER_MESSAGE_RENDERED, (messageId: number) => {
+  globalContext.eventSource.makeFirst(EventNames.CHARACTER_MESSAGE_RENDERED, (messageId: number, type?: string) => {
+    lastRenderedMessageId = messageId;
     const settings = getExtensionSettings();
-    if (!settings.autoTrigger) {
+    if (!settings.autoTrigger || type === 'group_chat' || selected_group) {
       return;
     }
 
@@ -554,6 +572,22 @@ function initializeEvents() {
     const messageBlock = $(`[mesid="${messageId}"]`);
     messageBlock.find('.mes_magic_roadway_button').trigger('click');
   });
+
+  const allowed_group_types: (string | undefined)[] = ['normal', 'continue', 'swipe'];
+  // @ts-ignore
+  globalContext.eventSource.makeFirst(
+    EventNames.GROUP_WRAPPER_FINISHED,
+    (params: { groupId: string; type?: string }) => {
+      const settings = getExtensionSettings();
+      if (!settings.autoTrigger || lastRenderedMessageId === -1 || !allowed_group_types.includes(params.type)) {
+        return;
+      }
+
+      // Simulate clicking the roadway button for this message
+      const messageBlock = $(`[mesid="${lastRenderedMessageId}"]`);
+      messageBlock.find('.mes_magic_roadway_button').trigger('click');
+    },
+  );
 }
 
 function stagingCheck(): boolean {
