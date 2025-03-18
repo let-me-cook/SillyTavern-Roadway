@@ -556,6 +556,27 @@ function initializeEvents() {
   });
 }
 
-initializeDefaultSettings();
-handleUIChanges();
-initializeEvents();
+function stagingCheck(): boolean {
+  if (!globalContext.ConnectionManagerRequestService) {
+    return false;
+  }
+
+  if (!globalContext.getCharacterCardFields) {
+    return false;
+  }
+
+  if (!globalContext.getWorldInfoPrompt) {
+    return false;
+  }
+
+  return true;
+}
+
+if (!stagingCheck()) {
+  const errorStr = '[Roadway Error] Make sure you are on staging branch and staging is updated.';
+  st_echo('error', errorStr);
+} else {
+  initializeDefaultSettings();
+  handleUIChanges();
+  initializeEvents();
+}
