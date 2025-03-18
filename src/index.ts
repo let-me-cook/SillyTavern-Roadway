@@ -18,6 +18,7 @@ interface ExtensionSettings {
   maxContextValue: number;
   maxResponseToken: number;
   promptPreset: string;
+  autoTrigger: boolean;
   promptPresets: Record<
     string,
     {
@@ -58,6 +59,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   maxContextValue: 16384,
   maxResponseToken: 500,
   promptPreset: 'default',
+  autoTrigger: false,
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
@@ -258,6 +260,15 @@ async function handleUIChanges(): Promise<void> {
     const context = SillyTavern.getContext();
     const settings = getExtensionSettings();
     settings.maxResponseToken = Number($(this).val());
+    context.saveSettingsDebounced();
+  });
+
+  const autoTriggerElement = settingsContainer.find('.auto_trigger');
+  autoTriggerElement.prop('checked', getExtensionSettings().autoTrigger);
+  autoTriggerElement.on('change', function () {
+    const context = SillyTavern.getContext();
+    const settings = getExtensionSettings();
+    settings.autoTrigger = $(this).prop('checked');
     context.saveSettingsDebounced();
   });
 
@@ -529,6 +540,19 @@ function initializeEvents() {
     if (typeof lastMessage.extra?.[EXTRA_TARGET_KEY] === 'number') {
       attachRoadwayOptionHandlers(context.chat.length - 1);
     }
+  });
+
+  // Auto trigger when new character message is received
+  // @ts-ignore
+  globalContext.eventSource.makeFirst(EventNames.CHARACTER_MESSAGE_RENDERED, (messageId: number) => {
+    const settings = getExtensionSettings();
+    if (!settings.autoTrigger) {
+      return;
+    }
+
+    // Simulate clicking the roadway button for this message
+    const messageBlock = $(`[mesid="${messageId}"]`);
+    messageBlock.find('.mes_magic_roadway_button').trigger('click');
   });
 }
 
