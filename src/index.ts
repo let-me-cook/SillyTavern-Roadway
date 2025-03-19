@@ -12,11 +12,14 @@ import { ChatMessage, EventNames } from 'sillytavern-utils-lib/types';
 const extensionName = 'SillyTavern-Roadway';
 const globalContext = SillyTavern.getContext();
 
-const EXTRA_TARGET_KEY = 'roadway_target_chat';
-const EXTRA_RAW_CONTENT_KEY = 'roadway_raw_content';
-const EXTRA_OPTIONS_KEY = 'roadway_options';
-
-const EXTENSION_SETTINGS_KEY = 'roadway';
+const KEYS = {
+  EXTENSION: 'roadway',
+  EXTRA: {
+    TARGET: 'roadway_target_chat',
+    RAW_CONTENT: 'roadway_raw_content',
+    OPTIONS: 'roadway_options',
+  },
+} as const;
 
 interface PromptPreset {
   content: string;
@@ -70,7 +73,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   },
 };
 
-const settingsManager = new ExtensionSettingsManager<ExtensionSettings>(EXTENSION_SETTINGS_KEY, DEFAULT_SETTINGS);
+const settingsManager = new ExtensionSettingsManager<ExtensionSettings>(KEYS.EXTENSION, DEFAULT_SETTINGS);
 
 async function handleUIChanges(): Promise<void> {
   const settingsHtml: string = await globalContext.renderExtensionTemplateAsync(
@@ -313,7 +316,7 @@ async function handleUIChanges(): Promise<void> {
         ? actions.map((action, index) => `${index + 1}. ${action}`).join('\n')
         : rest.content;
 
-      const existMessage = context.chat.find((mes) => mes.extra?.[EXTRA_TARGET_KEY] === targetMessageId);
+      const existMessage = context.chat.find((mes) => mes.extra?.[KEYS.EXTRA.TARGET] === targetMessageId);
       let newMessage: ChatMessage = existMessage ?? {
         mes: formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined),
         name: systemUserName,
@@ -322,16 +325,16 @@ async function handleUIChanges(): Promise<void> {
         is_user: false,
         extra: {
           isSmallSys: true,
-          [EXTRA_TARGET_KEY]: targetMessageId,
-          [EXTRA_RAW_CONTENT_KEY]: innerText,
-          [EXTRA_OPTIONS_KEY]: actions,
+          [KEYS.EXTRA.TARGET]: targetMessageId,
+          [KEYS.EXTRA.RAW_CONTENT]: innerText,
+          [KEYS.EXTRA.OPTIONS]: actions,
         },
       };
 
       if (existMessage) {
         newMessage.mes = formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined);
-        newMessage.extra![EXTRA_RAW_CONTENT_KEY] = rest.content;
-        newMessage.extra![EXTRA_OPTIONS_KEY] = actions;
+        newMessage.extra![KEYS.EXTRA.RAW_CONTENT] = rest.content;
+        newMessage.extra![KEYS.EXTRA.OPTIONS] = actions;
         const detailsElement = $(`[mesid="${targetMessageId + 1}"] .mes_text`);
         detailsElement.html(
           formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined, 'custom-'),
@@ -432,8 +435,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       return;
     }
 
-    const preset =
-      settingsManager.getSettings().promptPresets[context.extensionSettings[EXTENSION_SETTINGS_KEY].promptPreset];
+    const preset = settingsManager.getSettings().promptPresets[context.extensionSettings[KEYS.EXTENSION].promptPreset];
     if (!preset || !preset.impersonate) {
       await st_echo('error', 'Preset not found. Please check the extension settings.');
       return;
@@ -447,7 +449,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       undefined,
       undefined,
       {
-        roadwaySelected: message.extra?.[EXTRA_OPTIONS_KEY]?.[index],
+        roadwaySelected: message.extra?.[KEYS.EXTRA.OPTIONS]?.[index],
       },
       undefined,
     );
@@ -482,9 +484,9 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
 
       // Update the stored options
       const message = context.chat.find((_mes, index) => roadwayMessageId === index);
-      if (message?.extra?.[EXTRA_OPTIONS_KEY]) {
+      if (message?.extra?.[KEYS.EXTRA.OPTIONS]) {
         const index = optionsContainer.find('.custom-roadway_option').index(parentOption);
-        message.extra[EXTRA_OPTIONS_KEY][index] = newText;
+        message.extra[KEYS.EXTRA.OPTIONS][index] = newText;
         context.saveChat();
       }
     });
@@ -507,7 +509,7 @@ function initializeEvents() {
       return;
     }
     const lastMessage = context.chat[context.chat.length - 1];
-    if (typeof lastMessage.extra?.[EXTRA_TARGET_KEY] === 'number') {
+    if (typeof lastMessage.extra?.[KEYS.EXTRA.TARGET] === 'number') {
       attachRoadwayOptionHandlers(context.chat.length - 1);
     }
   });
