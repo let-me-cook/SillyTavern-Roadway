@@ -1,5 +1,4 @@
-import { buildPrompt } from 'sillytavern-utils-lib/prompt-builder';
-import { buildPresetSelect } from 'sillytavern-utils-lib/preset-select';
+import { buildPrompt, buildPresetSelect, ExtensionSettingsManager } from 'sillytavern-utils-lib';
 import {
   characters,
   selected_group,
@@ -19,6 +18,12 @@ const EXTRA_OPTIONS_KEY = 'roadway_options';
 
 const EXTENSION_SETTINGS_KEY = 'roadway';
 
+interface PromptPreset {
+  content: string;
+  extractionStrategy: 'bullet' | 'none';
+  impersonate?: string;
+}
+
 interface ExtensionSettings {
   profileId: string;
   maxContextType: 'profile' | 'sampler' | 'custom';
@@ -26,20 +31,9 @@ interface ExtensionSettings {
   maxResponseToken: number;
   promptPreset: string;
   autoTrigger: boolean;
-  promptPresets: Record<
-    string,
-    {
-      content: string;
-      extractionStrategy: 'bullet' | 'none';
-      impersonate?: string;
-    }
-  >;
+  promptPresets: Record<string, PromptPreset>;
 }
 
-function getExtensionSettings(): ExtensionSettings {
-  const context = SillyTavern.getContext();
-  return context.extensionSettings[EXTENSION_SETTINGS_KEY] as ExtensionSettings;
-}
 const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
 
 {{roadwaySelected}}`;
@@ -76,32 +70,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   },
 };
 
-function initializeDefaultSettings(): void {
-  globalContext.extensionSettings[EXTENSION_SETTINGS_KEY] =
-    globalContext.extensionSettings?.[EXTENSION_SETTINGS_KEY] || {};
-
-  function initializeRecursively(target: any, defaults: any): boolean {
-    let anyChange = false;
-
-    for (const key of Object.keys(defaults)) {
-      if (target[key] === undefined) {
-        target[key] = defaults[key];
-        anyChange = true;
-      } else if (typeof defaults[key] === 'object' && defaults[key] !== null) {
-        target[key] = target[key] || {};
-        if (initializeRecursively(target[key], defaults[key])) {
-          anyChange = true;
-        }
-      }
-    }
-
-    return anyChange;
-  }
-
-  if (initializeRecursively(globalContext.extensionSettings[EXTENSION_SETTINGS_KEY], DEFAULT_SETTINGS)) {
-    globalContext.saveSettingsDebounced();
-  }
-}
+const settingsManager = new ExtensionSettingsManager<ExtensionSettings>(EXTENSION_SETTINGS_KEY, DEFAULT_SETTINGS);
 
 async function handleUIChanges(): Promise<void> {
   const settingsHtml: string = await globalContext.renderExtensionTemplateAsync(
@@ -112,70 +81,65 @@ async function handleUIChanges(): Promise<void> {
 
   const settingsContainer = $('.roadway_settings');
 
+  const settings = settingsManager.getSettings();
   globalContext.ConnectionManagerRequestService.handleDropdown(
     '.roadway_settings .connection_profile',
-    getExtensionSettings().profileId,
+    settings.profileId,
     (profile) => {
-      const context = SillyTavern.getContext();
-      const settings = getExtensionSettings();
-      settings.profileId = profile ? profile.id : '';
-      context.saveSettingsDebounced();
+      settings.profileId = profile?.id ?? '';
+      settingsManager.saveSettings();
     },
   );
 
-  let settings = getExtensionSettings();
   const { select } = buildPresetSelect('.roadway_settings select.prompt', {
     label: 'prompt',
     initialValue: settings.promptPreset,
     initialList: Object.keys(settings.promptPresets),
     readOnlyValues: ['default'],
-    onSelectChange: async (previousValue, newValue) => {
-      settings = getExtensionSettings();
-      settings.promptPreset = newValue ?? 'default';
-      promptElement.val(settings.promptPresets[settings.promptPreset]?.content || '');
-      extractionStrategyElement.val(settings.promptPresets[settings.promptPreset]?.extractionStrategy);
-      impersonateElement.val(settings.promptPresets[settings.promptPreset]?.impersonate || '');
+    onSelectChange: async (_previousValue, newValue) => {
+      const newPresetValue = newValue ?? 'default';
+      settings.promptPreset = newPresetValue;
+      settingsManager.saveSettings();
+      promptElement.val(settings.promptPresets[newPresetValue]?.content ?? '');
+      extractionStrategyElement.val(settings.promptPresets[newPresetValue]?.extractionStrategy);
+      impersonateElement.val(settings.promptPresets[newPresetValue]?.impersonate ?? '');
       impersonateSection.css(
         'display',
-        settings.promptPresets[settings.promptPreset]?.extractionStrategy === 'none' ? 'none' : 'block',
+        settings.promptPresets[newPresetValue]?.extractionStrategy === 'none' ? 'none' : 'block',
       );
-      globalContext.saveSettingsDebounced();
     },
     create: {
       onAfterCreate: (value) => {
-        settings = getExtensionSettings();
+        const currentPreset = settings.promptPresets[settings.promptPreset];
         settings.promptPresets[value] = {
-          content: settings.promptPresets[settings.promptPreset]?.content || DEFAULT_PROMPT,
-          extractionStrategy: settings.promptPresets[settings.promptPreset]?.extractionStrategy || 'bullet',
-          impersonate: settings.promptPresets[settings.promptPreset]?.impersonate || DEFAULT_IMPERSONATE,
+          content: currentPreset?.content ?? DEFAULT_PROMPT,
+          extractionStrategy: currentPreset?.extractionStrategy ?? 'bullet',
+          impersonate: currentPreset?.impersonate ?? DEFAULT_IMPERSONATE,
         };
-        globalContext.saveSettingsDebounced();
+        settingsManager.saveSettings();
       },
     },
     rename: {
       onAfterRename: (previousValue, newValue) => {
-        settings = getExtensionSettings();
         settings.promptPresets[newValue] = settings.promptPresets[previousValue];
         delete settings.promptPresets[previousValue];
-        globalContext.saveSettingsDebounced();
+        settingsManager.saveSettings();
       },
     },
     delete: {
       onAfterDelete: (value) => {
-        settings = getExtensionSettings();
         delete settings.promptPresets[value];
-        globalContext.saveSettingsDebounced();
+        settingsManager.saveSettings();
       },
     },
   });
 
   const promptElement = settingsContainer.find('textarea.prompt');
-  promptElement.val(settings.promptPresets[settings.promptPreset]?.content || '');
+  promptElement.val(settings.promptPresets[settings.promptPreset]?.content ?? '');
   promptElement.on('change', function () {
-    settings = getExtensionSettings();
     const template = promptElement.val() as string;
     settings.promptPresets[settings.promptPreset].content = template;
-    globalContext.saveSettingsDebounced();
+    settingsManager.saveSettings();
   });
 
   const extractionStrategyElement = settingsContainer.find('select.extraction_strategy');
@@ -183,28 +147,25 @@ async function handleUIChanges(): Promise<void> {
   const impersonateElement = settingsContainer.find('textarea.impersonate');
 
   function updateExtractionStrategy() {
-    const settings = getExtensionSettings();
     const preset = settings.promptPresets[settings.promptPreset];
     extractionStrategyElement.val(preset?.extractionStrategy);
     const isNone = preset?.extractionStrategy === 'none';
     impersonateSection.toggle(!isNone);
-    impersonateElement.val(preset?.impersonate || '');
+    impersonateElement.val(preset?.impersonate ?? '');
   }
   updateExtractionStrategy();
 
   extractionStrategyElement.on('change', function () {
-    settings = getExtensionSettings();
     const value = $(this).val() as 'bullet' | 'none';
     settings.promptPresets[settings.promptPreset].extractionStrategy = value;
+    settingsManager.saveSettings();
     const isNone = value === 'none';
     impersonateSection.toggle(!isNone);
-    globalContext.saveSettingsDebounced();
   });
 
   impersonateElement.on('change', function () {
-    settings = getExtensionSettings();
     settings.promptPresets[settings.promptPreset].impersonate = $(this).val() as string;
-    globalContext.saveSettingsDebounced();
+    settingsManager.saveSettings();
   });
 
   // Update extraction strategy when preset changes
@@ -219,10 +180,11 @@ async function handleUIChanges(): Promise<void> {
       return;
     }
 
-    const settings = getExtensionSettings();
-    settings.promptPresets['default'].content = DEFAULT_PROMPT;
-    settings.promptPresets['default'].extractionStrategy = 'bullet';
-    settings.promptPresets['default'].impersonate = DEFAULT_IMPERSONATE;
+    settings.promptPresets['default'] = {
+      content: DEFAULT_PROMPT,
+      extractionStrategy: 'bullet',
+      impersonate: DEFAULT_IMPERSONATE,
+    };
     promptElement.val(DEFAULT_PROMPT);
     extractionStrategyElement.val('bullet');
     impersonateElement.val(DEFAULT_IMPERSONATE);
@@ -230,7 +192,7 @@ async function handleUIChanges(): Promise<void> {
       select.value = 'default';
       select.dispatchEvent(new Event('change'));
     } else {
-      globalContext.saveSettingsDebounced();
+      settingsManager.saveSettings();
     }
   });
 
@@ -238,45 +200,37 @@ async function handleUIChanges(): Promise<void> {
   const maxContextValueElement = settingsContainer.find('.max_context_value');
   const maxContextCustomDiv = settingsContainer.find('.max_context_custom');
 
-  maxContextTypeElement.val(getExtensionSettings().maxContextType);
-  maxContextValueElement.val(getExtensionSettings().maxContextValue);
+  maxContextTypeElement.val(settings.maxContextType);
+  maxContextValueElement.val(settings.maxContextValue);
 
-  if (getExtensionSettings().maxContextType === 'custom') {
+  if (settings.maxContextType === 'custom') {
     maxContextCustomDiv.show();
   }
 
   maxContextTypeElement.on('change', function () {
-    const context = SillyTavern.getContext();
-    const settings = getExtensionSettings();
     const newType = $(this).val() as 'profile' | 'sampler' | 'custom';
     settings.maxContextType = newType;
+    settingsManager.saveSettings();
     maxContextCustomDiv.toggle(newType === 'custom');
-    context.saveSettingsDebounced();
   });
 
   maxContextValueElement.on('change', function () {
-    const context = SillyTavern.getContext();
-    const settings = getExtensionSettings();
     settings.maxContextValue = Number($(this).val());
-    context.saveSettingsDebounced();
+    settingsManager.saveSettings();
   });
 
   const maxResponseTokenElement = settingsContainer.find('.max_response_tokens');
-  maxResponseTokenElement.val(getExtensionSettings().maxResponseToken);
+  maxResponseTokenElement.val(settings.maxResponseToken);
   maxResponseTokenElement.on('change', function () {
-    const context = SillyTavern.getContext();
-    const settings = getExtensionSettings();
     settings.maxResponseToken = Number($(this).val());
-    context.saveSettingsDebounced();
+    settingsManager.saveSettings();
   });
 
   const autoTriggerElement = settingsContainer.find('.auto_trigger');
-  autoTriggerElement.prop('checked', getExtensionSettings().autoTrigger);
+  autoTriggerElement.prop('checked', settings.autoTrigger);
   autoTriggerElement.on('change', function () {
-    const context = SillyTavern.getContext();
-    const settings = getExtensionSettings();
     settings.autoTrigger = $(this).prop('checked');
-    context.saveSettingsDebounced();
+    settingsManager.saveSettings();
   });
 
   const roadwayButton = $(
@@ -286,7 +240,6 @@ async function handleUIChanges(): Promise<void> {
   const pendingRequests = new Set<number>();
   $(document).on('click', '.mes_magic_roadway_button', async function () {
     const context = SillyTavern.getContext();
-    const settings = getExtensionSettings();
     if (!settings.profileId) {
       await st_echo('error', 'Please select a connection profile first in the settings.');
       return;
@@ -479,7 +432,8 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       return;
     }
 
-    const preset = getExtensionSettings().promptPresets[context.extensionSettings[EXTENSION_SETTINGS_KEY].promptPreset];
+    const preset =
+      settingsManager.getSettings().promptPresets[context.extensionSettings[EXTENSION_SETTINGS_KEY].promptPreset];
     if (!preset || !preset.impersonate) {
       await st_echo('error', 'Preset not found. Please check the extension settings.');
       return;
@@ -563,7 +517,7 @@ function initializeEvents() {
   // @ts-ignore
   globalContext.eventSource.makeFirst(EventNames.CHARACTER_MESSAGE_RENDERED, (messageId: number, type?: string) => {
     lastRenderedMessageId = messageId;
-    const settings = getExtensionSettings();
+    const settings = settingsManager.getSettings();
     if (!settings.autoTrigger || type === 'group_chat' || selected_group) {
       return;
     }
@@ -578,7 +532,7 @@ function initializeEvents() {
   globalContext.eventSource.makeFirst(
     EventNames.GROUP_WRAPPER_FINISHED,
     (params: { groupId: string; type?: string }) => {
-      const settings = getExtensionSettings();
+      const settings = settingsManager.getSettings();
       if (!settings.autoTrigger || lastRenderedMessageId === -1 || !allowed_group_types.includes(params.type)) {
         return;
       }
@@ -610,7 +564,7 @@ if (!stagingCheck()) {
   const errorStr = '[Roadway Error] Make sure you are on staging branch and staging is updated.';
   st_echo('error', errorStr);
 } else {
-  initializeDefaultSettings();
+  settingsManager.initializeDefaultSettings();
   handleUIChanges();
   initializeEvents();
 }

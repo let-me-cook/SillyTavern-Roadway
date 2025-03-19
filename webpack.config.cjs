@@ -27,6 +27,9 @@ module.exports = {
     ],
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.jsx'],
+        extensionAlias: {
+            '.js': ['.ts', '.js']
+        }
     },
     devtool: process.env.NODE_ENV === 'production' ? false : 'source-map',
     module: {
