@@ -10,6 +10,8 @@ import {
 import { ChatMessage, EventNames } from 'sillytavern-utils-lib/types';
 
 const extensionName = 'SillyTavern-Roadway';
+const VERSION = '0.3.0';
+const FORMAT_VERSION = 'F_1.0';
 const globalContext = SillyTavern.getContext();
 
 const KEYS = {
@@ -28,6 +30,8 @@ interface PromptPreset {
 }
 
 interface ExtensionSettings {
+  version: string;
+  formatVersion: string;
   profileId: string;
   maxContextType: 'profile' | 'sampler' | 'custom';
   maxContextValue: number;
@@ -58,6 +62,8 @@ Here are a few example actions to inspire creativity:
 3. Stage a fake ambush to draw out a hidden enemy.`;
 
 const DEFAULT_SETTINGS: ExtensionSettings = {
+  version: VERSION,
+  formatVersion: FORMAT_VERSION,
   profileId: '',
   maxContextType: 'profile',
   maxContextValue: 16384,
@@ -562,11 +568,29 @@ function stagingCheck(): boolean {
   return true;
 }
 
+function main() {
+  handleUIChanges();
+  initializeEvents();
+}
+
 if (!stagingCheck()) {
   const errorStr = '[Roadway Error] Make sure you are on staging branch and staging is updated.';
   st_echo('error', errorStr);
 } else {
-  settingsManager.initializeDefaultSettings();
-  handleUIChanges();
-  initializeEvents();
+  settingsManager
+    .initializeSettings()
+    .then((_result) => {
+      main();
+    })
+    .catch((error) => {
+      st_echo('error', error);
+      globalContext.Popup.show
+        .confirm('Data migration failed. Do you want to reset the roadway data?', 'Roadway')
+        .then((result) => {
+          if (result) {
+            settingsManager.resetSettings();
+            main();
+          }
+        });
+    });
 }
