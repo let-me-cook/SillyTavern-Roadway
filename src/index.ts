@@ -7,7 +7,7 @@ import {
   system_avatar,
   systemUserName,
 } from 'sillytavern-utils-lib/config';
-import { ChatMessage, EventNames } from 'sillytavern-utils-lib/types';
+import { ChatMessage, EventNames, ExtractedData } from 'sillytavern-utils-lib/types';
 
 const extensionName = 'SillyTavern-Roadway';
 const VERSION = '0.3.0';
@@ -38,6 +38,7 @@ interface ExtensionSettings {
   maxResponseToken: number;
   promptPreset: string;
   autoTrigger: boolean;
+  autoOpen: boolean;
   promptPresets: Record<string, PromptPreset>;
 }
 
@@ -45,15 +46,15 @@ const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if
 
 {{roadwaySelected}}`;
 
-const DEFAULT_PROMPT = `You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences, **building upon the established context from our previous conversation.** Your task is to generate an *unpredictable* and *engaging* list of options for the player, specifically tailored to their character, the world, and the current situation as established in our previous dialogue.
+const DEFAULT_PROMPT = `You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences, **building upon the established context from our previous conversation.** Your task is to generate an *unpredictable* and *engaging* list of options for **{{user}}**, specifically tailored to their character, the world, and the current situation as established in our previous dialogue. These should be framed as possible actions that **{{user}}** *could* take.
 
-Output ONLY a numbered list of possible actions. Each action should be a clear, actionable, concise, and *creative* sentence written in plain text.
+Output ONLY a numbered list of possible actions. Each action should be a clear, actionable, concise, and *creative* sentence written in plain text suggesting an action **{{user}}** can perform in the game.
 
 Prioritize *varied* actions that span multiple domains:
 
 {Observation/Investigation; Dialogue/Persuasion; Stealth/Intrigue; Combat/Conflict; Crafting/Repair; Knowledge/Lore; Movement/Traversal; Deception/Manipulation; Performance/Entertainment; Technical/Mechanical}.
 
-Avoid obvious or repetitive actions **that have already been explored or are contrary to the established character/world**. Push the boundaries of the situation. Challenge the player's expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 10 actions. The actions must be written in plain text.
+Avoid obvious or repetitive actions **that {{user}} has already explored or are contrary to the established character/world.** Push the boundaries of the situation. Challenge **{{user}}'s** expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 10 actions. The actions must be written in plain text.
 
 Here are a few example actions to inspire creativity:
 
@@ -70,6 +71,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   maxResponseToken: 500,
   promptPreset: 'default',
   autoTrigger: false,
+  autoOpen: true,
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
@@ -242,6 +244,13 @@ async function handleUIChanges(): Promise<void> {
     settingsManager.saveSettings();
   });
 
+  const autoOpenElement = settingsContainer.find('.auto_open');
+  autoOpenElement.prop('checked', settings.autoOpen);
+  autoOpenElement.on('change', function () {
+    settings.autoOpen = $(this).prop('checked');
+    settingsManager.saveSettings();
+  });
+
   const roadwayButton = $(
     `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-road interactable" tabindex="0"></div>`,
   );
@@ -303,11 +312,11 @@ async function handleUIChanges(): Promise<void> {
         content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
         role: 'system',
       });
-      const rest = await context.ConnectionManagerRequestService.sendRequest(
+      const rest = (await context.ConnectionManagerRequestService.sendRequest(
         settings.profileId,
         messages,
         settings.maxResponseToken,
-      );
+      )) as ExtractedData;
 
       let actions: string[] = [];
       const extractionStrategy = settings.promptPresets[settings.promptPreset]?.extractionStrategy;
@@ -350,7 +359,7 @@ async function handleUIChanges(): Promise<void> {
         context.addOneMessage(newMessage, { insertAfter: targetMessageId });
       }
       const detailsElement = $(`[mesid="${targetMessageId + 1}"] .mes_text details`);
-      if (!detailsElement.attr('open')) {
+      if (settings.autoOpen && !detailsElement.attr('open')) {
         detailsElement.attr('open', '');
       }
       attachRoadwayOptionHandlers(targetMessageId + 1);
