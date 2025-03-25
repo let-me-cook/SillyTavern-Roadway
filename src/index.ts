@@ -1,4 +1,4 @@
-import { buildPrompt, buildPresetSelect, ExtensionSettingsManager } from 'sillytavern-utils-lib';
+import { buildPrompt, buildPresetSelect, ExtensionSettingsManager, Generator } from 'sillytavern-utils-lib';
 import {
   characters,
   selected_group,
@@ -7,10 +7,12 @@ import {
   system_avatar,
   systemUserName,
 } from 'sillytavern-utils-lib/config';
-import { ChatMessage, EventNames, ExtractedData } from 'sillytavern-utils-lib/types';
+import { ChatMessage, EventNames, ExtractedData, StreamResponse } from 'sillytavern-utils-lib/types';
+import { ChatCompletionPreset } from 'sillytavern-utils-lib/types/chat-completion';
+import { TextCompletionPreset } from 'sillytavern-utils-lib/types/text-completion';
 
 const extensionName = 'SillyTavern-Roadway';
-const VERSION = '0.3.0';
+const VERSION = '0.4.0';
 const FORMAT_VERSION = 'F_1.0';
 const globalContext = SillyTavern.getContext();
 
@@ -40,6 +42,7 @@ interface ExtensionSettings {
   autoTrigger: boolean;
   autoOpen: boolean;
   promptPresets: Record<string, PromptPreset>;
+  impersonateApi: 'main' | 'profile';
 }
 
 const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
@@ -72,6 +75,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   promptPreset: 'default',
   autoTrigger: false,
   autoOpen: true,
+  impersonateApi: 'main',
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
@@ -248,6 +252,13 @@ async function handleUIChanges(): Promise<void> {
     settingsManager.saveSettings();
   });
 
+  const impersonateApiElement = settingsContainer.find('select.impersonate_api');
+  impersonateApiElement.val(settings.impersonateApi);
+  impersonateApiElement.on('change', function () {
+    settings.impersonateApi = $(this).val() as 'main' | 'profile';
+    settingsManager.saveSettings();
+  });
+
   const roadwayButton = $(
     `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-road interactable" tabindex="0"></div>`,
   );
@@ -268,10 +279,6 @@ async function handleUIChanges(): Promise<void> {
     const profile = context.extensionSettings.connectionManager?.profiles?.find(
       (profile) => profile.id === settings.profileId,
     );
-    const presetName = profile?.preset;
-    const contextName = profile?.context;
-    const instructName = profile?.instruct;
-    const syspromptName = profile?.sysprompt;
 
     const apiMap = profile?.api ? context.CONNECT_API_MAP[profile.api] : null;
     const targetMessage = context.chat.find((_mes, index) => index === targetMessageId);
@@ -297,10 +304,10 @@ async function handleUIChanges(): Promise<void> {
         messageIndexesBetween: {
           end: targetMessageId,
         },
-        presetName,
-        contextName,
-        instructName,
-        syspromptName,
+        presetName: profile?.preset,
+        contextName: profile?.context,
+        instructName: profile?.instruct,
+        syspromptName: profile?.sysprompt,
         maxContext:
           settings.maxContextType === 'custom'
             ? settings.maxContextValue
@@ -435,6 +442,8 @@ function extractBulletPoints(text: string): string[] {
   });
 }
 
+const generator = new Generator();
+let lastRequestId: string | undefined;
 function attachRoadwayOptionHandlers(roadwayMessageId: number) {
   const optionsContainer = $(`[mesid="${roadwayMessageId}"] .custom-roadway_options`);
   optionsContainer.find('.custom-action_button').off();
@@ -451,13 +460,14 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       return;
     }
 
-    const preset = settingsManager.getSettings().promptPresets[context.extensionSettings[KEYS.EXTENSION].promptPreset];
+    const settings = settingsManager.getSettings();
+    const preset = settings.promptPresets[context.extensionSettings[KEYS.EXTENSION].promptPreset];
     if (!preset || !preset.impersonate) {
       await st_echo('error', 'Preset not found. Please check the extension settings.');
       return;
     }
 
-    const impersonate = context.substituteParams(
+    const impersonate = globalContext.substituteParams(
       preset.impersonate,
       undefined,
       undefined,
@@ -469,7 +479,114 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       },
       undefined,
     );
-    st_runCommandCallback('impersonate', undefined, impersonate);
+    if (settings.impersonateApi === 'profile') {
+      if (!settings.profileId) {
+        await st_echo('error', 'Please select a connection profile first in the settings.');
+        return;
+      }
+
+      const profile = context.extensionSettings.connectionManager?.profiles?.find(
+        (profile) => profile.id === settings.profileId,
+      );
+
+      const apiMap = profile?.api ? context.CONNECT_API_MAP[profile.api] : null;
+      if (!apiMap?.selected) {
+        st_echo('error', 'Please select an API in the connection profile.');
+        return;
+      }
+
+      globalContext.deactivateSendButtons();
+      try {
+        const messages = await buildPrompt(apiMap.selected, {
+          presetName: profile?.preset,
+          contextName: profile?.context,
+          instructName: profile?.instruct,
+          syspromptName: profile?.sysprompt,
+          maxContext:
+            settings.maxContextType === 'custom'
+              ? settings.maxContextValue
+              : settings.maxContextType === 'profile'
+                ? 'preset'
+                : 'active',
+          includeNames: !!selected_group,
+        });
+        messages.push({
+          role: 'system',
+          content: impersonate,
+        });
+
+        let streamingEnabled = true;
+        let maxResponseToken = settings.maxResponseToken;
+        if (apiMap.selected === 'openai') {
+          const preset = globalContext.getPresetManager('openai').getCompletionPresetByName(profile?.preset) as
+            | ChatCompletionPreset
+            | undefined;
+          if (preset) {
+            streamingEnabled = preset.stream_openai;
+            maxResponseToken = preset.openai_max_tokens;
+          }
+        } else if (apiMap.selected === 'textgenerationwebui') {
+          const preset = globalContext
+            .getPresetManager('textgenerationwebui')
+            .getCompletionPresetByName(profile?.preset) as TextCompletionPreset | undefined;
+          if (preset) {
+            streamingEnabled = preset.streaming ?? context.textCompletionSettings.streaming ?? false;
+            maxResponseToken = preset.genamt ?? maxResponseToken;
+          }
+        }
+
+        const textInputElement = $('#send_textarea');
+        const abortController = new AbortController();
+        await generator.generateRequest(
+          {
+            profileId: settings.profileId,
+            prompt: messages,
+            maxTokens: maxResponseToken,
+            custom: {
+              stream: streamingEnabled,
+              signal: streamingEnabled ? abortController.signal : undefined,
+            },
+          },
+          {
+            abortController: streamingEnabled ? abortController : undefined,
+            onStart(uuid) {
+              lastRequestId = uuid;
+              globalContext.eventSource.emit(EventNames.GENERATION_STARTED, 'impersonate', {
+                signal: streamingEnabled ? abortController.signal : undefined,
+              });
+            },
+            onEntry(data) {
+              if (streamingEnabled && data) {
+                textInputElement.val((data as StreamResponse).text);
+                textInputElement.trigger('input');
+                textInputElement.trigger('change');
+              }
+            },
+            onFinish(data, error) {
+              if (!streamingEnabled && data) {
+                textInputElement.val((data as ExtractedData).content);
+                textInputElement.trigger('input');
+                textInputElement.trigger('change');
+              }
+
+              if (error) {
+                st_echo('error', `Error: ${error}`);
+              }
+
+              globalContext.activateSendButtons();
+            },
+          },
+        );
+      } catch (error) {
+        console.error(error);
+        await st_echo('error', `Error: ${error}`);
+      } finally {
+        globalContext.activateSendButtons();
+        lastRequestId = undefined;
+      }
+    } else {
+      st_runCommandCallback('impersonate', undefined, impersonate);
+    }
   });
 
   // Handle edit action
@@ -560,6 +677,12 @@ function initializeEvents() {
       messageBlock.find('.mes_magic_roadway_button').trigger('click');
     },
   );
+
+  $('#mes_stop').on('click', () => {
+    if (lastRequestId) {
+      generator.abortRequest(lastRequestId);
+    }
+  });
 }
 
 function stagingCheck(): boolean {
@@ -589,7 +712,13 @@ if (!stagingCheck()) {
 } else {
   settingsManager
     .initializeSettings()
-    .then((_result) => {
+    .then((result) => {
+      if (result.version.changed) {
+        // 0.3.0 to 0.4.0
+        if (result.oldSettings.version < '0.4.0' && result.newSettings.version === '0.4.0') {
+          st_echo('info', '[Roadway] Added impersonate with connection profile api. Check extension settings.');
+        }
+      }
       main();
     })
     .catch((error) => {
