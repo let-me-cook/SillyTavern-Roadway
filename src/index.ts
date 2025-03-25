@@ -127,20 +127,17 @@ async function handleUIChanges(): Promise<void> {
           extractionStrategy: currentPreset?.extractionStrategy ?? 'bullet',
           impersonate: currentPreset?.impersonate ?? DEFAULT_IMPERSONATE,
         };
-        settingsManager.saveSettings();
       },
     },
     rename: {
       onAfterRename: (previousValue, newValue) => {
         settings.promptPresets[newValue] = settings.promptPresets[previousValue];
         delete settings.promptPresets[previousValue];
-        settingsManager.saveSettings();
       },
     },
     delete: {
       onAfterDelete: (value) => {
         delete settings.promptPresets[value];
-        settingsManager.saveSettings();
       },
     },
   });
@@ -295,7 +292,11 @@ async function handleUIChanges(): Promise<void> {
       pendingRequests.add(targetMessageId);
       $(this).addClass('spinning');
 
-      const messages = await buildPrompt(apiMap?.selected, targetMessageId, characterId, {
+      const messages = await buildPrompt(apiMap?.selected!, {
+        targetCharacterId: characterId,
+        messageIndexesBetween: {
+          end: targetMessageId,
+        },
         presetName,
         contextName,
         instructName,
