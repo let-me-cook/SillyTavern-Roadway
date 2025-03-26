@@ -22,8 +22,7 @@
 }
 
 .custom-roadway_option {
-  position: relative;
-  padding: calc(var(--mainFontSize) * 1);
+  padding: 0;
   border-radius: var(--avatar-base-border-radius);
   background-color: var(--SmartThemeBlurTintColor);
   transition: transform var(--animation-duration), box-shadow var(--animation-duration);
@@ -36,24 +35,25 @@
   box-shadow: 0 4px 8px var(--SmartThemeShadowColor);
   background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 95%, var(--SmartThemeBorderColor) 5%);
 }
-.custom-roadway_option .custom-option_content {
-  margin-right: calc(var(--mainFontSize) * 2.5);
-  color: var(--SmartThemeBodyColor);
-}
 .custom-roadway_option .custom-option_actions {
-  position: absolute;
-  right: calc(var(--mainFontSize) * 0.67);
-  top: calc(var(--mainFontSize) * 0.67);
   display: flex;
-  flex-direction: column;
-  gap: calc(var(--mainFontSize) * 0.67);
+  justify-content: flex-end;
+  gap: calc(var(--mainFontSize) * 0.5);
+  padding: calc(var(--mainFontSize) * 0.5);
+  background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor) 90%, var(--SmartThemeBorderColor) 10%);
+  border-bottom: 1px solid var(--SmartThemeBorderColor);
+  border-radius: calc(var(--avatar-base-border-radius) - 1px) calc(var(--avatar-base-border-radius) - 1px) 0 0;
 }
-.custom-roadway_option .custom-option_actions .custom-action_button {
+.custom-roadway_option .custom-option_content {
+  color: var(--SmartThemeBodyColor);
+  padding: calc(var(--mainFontSize) * 1);
+}
+.custom-roadway_option .custom-action_button {
   cursor: pointer;
   padding: calc(var(--mainFontSize) * 0.33);
   border-radius: calc(var(--avatar-base-border-radius) * 0.5);
   transition: background-color var(--animation-duration);
 }
-.custom-roadway_option .custom-option_actions .custom-action_button:hover {
+.custom-roadway_option .custom-action_button:hover {
   background-color: var(--SmartThemeBorderColor);
 }

@@ -43,6 +43,7 @@ interface ExtensionSettings {
   autoOpen: boolean;
   promptPresets: Record<string, PromptPreset>;
   impersonateApi: 'main' | 'profile';
+  showUseActionIcon: boolean;
 }
 
 const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
@@ -57,7 +58,7 @@ Prioritize *varied* actions that span multiple domains:
 
 {Observation/Investigation; Dialogue/Persuasion; Stealth/Intrigue; Combat/Conflict; Crafting/Repair; Knowledge/Lore; Movement/Traversal; Deception/Manipulation; Performance/Entertainment; Technical/Mechanical}.
 
-Avoid obvious or repetitive actions **that {{user}} has already explored or are contrary to the established character/world.** Push the boundaries of the situation. Challenge **{{user}}'s** expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 10 actions. The actions must be written in plain text.
+Avoid obvious or repetitive actions **that {{user}} has already explored or are contrary to the established character/world.** Push the boundaries of the situation. Challenge **{{user}}'s** expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 6 actions. The actions must be written in plain text.
 
 Here are a few example actions to inspire creativity:
 
@@ -76,6 +77,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   autoTrigger: false,
   autoOpen: true,
   impersonateApi: 'main',
+  showUseActionIcon: true,
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
@@ -252,6 +254,17 @@ async function handleUIChanges(): Promise<void> {
     settingsManager.saveSettings();
   });
 
+  const showUseActionElement = settingsContainer.find('.show_use_action');
+  showUseActionElement.prop('checked', settings.showUseActionIcon);
+
+  showUseActionElement.on('change', function () {
+    settings.showUseActionIcon = $(this).prop('checked');
+    settingsManager.saveSettings();
+
+    // Update visibility of all existing use buttons
+    $('.custom-roadway_options .custom-use_action').toggle(settings.showUseActionIcon);
+  });
+
   const impersonateApiElement = settingsContainer.find('select.impersonate_api');
   impersonateApiElement.val(settings.impersonateApi);
   impersonateApiElement.on('change', function () {
@@ -396,10 +409,6 @@ async function handleUIChanges(): Promise<void> {
         const optionDiv = document.createElement('div');
         optionDiv.classList.add(`${classPrefix}roadway_option`);
 
-        const contentDiv = document.createElement('div');
-        contentDiv.classList.add(`${classPrefix}option_content`);
-        contentDiv.textContent = option;
-
         const actionsDiv = document.createElement('div');
         actionsDiv.classList.add(`${classPrefix}option_actions`);
 
@@ -415,11 +424,24 @@ async function handleUIChanges(): Promise<void> {
         editButton.innerHTML = '✏️';
         editButton.title = 'Edit';
 
+        // Create use button (only if enabled in settings)
+        const settings = settingsManager.getSettings();
+        const useButton = document.createElement('div');
+        useButton.classList.add(`${classPrefix}action_button`, `${classPrefix}use_action`);
+        useButton.innerHTML = '▶️';
+        useButton.title = 'Use option';
+        useButton.style.display = settings.showUseActionIcon ? 'inline-block' : 'none';
+        actionsDiv.appendChild(useButton);
+
         actionsDiv.appendChild(impersonateButton);
         actionsDiv.appendChild(editButton);
 
-        optionDiv.appendChild(contentDiv);
+        const contentDiv = document.createElement('div');
+        contentDiv.classList.add(`${classPrefix}option_content`);
+        contentDiv.textContent = option;
+
         optionDiv.appendChild(actionsDiv);
+        optionDiv.appendChild(contentDiv);
         optionsDiv.appendChild(optionDiv);
       });
 
@@ -589,6 +611,24 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
     }
   });
 
+  // Handle use action
+  optionsContainer.find('.custom-use_action').on('click', function () {
+    const parentOption = $(this).closest('.custom-roadway_option');
+    const contentDiv = parentOption.find('.custom-option_content');
+    const text = contentDiv.text();
+
+    if (text) {
+      $('#send_textarea').val(text);
+      $('#send_textarea').trigger('input');
+
+      const useButton = $(this);
+      useButton.html('✓');
+      setTimeout(() => {
+        useButton.html('▶️');
+      }, 1000);
+    }
+  });
+
   // Handle edit action
   optionsContainer.find('.custom-edit_action').on('click', async function () {
     const parentOption = $(this).closest('.custom-roadway_option');
@@ -641,6 +681,8 @@ function initializeEvents() {
     if (!context.chat.length) {
       return;
     }
+
+    $('.custom-roadway_options .custom-use_action').toggle(settingsManager.getSettings().showUseActionIcon);
     const lastMessage = context.chat[context.chat.length - 1];
     if (typeof lastMessage.extra?.[KEYS.EXTRA.TARGET] === 'number') {
       attachRoadwayOptionHandlers(context.chat.length - 1);
