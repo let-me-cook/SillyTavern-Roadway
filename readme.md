@@ -1,7 +1,5 @@
 # SillyTavern Roadway
 
-**To use the extension, you need to be on the `staging` branch of SillyTavern.**
-
 ## Overview
 
 A [SillyTavern](https://docs.sillytavern.app/) extension that helps you to make decisions about the story. It could give an idea.

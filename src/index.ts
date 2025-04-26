@@ -727,7 +727,7 @@ function initializeEvents() {
   });
 }
 
-function stagingCheck(): boolean {
+function importCheck(): boolean {
   if (!globalContext.ConnectionManagerRequestService) {
     return false;
   }
@@ -748,8 +748,8 @@ function main() {
   initializeEvents();
 }
 
-if (!stagingCheck()) {
-  const errorStr = '[Roadway Error] Make sure you are on staging branch and staging is updated.';
+if (!importCheck()) {
+  const errorStr = '[Roadway Error] Make sure ST is updated.';
   st_echo('error', errorStr);
 } else {
   settingsManager
