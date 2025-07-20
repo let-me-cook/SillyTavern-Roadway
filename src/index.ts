@@ -44,6 +44,7 @@ interface ExtensionSettings {
   promptPresets: Record<string, PromptPreset>;
   impersonateApi: 'main' | 'profile';
   showUseActionIcon: boolean;
+  autoSubmitUseAction: boolean;
 }
 
 const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
@@ -78,6 +79,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   autoOpen: true,
   impersonateApi: 'main',
   showUseActionIcon: true,
+  autoSubmitUseAction: false,
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
@@ -109,7 +111,7 @@ async function handleUIChanges(): Promise<void> {
   );
 
   const { select } = buildPresetSelect('.roadway_settings select.prompt', {
-    label: 'prompt',
+    label: () => 'prompt',
     initialValue: settings.promptPreset,
     initialList: Object.keys(settings.promptPresets),
     readOnlyValues: ['default'],
@@ -265,6 +267,13 @@ async function handleUIChanges(): Promise<void> {
     $('.custom-roadway_options .custom-use_action').toggle(settings.showUseActionIcon);
   });
 
+  const autoSubmitUseActionElement = settingsContainer.find('.auto_submit_use_action');
+  autoSubmitUseActionElement.prop('checked', settings.autoSubmitUseAction);
+  autoSubmitUseActionElement.on('change', function () {
+    settings.autoSubmitUseAction = $(this).prop('checked');
+    settingsManager.saveSettings();
+  });
+
   const impersonateApiElement = settingsContainer.find('select.impersonate_api');
   impersonateApiElement.val(settings.impersonateApi);
   impersonateApiElement.on('change', function () {
@@ -312,7 +321,7 @@ async function handleUIChanges(): Promise<void> {
       pendingRequests.add(targetMessageId);
       $(this).addClass('spinning');
 
-      const messages = await buildPrompt(apiMap?.selected!, {
+      const promptResult = await buildPrompt(apiMap?.selected!, {
         targetCharacterId: characterId,
         messageIndexesBetween: {
           end: targetMessageId,
@@ -329,6 +338,7 @@ async function handleUIChanges(): Promise<void> {
               : 'active',
         includeNames: !!selected_group,
       });
+      const messages = promptResult.result;
       messages.push({
         content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
         role: 'system',
@@ -337,24 +347,35 @@ async function handleUIChanges(): Promise<void> {
         settings.profileId,
         messages,
         settings.maxResponseToken,
+        {},
+        {
+          json_schema: {
+            name: 'Roadway',
+            value: {
+              $schema: 'http://json-schema.org/draft-04/schema#',
+              type: 'object',
+              properties: {
+                options: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                  },
+                },
+              },
+              required: ['options'],
+            },
+          },
+        },
       )) as ExtractedData;
 
-      let actions: string[] = [];
-      const extractionStrategy = settings.promptPresets[settings.promptPreset]?.extractionStrategy;
-      if (extractionStrategy === 'bullet') {
-        actions = extractBulletPoints(rest.content);
-        if (actions.length === 0) {
-          await st_echo('warning', 'Could not extract any bullet points from the response. Using original response.');
-        }
-      }
-
+      const actions: string[] = (rest.content as any).options ?? [];
       const innerText = actions?.length
         ? actions.map((action, index) => `${index + 1}. ${action}`).join('\n')
         : rest.content;
 
       const existMessage = context.chat.find((mes) => mes.extra?.[KEYS.EXTRA.TARGET] === targetMessageId);
       let newMessage: ChatMessage = existMessage ?? {
-        mes: formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined),
+        mes: formatResponse(innerText, actions),
         name: systemUserName,
         force_avatar: system_avatar,
         is_system: true,
@@ -368,13 +389,11 @@ async function handleUIChanges(): Promise<void> {
       };
 
       if (existMessage) {
-        newMessage.mes = formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined);
+        newMessage.mes = formatResponse(innerText, actions);
         newMessage.extra![KEYS.EXTRA.RAW_CONTENT] = rest.content;
         newMessage.extra![KEYS.EXTRA.OPTIONS] = actions;
         const detailsElement = $(`[mesid="${targetMessageId + 1}"] .mes_text`);
-        detailsElement.html(
-          formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined, 'custom-'),
-        );
+        detailsElement.html(formatResponse(innerText, actions, 'custom-'));
       } else {
         context.chat.push(newMessage);
         context.addOneMessage(newMessage, { insertAfter: targetMessageId });
@@ -519,7 +538,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
 
       globalContext.deactivateSendButtons();
       try {
-        const messages = await buildPrompt(apiMap.selected, {
+        const promptResult = await buildPrompt(apiMap.selected, {
           presetName: profile?.preset,
           contextName: profile?.context,
           instructName: profile?.instruct,
@@ -532,6 +551,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
                 : 'active',
           includeNames: !!selected_group,
         });
+        const messages = promptResult.result;
         messages.push({
           role: 'system',
           content: impersonate,
@@ -620,6 +640,10 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
     if (text) {
       $('#send_textarea').val(text);
       $('#send_textarea').trigger('input');
+
+      if (settingsManager.getSettings().autoSubmitUseAction) {
+        $('#send_but').trigger('click');
+      }
 
       const useButton = $(this);
       useButton.html('✓');
