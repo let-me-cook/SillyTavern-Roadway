@@ -347,35 +347,24 @@ async function handleUIChanges(): Promise<void> {
         settings.profileId,
         messages,
         settings.maxResponseToken,
-        {},
-        {
-          json_schema: {
-            name: 'Roadway',
-            value: {
-              $schema: 'http://json-schema.org/draft-04/schema#',
-              type: 'object',
-              properties: {
-                options: {
-                  type: 'array',
-                  items: {
-                    type: 'string',
-                  },
-                },
-              },
-              required: ['options'],
-            },
-          },
-        },
       )) as ExtractedData;
 
-      const actions: string[] = (rest.content as any).options ?? [];
+      let actions: string[] = [];
+      const extractionStrategy = settings.promptPresets[settings.promptPreset]?.extractionStrategy;
+      if (extractionStrategy === 'bullet') {
+        actions = extractBulletPoints(rest.content);
+        if (actions.length === 0) {
+          await st_echo('warning', 'Could not extract any bullet points from the response. Using original response.');
+        }
+      }
+
       const innerText = actions?.length
         ? actions.map((action, index) => `${index + 1}. ${action}`).join('\n')
         : rest.content;
 
       const existMessage = context.chat.find((mes) => mes.extra?.[KEYS.EXTRA.TARGET] === targetMessageId);
       let newMessage: ChatMessage = existMessage ?? {
-        mes: formatResponse(innerText, actions),
+        mes: formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined),
         name: systemUserName,
         force_avatar: system_avatar,
         is_system: true,
@@ -389,11 +378,13 @@ async function handleUIChanges(): Promise<void> {
       };
 
       if (existMessage) {
-        newMessage.mes = formatResponse(innerText, actions);
+        newMessage.mes = formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined);
         newMessage.extra![KEYS.EXTRA.RAW_CONTENT] = rest.content;
         newMessage.extra![KEYS.EXTRA.OPTIONS] = actions;
         const detailsElement = $(`[mesid="${targetMessageId + 1}"] .mes_text`);
-        detailsElement.html(formatResponse(innerText, actions, 'custom-'));
+        detailsElement.html(
+          formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined, 'custom-'),
+        );
       } else {
         context.chat.push(newMessage);
         context.addOneMessage(newMessage, { insertAfter: targetMessageId });
