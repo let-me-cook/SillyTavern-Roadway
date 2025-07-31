@@ -31,7 +31,7 @@ interface PromptPreset {
   impersonate?: string;
 }
 
-interface ExtensionSettings {
+export interface ExtensionSettings {
   version: string;
   formatVersion: string;
   profileId: string;
@@ -45,6 +45,8 @@ interface ExtensionSettings {
   impersonateApi: 'main' | 'profile';
   showUseActionIcon: boolean;
   autoSubmitUseAction: boolean;
+  noAssMode: boolean;
+  noAssModePlacement: 'prependUser' | 'appendUser' | 'prependAssistant' | 'appendAssistant' | 'variable';
 }
 
 const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
@@ -80,6 +82,8 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   impersonateApi: 'main',
   showUseActionIcon: true,
   autoSubmitUseAction: false,
+  noAssMode: false,
+  noAssModePlacement: 'variable',
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
@@ -111,7 +115,7 @@ async function handleUIChanges(): Promise<void> {
   );
 
   const { select } = buildPresetSelect('.roadway_settings select.prompt', {
-    label: () => 'prompt',
+    label: (value) => value,
     initialValue: settings.promptPreset,
     initialList: Object.keys(settings.promptPresets),
     readOnlyValues: ['default'],
@@ -281,6 +285,22 @@ async function handleUIChanges(): Promise<void> {
     settingsManager.saveSettings();
   });
 
+  const noAssModeElement = settingsContainer.find('.no_ass_mode');
+  const noAssModePlacementElement = settingsContainer.find('.no_ass_mode_placement');
+
+  noAssModeElement.prop('checked', settings.noAssMode);
+  noAssModePlacementElement.val(settings.noAssModePlacement);
+
+  noAssModeElement.on('change', function () {
+    settings.noAssMode = $(this).prop('checked');
+    settingsManager.saveSettings();
+  });
+
+  noAssModePlacementElement.on('change', function () {
+    settings.noAssModePlacement = $(this).val() as 'prependUser' | 'appendUser' | 'prependAssistant' | 'appendAssistant' | 'variable';
+    settingsManager.saveSettings();
+  });
+
   const roadwayButton = $(
     `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-road interactable" tabindex="0"></div>`,
   );
@@ -338,14 +358,20 @@ async function handleUIChanges(): Promise<void> {
               : 'active',
         includeNames: !!selected_group,
       });
-      const messages = promptResult.result;
+      let messages = promptResult.result;
+      if (settings.noAssMode) {
+        messages = squashMessages(messages, settings);
+      }
+      const finalPrompt = context.substituteParams(settings.promptPresets[settings.promptPreset].content, undefined, undefined, undefined, undefined, undefined, {
+        squashedMessages: messages.find(m => m.role === 'squashed')?.content ?? '',
+      });
       messages.push({
-        content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
+        content: finalPrompt,
         role: 'system',
       });
       const rest = (await context.ConnectionManagerRequestService.sendRequest(
         settings.profileId,
-        messages,
+        messages.filter(m => m.role !== 'squashed'),
         settings.maxResponseToken,
       )) as ExtractedData;
 
@@ -465,6 +491,43 @@ async function handleUIChanges(): Promise<void> {
 
     return detailsElement.outerHTML;
   }
+}
+
+function squashMessages(messages: any[], settings: ExtensionSettings): any[] {
+  const squashedContent = messages
+    .map((msg) => {
+      if (msg.role === 'user') {
+        return `User: ${msg.content}`;
+      }
+      if (msg.role === 'assistant') {
+        return `Assistant: ${msg.content}`;
+      }
+      return null;
+    })
+    .filter(Boolean)
+    .join('\n');
+
+  const placement = settings.noAssModePlacement;
+
+  if (placement === 'variable') {
+    return [{ role: 'squashed', content: squashedContent }];
+  }
+
+  const userMessages = messages.filter((msg) => msg.role === 'user');
+  const assistantMessages = messages.filter((msg) => msg.role === 'assistant');
+  const otherMessages = messages.filter((msg) => msg.role !== 'user' && msg.role !== 'assistant');
+
+  if (placement === 'prependUser' && userMessages.length > 0) {
+    userMessages[0].content = `${squashedContent}\n${userMessages[0].content}`;
+  } else if (placement === 'appendUser' && userMessages.length > 0) {
+    userMessages[userMessages.length - 1].content = `${userMessages[userMessages.length - 1].content}\n${squashedContent}`;
+  } else if (placement === 'prependAssistant' && assistantMessages.length > 0) {
+    assistantMessages[0].content = `${squashedContent}\n${assistantMessages[0].content}`;
+  } else if (placement === 'appendAssistant' && assistantMessages.length > 0) {
+    assistantMessages[assistantMessages.length - 1].content = `${assistantMessages[assistantMessages.length - 1].content}\n${squashedContent}`;
+  }
+
+  return [...otherMessages, ...userMessages, ...assistantMessages];
 }
 
 function extractBulletPoints(text: string): string[] {

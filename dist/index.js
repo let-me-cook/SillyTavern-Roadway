@@ -1,8 +1,8737 @@
-import*as e from"../../../../power-user.js";import*as t from"../../../../../script.js";import*as n from"../../../../world-info.js";import*as o from"../../../../instruct-mode.js";import*as r from"../../../../chats.js";import*as i from"../../../../openai.js";import*as a from"../../../../authors-note.js";import*as s from"../../../../group-chats.js";import*as l from"../../../regex/engine.js";import*as c from"../../../../utils.js";import*as u from"../../../../slash-commands/SlashCommandCommonEnumsProvider.js";var d={d:(e,t)=>{for(var n in t)d.o(t,n)&&!d.o(e,n)&&Object.defineProperty(e,n,{enumerable:!0,get:t[n]})},o:(e,t)=>Object.prototype.hasOwnProperty.call(e,t)};Error;const p=(e=>{var t={};return d.d(t,e),t})({persona_description_positions:()=>e.persona_description_positions,renderStoryString:()=>e.renderStoryString});const f=(e=>{var t={};return d.d(t,e),t})({baseChatReplace:()=>t.baseChatReplace,characters:()=>t.characters,chat_metadata:()=>t.chat_metadata,depth_prompt_depth_default:()=>t.depth_prompt_depth_default,depth_prompt_role_default:()=>t.depth_prompt_role_default,extension_prompt_types:()=>t.extension_prompt_types,getMaxContextSize:()=>t.getMaxContextSize,name1:()=>t.name1,name2:()=>t.name2,parseMesExamples:()=>t.parseMesExamples,systemUserName:()=>t.systemUserName,system_avatar:()=>t.system_avatar,this_chid:()=>t.this_chid});const h=(e=>{var t={};return d.d(t,e),t})({wi_anchor_position:()=>n.wi_anchor_position,world_info_include_names:()=>n.world_info_include_names});const m=(e=>{var t={};return d.d(t,e),t})({formatInstructModeExamples:()=>o.formatInstructModeExamples,formatInstructModeSystemPrompt:()=>o.formatInstructModeSystemPrompt});const g=(e=>{var t={};return d.d(t,e),t})({appendFileContent:()=>r.appendFileContent});const v=(e=>{var t={};return d.d(t,e),t})({formatWorldInfo:()=>i.formatWorldInfo,getPromptPosition:()=>i.getPromptPosition,getPromptRole:()=>i.getPromptRole,prepareOpenAIMessages:()=>i.prepareOpenAIMessages,setOpenAIMessageExamples:()=>i.setOpenAIMessageExamples,setOpenAIMessages:()=>i.setOpenAIMessages});const _=(e=>{var t={};return d.d(t,e),t})({metadata_keys:()=>a.metadata_keys});const y=(e=>{var t={};return d.d(t,e),t})({getGroupDepthPrompts:()=>s.getGroupDepthPrompts,selected_group:()=>s.selected_group});const b=(e=>{var t={};return d.d(t,e),t})({getRegexedString:()=>l.getRegexedString,regex_placement:()=>l.regex_placement});(e=>{var t={};d.d(t,e)})({});(e=>{var t={};d.d(t,e)})({});async function E(e,...t){await SillyTavern.getContext().SlashCommandParser.commands[e].callback(...t)}async function w(e,t,{escapeHtml:n=!0}={}){await E("echo",{severity:e,escapeHtml:Boolean(n).toString()},t)}function S(e){return(0,f.getMaxContextSize)(e)}function x(e,t){return(0,f.parseMesExamples)(e,t)}function T(e,t,n){return(0,f.baseChatReplace)(e,t,n)}function C(e){return(0,v.getPromptRole)(e)}function P(e,{wiFormat:t}={}){return(0,v.formatWorldInfo)(e,{wiFormat:t})}function A(e){return(0,v.getPromptPosition)(e)}function D(e,t={}){const n=SillyTavern.getContext(),o=t.readOnlyValues||[],r=document.querySelector(e);if(!r)throw new Error(`Could not find preset select: ${e}`);const i=e=>t.label?t.label(e):e,a=document.createElement("div");a.className="preset-select-container",a.style.display="flex",a.style.alignItems="center";const s=e=>o.includes(e);if(r.parentNode?.insertBefore(a,r),a.appendChild(r),t.initialList&&t.initialList.length>0){r.innerHTML="";const e=e=>"string"==typeof e?e:e.value;for(const n of t.initialList){const t=document.createElement("option"),o=e(n);t.value=o,t.textContent=i(o),s(o)&&(t.dataset.readonly="true"),r.appendChild(t)}}if(t.initialValue){const e=Array.from(r.options).find((e=>e.value===t.initialValue));e&&(r.value=e.value)}let l=r.value;if(r.addEventListener("change",(async()=>{const e=r.value;t.onSelectChange&&l!==e&&await t.onSelectChange(l,e),l=e})),t.create){const e=document.createElement("i");e.className="menu_button fa-solid fa-file-circle-plus";const o=i("");e.title=`Create a new ${o}`,e.setAttribute("data-i18n",`[title]Create a new ${o}`),e.addEventListener("click",(async()=>{t.create?.onPopupOpen&&await t.create.onPopupOpen();const e=i(""),o=await n.Popup.show.input(`Create a new ${e}`,`Please enter a name for the new ${e}:`,"");if(null===o||""===o.trim())return;let a=o.trim();if(Array.from(r.options).some((e=>e.value===a)))return void await w("warning",`A ${i(a)} with this name already exists.`);if(t.create?.onBeforeCreate){if(!await t.create.onBeforeCreate(a))return}if(t.create?.onAfterCreate){const e=await t.create.onAfterCreate(a);"string"==typeof e&&(a=e)}const s=document.createElement("option");s.value=a,s.textContent=i(a),r.appendChild(s);const c=r.value;r.value=a,t.onSelectChange&&c!==a&&await t.onSelectChange(c,a),l=a})),a.appendChild(e)}if(t.rename){const e=document.createElement("i");e.className="menu_button fa-solid fa-pencil";const o=i("");e.title=`Rename a ${o}`,e.setAttribute("data-i18n",`[title]Rename a ${o}`),e.addEventListener("click",(async()=>{if(-1===r.selectedIndex)return void await w("warning",`Please select a ${i("")} to rename.`);const e=r.options[r.selectedIndex];let o=e.value;if(s(o))return void await w("warning",`This ${i(o)} cannot be renamed as it is read-only.`);t.rename?.onPopupOpen&&await t.rename.onPopupOpen();const a=await n.Popup.show.input(`Rename ${i(o)}`,`Please enter a new name for "${o}":`,o);if(null===a||""===a.trim()||a===o)return;let c=a.trim();if(Array.from(r.options).some((t=>t.value===c&&t!==e)))await w("warning",`A ${i(c)} with this name already exists.`);else{if(t.rename?.onBeforeRename){if(!await t.rename.onBeforeRename(o,c))return}if(t.rename?.onAfterRename){const e=await t.rename.onAfterRename(o,c);"string"==typeof e&&(c=e)}e.value=c,e.textContent=i(c),o===l&&(l=c),t.onSelectChange&&r.value===c&&await t.onSelectChange(o,c)}})),a.appendChild(e)}if(t.delete){const e=document.createElement("i");e.className="menu_button fa-solid fa-trash-can";const o=i("");e.title=`Delete a ${o}`,e.setAttribute("data-i18n",`[title]Delete a ${o}`),e.addEventListener("click",(async()=>{if(-1===r.selectedIndex)return void await w("warning",`Please select a ${i("")} to delete.`);const e=r.options[r.selectedIndex],o=e.value,a=r.selectedIndex;if(s(o))return void await w("warning",`This ${i(o)} cannot be deleted as it is read-only.`);t.delete?.onPopupOpen&&await t.delete.onPopupOpen();if(!await n.Popup.show.confirm(`Delete ${i(o)}`,`Are you sure you want to delete "${o}"?`))return;if(t.delete?.onBeforeDelete){if(!await t.delete.onBeforeDelete(o))return}const c=o;let u,d=-1;r.options.length>1&&(d=a<r.options.length-1?a:a-1,u=r.options[d].value),r.removeChild(e),d>=0?(r.selectedIndex=d,l=u,t.onSelectChange&&await t.onSelectChange(c,u)):(t.onSelectChange&&await t.onSelectChange(c,void 0),l=void 0),t.delete?.onAfterDelete&&await t.delete.onAfterDelete(c)})),a.appendChild(e)}return{select:r,container:a}}async function O(e,{targetCharacterId:t,presetName:n,instructName:o,contextName:r,syspromptName:i,maxContext:a,includeNames:s,ignoreCharacterFields:l,ignoreAuthorNote:c,ignoreWorldInfo:u,messageIndexesBetween:d}={}){if(!["textgenerationwebui","openai"].includes(e))throw new Error("Unsupported API");const E=SillyTavern.getContext();let w=[],{description:D,personality:O,persona:R,scenario:I,mesExamples:N,system:M,jailbreak:k}=l?{description:"",personality:"",persona:"",scenario:"",mesExamples:"",system:"",jailbreak:""}:E.getCharacterCardFields({chid:t});const L="textgenerationwebui"===e?E.getPresetManager("instruct")?.getCompletionPresetByName(o):void 0,F=!!L?.enabled;let B=x(N,F);let G=[];const j=function(){if("number"==typeof a)return a;if(!a)return S();if("active"===a||!n)return S();if("number"==typeof a)return a;let t;if("textgenerationwebui"===e){const e=E.getPresetManager("textgenerationwebui")?.getCompletionPresetByName(n);t=e?.max_length}else{const e=E.getPresetManager("openai")?.getCompletionPresetByName(n);t=e?.openai_max_context}return"number"==typeof t?t:S()}();if(j<=0)return{result:[],warnings:G};const $=E.ToolManager.isToolCallingSupported(),H=d?.start??0,U=d?.end?d.end+1:void 0;let Y=-1===H&&0===U?[]:E.chat.slice(H,U).filter((e=>!e.is_system||$&&Array.isArray(e.extra?.tool_invocations)));Y=await Promise.all(Y.map((async(e,t)=>{let n=function(e,t,{characterOverride:n,isMarkdown:o,isPrompt:r,isEdit:i,depth:a}){return(0,b.getRegexedString)(e,t,{characterOverride:n,isMarkdown:o,isPrompt:r,isEdit:i,depth:a})}(e.mes,e.is_user?b.regex_placement.USER_INPUT:b.regex_placement.AI_OUTPUT,{isPrompt:!0,depth:Y.length-t-1});return n=await async function(e,t){return await(0,g.appendFileContent)(e,t)}(e,n),e?.extra?.append_title&&e?.extra?.title&&(n=`${n}\n\n${e.extra.title}`),{...e,mes:n,index:t}})));const V=Y.map((e=>h.world_info_include_names?`${e.name}: ${e.mes}`:e.mes)).reverse(),{worldInfoString:X,worldInfoBefore:q,worldInfoAfter:W,worldInfoExamples:z,worldInfoDepth:K,anBefore:Q,anAfter:Z}=u?{worldInfoString:"",worldInfoBefore:"",worldInfoAfter:"",worldInfoExamples:[],worldInfoDepth:[],anBefore:[],anAfter:[]}:await E.getWorldInfoPrompt(V,j,!1);for(const se of z){const le=se.content;if(0===le.length)continue;const ce=x(T(le,f.name1,f.name2),F);se.position===h.wi_anchor_position.before?B.unshift(...ce):B.push(...ce)}function J(){let e=0;const t=[];for(let n=Y.length-1;n>=0;n--){const o=Y[n];if(o.extra?.token_count&&e+o.extra.token_count>j)break;e+=o.extra?.token_count||0,t.unshift({role:o.is_user?"user":"assistant",content:s?`${o.name}: ${o.mes}`:o.mes})}w.push(...t)}if("textgenerationwebui"===e){const ue=[...B];B&&(B=function(e,t,n){return(0,m.formatInstructModeExamples)(e,t,n)}(B,f.name1,f.name2));const de=E.getPresetManager("sysprompt")?.getCompletionPresetByName(i);de&&(M=E.powerUserSettings.prefer_character_prompt&&M?M:T(de.content,f.name1,f.name2),M=F?(te=E.substituteParams(M,f.name1,f.name2,de.content),ne=L,(0,m.formatInstructModeSystemPrompt)(te,ne)):M);const pe={description:D,personality:O,persona:E.powerUserSettings.persona_description_position==p.persona_description_positions.IN_PROMPT?R:"",scenario:I,system:M,char:f.name2,user:f.name1,wiBefore:q,wiAfter:W,loreBefore:q,loreAfter:W,mesExamples:B.join(""),mesExamplesRaw:ue.join("")},fe=E.getPresetManager("context")?.getCompletionPresetByName(r);let he=function(e,{customStoryString:t,customInstructSettings:n}={}){return(0,p.renderStoryString)(e,{customStoryString:t,customInstructSettings:n})}(pe,{customInstructSettings:L,customStoryString:fe?.story_string});w.push({role:"system",content:he,ignoreInstruct:!0}),J()}else{let me=(ee=Y,(0,v.setOpenAIMessages)(ee)),ge=function(e){return(0,v.setOpenAIMessageExamples)(e)}(B);async function ve(){let[e,t]=await function({name2:e,charDescription:t,charPersonality:n,Scenario:o,worldInfoBefore:r,worldInfoAfter:i,bias:a,type:s,quietPrompt:l,quietImage:c,extensionPrompts:u,cyclePrompt:d,systemPromptOverride:p,jailbreakPromptOverride:f,personaDescription:h,messages:m,messageExamples:g},_){return(0,v.prepareOpenAIMessages)({name2:e,charDescription:t,charPersonality:n,Scenario:o,worldInfoBefore:r,worldInfoAfter:i,bias:a,type:s,quietPrompt:l,quietImage:c,cyclePrompt:d,systemPromptOverride:p,jailbreakPromptOverride:f,personaDescription:h,extensionPrompts:u,messages:m,messageExamples:g},_)}({name2:f.name2,charDescription:D,charPersonality:O,Scenario:I,worldInfoBefore:q,worldInfoAfter:W,extensionPrompts:E.extensionPrompts,bias:"",type:"normal",quietPrompt:void 0,quietImage:void 0,cyclePrompt:"",systemPromptOverride:M,jailbreakPromptOverride:k,personaDescription:R,messages:me,messageExamples:ge},!1);w.push(...e)}if(!n)return G.push("No preset name provided. Using default preset."),await ve(),{result:w,warnings:G};const _e=E.getPresetManager("openai")?.getCompletionPresetByName(n);if(!_e)return console.warn(`Preset not found: ${n}. Using current preset.`),G.push(`Preset not found: ${n}. Using current preset.`),ve(),{result:w,warnings:G};let ye=_e.prompt_order?.find((e=>e.character_id===f.this_chid));if(!ye&&_e.prompt_order&&_e.prompt_order.length>0&&(ye=_e.prompt_order[0]),!ye)return console.warn(`No prompt order found for preset: ${n}. Using current preset.`),G.push(`No prompt order found for preset: ${n}. Using current preset.`),ve(),{result:w,warnings:G};const be=I&&_e.scenario_format?E.substituteParams(_e.scenario_format):"",Ee=O&&_e.personality_format?E.substituteParams(_e.personality_format):"",we=E.substituteParams(_e.group_nudge_prompt),Se=_e.impersonation_prompt?E.substituteParams(_e.impersonation_prompt):"",xe=[];u&&xe.push({role:"system",content:P(q,{wiFormat:_e.wi_format}),identifier:"worldInfoBefore"},{role:"system",content:P(W,{wiFormat:_e.wi_format}),identifier:"worldInfoAfter"}),l||xe.push({role:"system",content:D,identifier:"charDescription"},{role:"system",content:Ee,identifier:"charPersonality"},{role:"system",content:be,identifier:"scenario"}),xe.push({role:"system",content:Se,identifier:"impersonate"},{role:"system",content:we,identifier:"groupNudge"});const Te=E.extensionPrompts["1_memory"];Te&&Te.value&&xe.push({role:C(Te.role),content:Te.value,identifier:"summary",position:A(Te.position)});const Ce=E.extensionPrompts["2_floating_prompt"];!c&&Ce&&Ce.value&&xe.push({role:C(Ce.role),content:Ce.value,identifier:"authorsNote",position:A(Ce.position)});const Pe=E.extensionPrompts["3_vectors"];Pe&&Pe.value&&xe.push({role:"system",content:Pe.value,identifier:"vectorsMemory",position:A(Pe.position)});const Ae=E.extensionPrompts["4_vectors_data_bank"];Ae&&Ae.value&&xe.push({role:C(Ae.role),content:Ae.value,identifier:"vectorsDataBank",position:A(Ae.position)});const De=E.extensionPrompts.chromadb;De&&De.value&&xe.push({role:"system",content:De.value,identifier:"smartContext",position:A(De.position)}),!l&&E.powerUserSettings.persona_description&&E.powerUserSettings.persona_description_position===p.persona_description_positions.IN_PROMPT&&xe.push({role:"system",content:E.powerUserSettings.persona_description,identifier:"personaDescription"}),ye.order.forEach((e=>{if(!e.enabled)return;const t=(n=e.identifier,xe.find((e=>e.identifier===n)));var n;t&&t.content?w.push({role:t.role??"system",content:E.substituteParams(t.content)}):"chatHistory"===e.identifier&&J()}))}var ee,te,ne;const oe=["1_memory","2_floating_prompt","3_vectors","4_vectors_data_bank","chromadb","PERSONA_DESCRIPTION","QUIET_PROMPT","DEPTH_PROMPT"];for(const Oe in E.extensionPrompts)if(Object.hasOwn(E.extensionPrompts,Oe)){const Re=E.extensionPrompts[Oe];if(oe.includes(Oe))continue;if(!E.extensionPrompts[Oe].value)continue;if(![f.extension_prompt_types.BEFORE_PROMPT,f.extension_prompt_types.IN_PROMPT].includes(Re.position))continue;if("function"==typeof Re.filter&&!await Re.filter())continue;Re.position===f.extension_prompt_types.BEFORE_PROMPT?w=[...w.slice(0,Re.depth),{role:C(Re.role)??"system",content:Re.value},...w.slice(Re.depth)]:Re.position===f.extension_prompt_types.IN_PROMPT&&(w=[...w.slice(0,w.length-Re.depth),{role:C(Re.role)??"system",content:Re.value},...w.slice(w.length-Re.depth)])}for(const Ie of K)w=[...w.slice(0,w.length-Ie.depth),{role:C(Ie.role),content:Ie.entries.join("\n")},...w.slice(w.length-Ie.depth)];if(!l){const Ne=(re=y.selected_group,ie=Number(f.this_chid),(0,y.getGroupDepthPrompts)(re,ie));if(y.selected_group&&Array.isArray(Ne)&&Ne.length>0)Ne.filter((e=>e.text)).forEach(((e,t)=>{w=[...w.slice(0,w.length-e.depth),{role:e.role,content:e.text},...w.slice(w.length-e.depth)]}));else{const Me=T(E.characters[f.this_chid]?.data?.extensions?.depth_prompt?.prompt?.trim(),f.name1,f.name2)||"";if(Me){const ke=f.depth_prompt_depth_default,Le=E.characters[f.this_chid]?.data?.extensions?.depth_prompt?.role??f.depth_prompt_role_default;w=[...w.slice(0,w.length-ke),{role:C(Le),content:Me},...w.slice(w.length-ke)]}}}var re,ie;let ae=-1;if(!c){const Fe={prompt:f.chat_metadata[_.metadata_keys.prompt],interval:f.chat_metadata[_.metadata_keys.interval],position:f.chat_metadata[_.metadata_keys.position],depth:f.chat_metadata[_.metadata_keys.depth],role:f.chat_metadata[_.metadata_keys.role]};if(Fe.prompt)switch(Fe.prompt=T(Fe.prompt,f.name1,f.name2),Fe.position){case f.extension_prompt_types.IN_PROMPT:w=[...w.slice(0,1),{role:"user",content:Fe.prompt},...w.slice(1)],ae=1;break;case f.extension_prompt_types.IN_CHAT:w=[...w.slice(0,w.length-Fe.depth),{role:C(Fe.role),content:Fe.prompt},...w.slice(w.length-Fe.depth)],ae=w.length-Fe.depth-1;break;case f.extension_prompt_types.BEFORE_PROMPT:w.unshift({role:"user",content:Fe.prompt}),ae=0}}return ae>=0&&(Q.length>0&&(w=[...w.slice(0,ae),{role:"system",content:Q.join("\n")},...w.slice(ae)],ae++),Z.length>0&&(w=[...w.slice(0,ae+1),{role:"system",content:Z.join("\n")},...w.slice(ae+1)])),{result:w,warnings:G}}
+import * as __WEBPACK_EXTERNAL_MODULE__script_js_588e7203__ from "../../../../../script.js";
+import * as __WEBPACK_EXTERNAL_MODULE__authors_note_js_59167e8d__ from "../../../../authors-note.js";
+import * as __WEBPACK_EXTERNAL_MODULE__chats_js_c244506c__ from "../../../../chats.js";
+import * as __WEBPACK_EXTERNAL_MODULE__group_chats_js_678c16bd__ from "../../../../group-chats.js";
+import * as __WEBPACK_EXTERNAL_MODULE__instruct_mode_js_e7f3531a__ from "../../../../instruct-mode.js";
+import * as __WEBPACK_EXTERNAL_MODULE__openai_js_bf183548__ from "../../../../openai.js";
+import * as __WEBPACK_EXTERNAL_MODULE__power_user_js_3c7cfb8b__ from "../../../../power-user.js";
+import * as __WEBPACK_EXTERNAL_MODULE__slash_commands_SlashCommandCommonEnumsProvider_js_4453b111__ from "../../../../slash-commands/SlashCommandCommonEnumsProvider.js";
+import * as __WEBPACK_EXTERNAL_MODULE__utils_js_d605cabe__ from "../../../../utils.js";
+import * as __WEBPACK_EXTERNAL_MODULE__world_info_js_83198f57__ from "../../../../world-info.js";
+import * as __WEBPACK_EXTERNAL_MODULE__regex_engine_js_683beba0__ from "../../../regex/engine.js";
+/******/ var __webpack_modules__ = ({
+
+/***/ "./node_modules/sortablejs/modular/sortable.esm.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/sortablejs/modular/sortable.esm.js ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   MultiDrag: () => (/* binding */ MultiDragPlugin),
+/* harmony export */   Sortable: () => (/* binding */ Sortable),
+/* harmony export */   Swap: () => (/* binding */ SwapPlugin),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /**!
  * Sortable 1.15.6
  * @author	RubaXa   <trash@rubaxa.org>
  * @author	owenm    <owen23355@gmail.com>
  * @license MIT
  */
-function R(e,t){var n=Object.keys(e);if(Object.getOwnPropertySymbols){var o=Object.getOwnPropertySymbols(e);t&&(o=o.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),n.push.apply(n,o)}return n}function I(e){for(var t=1;t<arguments.length;t++){var n=null!=arguments[t]?arguments[t]:{};t%2?R(Object(n),!0).forEach((function(t){M(e,t,n[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(n)):R(Object(n)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(n,t))}))}return e}function N(e){return N="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},N(e)}function M(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}function k(){return k=Object.assign||function(e){for(var t=1;t<arguments.length;t++){var n=arguments[t];for(var o in n)Object.prototype.hasOwnProperty.call(n,o)&&(e[o]=n[o])}return e},k.apply(this,arguments)}function L(e,t){if(null==e)return{};var n,o,r=function(e,t){if(null==e)return{};var n,o,r={},i=Object.keys(e);for(o=0;o<i.length;o++)n=i[o],t.indexOf(n)>=0||(r[n]=e[n]);return r}(e,t);if(Object.getOwnPropertySymbols){var i=Object.getOwnPropertySymbols(e);for(o=0;o<i.length;o++)n=i[o],t.indexOf(n)>=0||Object.prototype.propertyIsEnumerable.call(e,n)&&(r[n]=e[n])}return r}function F(e){if("undefined"!=typeof window&&window.navigator)return!!navigator.userAgent.match(e)}var B=F(/(?:Trident.*rv[ :]?11\.|msie|iemobile|Windows Phone)/i),G=F(/Edge/i),j=F(/firefox/i),H=F(/safari/i)&&!F(/chrome/i)&&!F(/android/i),U=F(/iP(ad|od|hone)/i),Y=F(/chrome/i)&&F(/android/i),V={capture:!1,passive:!1};function X(e,t,n){e.addEventListener(t,n,!B&&V)}function q(e,t,n){e.removeEventListener(t,n,!B&&V)}function W(e,t){if(t){if(">"===t[0]&&(t=t.substring(1)),e)try{if(e.matches)return e.matches(t);if(e.msMatchesSelector)return e.msMatchesSelector(t);if(e.webkitMatchesSelector)return e.webkitMatchesSelector(t)}catch(e){return!1}return!1}}function z(e){return e.host&&e!==document&&e.host.nodeType?e.host:e.parentNode}function K(e,t,n,o){if(e){n=n||document;do{if(null!=t&&(">"===t[0]?e.parentNode===n&&W(e,t):W(e,t))||o&&e===n)return e;if(e===n)break}while(e=z(e))}return null}var Q,Z=/\s+/g;function J(e,t,n){if(e&&t)if(e.classList)e.classList[n?"add":"remove"](t);else{var o=(" "+e.className+" ").replace(Z," ").replace(" "+t+" "," ");e.className=(o+(n?" "+t:"")).replace(Z," ")}}function ee(e,t,n){var o=e&&e.style;if(o){if(void 0===n)return document.defaultView&&document.defaultView.getComputedStyle?n=document.defaultView.getComputedStyle(e,""):e.currentStyle&&(n=e.currentStyle),void 0===t?n:n[t];t in o||-1!==t.indexOf("webkit")||(t="-webkit-"+t),o[t]=n+("string"==typeof n?"":"px")}}function te(e,t){var n="";if("string"==typeof e)n=e;else do{var o=ee(e,"transform");o&&"none"!==o&&(n=o+" "+n)}while(!t&&(e=e.parentNode));var r=window.DOMMatrix||window.WebKitCSSMatrix||window.CSSMatrix||window.MSCSSMatrix;return r&&new r(n)}function ne(e,t,n){if(e){var o=e.getElementsByTagName(t),r=0,i=o.length;if(n)for(;r<i;r++)n(o[r],r);return o}return[]}function oe(){var e=document.scrollingElement;return e||document.documentElement}function re(e,t,n,o,r){if(e.getBoundingClientRect||e===window){var i,a,s,l,c,u,d;if(e!==window&&e.parentNode&&e!==oe()?(a=(i=e.getBoundingClientRect()).top,s=i.left,l=i.bottom,c=i.right,u=i.height,d=i.width):(a=0,s=0,l=window.innerHeight,c=window.innerWidth,u=window.innerHeight,d=window.innerWidth),(t||n)&&e!==window&&(r=r||e.parentNode,!B))do{if(r&&r.getBoundingClientRect&&("none"!==ee(r,"transform")||n&&"static"!==ee(r,"position"))){var p=r.getBoundingClientRect();a-=p.top+parseInt(ee(r,"border-top-width")),s-=p.left+parseInt(ee(r,"border-left-width")),l=a+i.height,c=s+i.width;break}}while(r=r.parentNode);if(o&&e!==window){var f=te(r||e),h=f&&f.a,m=f&&f.d;f&&(l=(a/=m)+(u/=m),c=(s/=h)+(d/=h))}return{top:a,left:s,bottom:l,right:c,width:d,height:u}}}function ie(e,t,n){for(var o=ue(e,!0),r=re(e)[t];o;){var i=re(o)[n];if(!("top"===n||"left"===n?r>=i:r<=i))return o;if(o===oe())break;o=ue(o,!1)}return!1}function ae(e,t,n,o){for(var r=0,i=0,a=e.children;i<a.length;){if("none"!==a[i].style.display&&a[i]!==mt.ghost&&(o||a[i]!==mt.dragged)&&K(a[i],n.draggable,e,!1)){if(r===t)return a[i];r++}i++}return null}function se(e,t){for(var n=e.lastElementChild;n&&(n===mt.ghost||"none"===ee(n,"display")||t&&!W(n,t));)n=n.previousElementSibling;return n||null}function le(e,t){var n=0;if(!e||!e.parentNode)return-1;for(;e=e.previousElementSibling;)"TEMPLATE"===e.nodeName.toUpperCase()||e===mt.clone||t&&!W(e,t)||n++;return n}function ce(e){var t=0,n=0,o=oe();if(e)do{var r=te(e),i=r.a,a=r.d;t+=e.scrollLeft*i,n+=e.scrollTop*a}while(e!==o&&(e=e.parentNode));return[t,n]}function ue(e,t){if(!e||!e.getBoundingClientRect)return oe();var n=e,o=!1;do{if(n.clientWidth<n.scrollWidth||n.clientHeight<n.scrollHeight){var r=ee(n);if(n.clientWidth<n.scrollWidth&&("auto"==r.overflowX||"scroll"==r.overflowX)||n.clientHeight<n.scrollHeight&&("auto"==r.overflowY||"scroll"==r.overflowY)){if(!n.getBoundingClientRect||n===document.body)return oe();if(o||t)return n;o=!0}}}while(n=n.parentNode);return oe()}function de(e,t){return Math.round(e.top)===Math.round(t.top)&&Math.round(e.left)===Math.round(t.left)&&Math.round(e.height)===Math.round(t.height)&&Math.round(e.width)===Math.round(t.width)}function pe(e,t){return function(){if(!Q){var n=arguments;1===n.length?e.call(this,n[0]):e.apply(this,n),Q=setTimeout((function(){Q=void 0}),t)}}}function fe(e,t,n){e.scrollLeft+=t,e.scrollTop+=n}function he(e){var t=window.Polymer,n=window.jQuery||window.Zepto;return t&&t.dom?t.dom(e).cloneNode(!0):n?n(e).clone(!0)[0]:e.cloneNode(!0)}function me(e,t,n){var o={};return Array.from(e.children).forEach((function(r){var i,a,s,l;if(K(r,t.draggable,e,!1)&&!r.animated&&r!==n){var c=re(r);o.left=Math.min(null!==(i=o.left)&&void 0!==i?i:1/0,c.left),o.top=Math.min(null!==(a=o.top)&&void 0!==a?a:1/0,c.top),o.right=Math.max(null!==(s=o.right)&&void 0!==s?s:-1/0,c.right),o.bottom=Math.max(null!==(l=o.bottom)&&void 0!==l?l:-1/0,c.bottom)}})),o.width=o.right-o.left,o.height=o.bottom-o.top,o.x=o.left,o.y=o.top,o}var ge="Sortable"+(new Date).getTime();function ve(){var e,t=[];return{captureAnimationState:function(){(t=[],this.options.animation)&&[].slice.call(this.el.children).forEach((function(e){if("none"!==ee(e,"display")&&e!==mt.ghost){t.push({target:e,rect:re(e)});var n=I({},t[t.length-1].rect);if(e.thisAnimationDuration){var o=te(e,!0);o&&(n.top-=o.f,n.left-=o.e)}e.fromRect=n}}))},addAnimationState:function(e){t.push(e)},removeAnimationState:function(e){t.splice(function(e,t){for(var n in e)if(e.hasOwnProperty(n))for(var o in t)if(t.hasOwnProperty(o)&&t[o]===e[n][o])return Number(n);return-1}(t,{target:e}),1)},animateAll:function(n){var o=this;if(!this.options.animation)return clearTimeout(e),void("function"==typeof n&&n());var r=!1,i=0;t.forEach((function(e){var t=0,n=e.target,a=n.fromRect,s=re(n),l=n.prevFromRect,c=n.prevToRect,u=e.rect,d=te(n,!0);d&&(s.top-=d.f,s.left-=d.e),n.toRect=s,n.thisAnimationDuration&&de(l,s)&&!de(a,s)&&(u.top-s.top)/(u.left-s.left)==(a.top-s.top)/(a.left-s.left)&&(t=function(e,t,n,o){return Math.sqrt(Math.pow(t.top-e.top,2)+Math.pow(t.left-e.left,2))/Math.sqrt(Math.pow(t.top-n.top,2)+Math.pow(t.left-n.left,2))*o.animation}(u,l,c,o.options)),de(s,a)||(n.prevFromRect=a,n.prevToRect=s,t||(t=o.options.animation),o.animate(n,u,s,t)),t&&(r=!0,i=Math.max(i,t),clearTimeout(n.animationResetTimer),n.animationResetTimer=setTimeout((function(){n.animationTime=0,n.prevFromRect=null,n.fromRect=null,n.prevToRect=null,n.thisAnimationDuration=null}),t),n.thisAnimationDuration=t)})),clearTimeout(e),r?e=setTimeout((function(){"function"==typeof n&&n()}),i):"function"==typeof n&&n(),t=[]},animate:function(e,t,n,o){if(o){ee(e,"transition",""),ee(e,"transform","");var r=te(this.el),i=r&&r.a,a=r&&r.d,s=(t.left-n.left)/(i||1),l=(t.top-n.top)/(a||1);e.animatingX=!!s,e.animatingY=!!l,ee(e,"transform","translate3d("+s+"px,"+l+"px,0)"),this.forRepaintDummy=function(e){return e.offsetWidth}(e),ee(e,"transition","transform "+o+"ms"+(this.options.easing?" "+this.options.easing:"")),ee(e,"transform","translate3d(0,0,0)"),"number"==typeof e.animated&&clearTimeout(e.animated),e.animated=setTimeout((function(){ee(e,"transition",""),ee(e,"transform",""),e.animated=!1,e.animatingX=!1,e.animatingY=!1}),o)}}}}var _e=[],ye={initializeByDefault:!0},be={mount:function(e){for(var t in ye)ye.hasOwnProperty(t)&&!(t in e)&&(e[t]=ye[t]);_e.forEach((function(t){if(t.pluginName===e.pluginName)throw"Sortable: Cannot mount plugin ".concat(e.pluginName," more than once")})),_e.push(e)},pluginEvent:function(e,t,n){var o=this;this.eventCanceled=!1,n.cancel=function(){o.eventCanceled=!0};var r=e+"Global";_e.forEach((function(o){t[o.pluginName]&&(t[o.pluginName][r]&&t[o.pluginName][r](I({sortable:t},n)),t.options[o.pluginName]&&t[o.pluginName][e]&&t[o.pluginName][e](I({sortable:t},n)))}))},initializePlugins:function(e,t,n,o){for(var r in _e.forEach((function(o){var r=o.pluginName;if(e.options[r]||o.initializeByDefault){var i=new o(e,t,e.options);i.sortable=e,i.options=e.options,e[r]=i,k(n,i.defaults)}})),e.options)if(e.options.hasOwnProperty(r)){var i=this.modifyOption(e,r,e.options[r]);void 0!==i&&(e.options[r]=i)}},getEventProperties:function(e,t){var n={};return _e.forEach((function(o){"function"==typeof o.eventProperties&&k(n,o.eventProperties.call(t[o.pluginName],e))})),n},modifyOption:function(e,t,n){var o;return _e.forEach((function(r){e[r.pluginName]&&r.optionListeners&&"function"==typeof r.optionListeners[t]&&(o=r.optionListeners[t].call(e[r.pluginName],n))})),o}};function Ee(e){var t=e.sortable,n=e.rootEl,o=e.name,r=e.targetEl,i=e.cloneEl,a=e.toEl,s=e.fromEl,l=e.oldIndex,c=e.newIndex,u=e.oldDraggableIndex,d=e.newDraggableIndex,p=e.originalEvent,f=e.putSortable,h=e.extraEventProperties;if(t=t||n&&n[ge]){var m,g=t.options,v="on"+o.charAt(0).toUpperCase()+o.substr(1);!window.CustomEvent||B||G?(m=document.createEvent("Event")).initEvent(o,!0,!0):m=new CustomEvent(o,{bubbles:!0,cancelable:!0}),m.to=a||n,m.from=s||n,m.item=r||n,m.clone=i,m.oldIndex=l,m.newIndex=c,m.oldDraggableIndex=u,m.newDraggableIndex=d,m.originalEvent=p,m.pullMode=f?f.lastPutMode:void 0;var _=I(I({},h),be.getEventProperties(o,t));for(var y in _)m[y]=_[y];n&&n.dispatchEvent(m),g[v]&&g[v].call(t,m)}}var we=["evt"],Se=function(e,t){var n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{},o=n.evt,r=L(n,we);be.pluginEvent.bind(mt)(e,t,I({dragEl:Te,parentEl:Ce,ghostEl:Pe,rootEl:Ae,nextEl:De,lastDownEl:Oe,cloneEl:Re,cloneHidden:Ie,dragStarted:Ve,putSortable:Be,activeSortable:mt.active,originalEvent:o,oldIndex:Ne,oldDraggableIndex:ke,newIndex:Me,newDraggableIndex:Le,hideGhostForTarget:dt,unhideGhostForTarget:pt,cloneNowHidden:function(){Ie=!0},cloneNowShown:function(){Ie=!1},dispatchSortableEvent:function(e){xe({sortable:t,name:e,originalEvent:o})}},r))};function xe(e){Ee(I({putSortable:Be,cloneEl:Re,targetEl:Te,rootEl:Ae,oldIndex:Ne,oldDraggableIndex:ke,newIndex:Me,newDraggableIndex:Le},e))}var Te,Ce,Pe,Ae,De,Oe,Re,Ie,Ne,Me,ke,Le,Fe,Be,Ge,je,$e,He,Ue,Ye,Ve,Xe,qe,We,ze,Ke=!1,Qe=!1,Ze=[],Je=!1,et=!1,tt=[],nt=!1,ot=[],rt="undefined"!=typeof document,it=U,at=G||B?"cssFloat":"float",st=rt&&!Y&&!U&&"draggable"in document.createElement("div"),lt=function(){if(rt){if(B)return!1;var e=document.createElement("x");return e.style.cssText="pointer-events:auto","auto"===e.style.pointerEvents}}(),ct=function(e,t){var n=ee(e),o=parseInt(n.width)-parseInt(n.paddingLeft)-parseInt(n.paddingRight)-parseInt(n.borderLeftWidth)-parseInt(n.borderRightWidth),r=ae(e,0,t),i=ae(e,1,t),a=r&&ee(r),s=i&&ee(i),l=a&&parseInt(a.marginLeft)+parseInt(a.marginRight)+re(r).width,c=s&&parseInt(s.marginLeft)+parseInt(s.marginRight)+re(i).width;if("flex"===n.display)return"column"===n.flexDirection||"column-reverse"===n.flexDirection?"vertical":"horizontal";if("grid"===n.display)return n.gridTemplateColumns.split(" ").length<=1?"vertical":"horizontal";if(r&&a.float&&"none"!==a.float){var u="left"===a.float?"left":"right";return!i||"both"!==s.clear&&s.clear!==u?"horizontal":"vertical"}return r&&("block"===a.display||"flex"===a.display||"table"===a.display||"grid"===a.display||l>=o&&"none"===n[at]||i&&"none"===n[at]&&l+c>o)?"vertical":"horizontal"},ut=function(e){function t(e,n){return function(o,r,i,a){var s=o.options.group.name&&r.options.group.name&&o.options.group.name===r.options.group.name;if(null==e&&(n||s))return!0;if(null==e||!1===e)return!1;if(n&&"clone"===e)return e;if("function"==typeof e)return t(e(o,r,i,a),n)(o,r,i,a);var l=(n?o:r).options.group.name;return!0===e||"string"==typeof e&&e===l||e.join&&e.indexOf(l)>-1}}var n={},o=e.group;o&&"object"==N(o)||(o={name:o}),n.name=o.name,n.checkPull=t(o.pull,!0),n.checkPut=t(o.put),n.revertClone=o.revertClone,e.group=n},dt=function(){!lt&&Pe&&ee(Pe,"display","none")},pt=function(){!lt&&Pe&&ee(Pe,"display","")};rt&&!Y&&document.addEventListener("click",(function(e){if(Qe)return e.preventDefault(),e.stopPropagation&&e.stopPropagation(),e.stopImmediatePropagation&&e.stopImmediatePropagation(),Qe=!1,!1}),!0);var ft=function(e){if(Te){var t=function(e,t){var n;return Ze.some((function(o){var r=o[ge].options.emptyInsertThreshold;if(r&&!se(o)){var i=re(o),a=e>=i.left-r&&e<=i.right+r,s=t>=i.top-r&&t<=i.bottom+r;return a&&s?n=o:void 0}})),n}((e=e.touches?e.touches[0]:e).clientX,e.clientY);if(t){var n={};for(var o in e)e.hasOwnProperty(o)&&(n[o]=e[o]);n.target=n.rootEl=t,n.preventDefault=void 0,n.stopPropagation=void 0,t[ge]._onDragOver(n)}}},ht=function(e){Te&&Te.parentNode[ge]._isOutsideThisEl(e.target)};function mt(e,t){if(!e||!e.nodeType||1!==e.nodeType)throw"Sortable: `el` must be an HTMLElement, not ".concat({}.toString.call(e));this.el=e,this.options=t=k({},t),e[ge]=this;var n={group:null,sort:!0,disabled:!1,store:null,handle:null,draggable:/^[uo]l$/i.test(e.nodeName)?">li":">*",swapThreshold:1,invertSwap:!1,invertedSwapThreshold:null,removeCloneOnHide:!0,direction:function(){return ct(e,this.options)},ghostClass:"sortable-ghost",chosenClass:"sortable-chosen",dragClass:"sortable-drag",ignore:"a, img",filter:null,preventOnFilter:!0,animation:0,easing:null,setData:function(e,t){e.setData("Text",t.textContent)},dropBubble:!1,dragoverBubble:!1,dataIdAttr:"data-id",delay:0,delayOnTouchOnly:!1,touchStartThreshold:(Number.parseInt?Number:window).parseInt(window.devicePixelRatio,10)||1,forceFallback:!1,fallbackClass:"sortable-fallback",fallbackOnBody:!1,fallbackTolerance:0,fallbackOffset:{x:0,y:0},supportPointer:!1!==mt.supportPointer&&"PointerEvent"in window&&(!H||U),emptyInsertThreshold:5};for(var o in be.initializePlugins(this,e,n),n)!(o in t)&&(t[o]=n[o]);for(var r in ut(t),this)"_"===r.charAt(0)&&"function"==typeof this[r]&&(this[r]=this[r].bind(this));this.nativeDraggable=!t.forceFallback&&st,this.nativeDraggable&&(this.options.touchStartThreshold=1),t.supportPointer?X(e,"pointerdown",this._onTapStart):(X(e,"mousedown",this._onTapStart),X(e,"touchstart",this._onTapStart)),this.nativeDraggable&&(X(e,"dragover",this),X(e,"dragenter",this)),Ze.push(this.el),t.store&&t.store.get&&this.sort(t.store.get(this)||[]),k(this,ve())}function gt(e,t,n,o,r,i,a,s){var l,c,u=e[ge],d=u.options.onMove;return!window.CustomEvent||B||G?(l=document.createEvent("Event")).initEvent("move",!0,!0):l=new CustomEvent("move",{bubbles:!0,cancelable:!0}),l.to=t,l.from=e,l.dragged=n,l.draggedRect=o,l.related=r||t,l.relatedRect=i||re(t),l.willInsertAfter=s,l.originalEvent=a,e.dispatchEvent(l),d&&(c=d.call(u,l,a)),c}function vt(e){e.draggable=!1}function _t(){nt=!1}function yt(e){for(var t=e.tagName+e.className+e.src+e.href+e.textContent,n=t.length,o=0;n--;)o+=t.charCodeAt(n);return o.toString(36)}function bt(e){return setTimeout(e,0)}function Et(e){return clearTimeout(e)}mt.prototype={constructor:mt,_isOutsideThisEl:function(e){this.el.contains(e)||e===this.el||(Xe=null)},_getDirection:function(e,t){return"function"==typeof this.options.direction?this.options.direction.call(this,e,t,Te):this.options.direction},_onTapStart:function(e){if(e.cancelable){var t=this,n=this.el,o=this.options,r=o.preventOnFilter,i=e.type,a=e.touches&&e.touches[0]||e.pointerType&&"touch"===e.pointerType&&e,s=(a||e).target,l=e.target.shadowRoot&&(e.path&&e.path[0]||e.composedPath&&e.composedPath()[0])||s,c=o.filter;if(function(e){ot.length=0;var t=e.getElementsByTagName("input"),n=t.length;for(;n--;){var o=t[n];o.checked&&ot.push(o)}}(n),!Te&&!(/mousedown|pointerdown/.test(i)&&0!==e.button||o.disabled)&&!l.isContentEditable&&(this.nativeDraggable||!H||!s||"SELECT"!==s.tagName.toUpperCase())&&!((s=K(s,o.draggable,n,!1))&&s.animated||Oe===s)){if(Ne=le(s),ke=le(s,o.draggable),"function"==typeof c){if(c.call(this,e,s,this))return xe({sortable:t,rootEl:l,name:"filter",targetEl:s,toEl:n,fromEl:n}),Se("filter",t,{evt:e}),void(r&&e.preventDefault())}else if(c&&(c=c.split(",").some((function(o){if(o=K(l,o.trim(),n,!1))return xe({sortable:t,rootEl:o,name:"filter",targetEl:s,fromEl:n,toEl:n}),Se("filter",t,{evt:e}),!0}))))return void(r&&e.preventDefault());o.handle&&!K(l,o.handle,n,!1)||this._prepareDragStart(e,a,s)}}},_prepareDragStart:function(e,t,n){var o,r=this,i=r.el,a=r.options,s=i.ownerDocument;if(n&&!Te&&n.parentNode===i){var l=re(n);if(Ae=i,Ce=(Te=n).parentNode,De=Te.nextSibling,Oe=n,Fe=a.group,mt.dragged=Te,Ge={target:Te,clientX:(t||e).clientX,clientY:(t||e).clientY},Ue=Ge.clientX-l.left,Ye=Ge.clientY-l.top,this._lastX=(t||e).clientX,this._lastY=(t||e).clientY,Te.style["will-change"]="all",o=function(){Se("delayEnded",r,{evt:e}),mt.eventCanceled?r._onDrop():(r._disableDelayedDragEvents(),!j&&r.nativeDraggable&&(Te.draggable=!0),r._triggerDragStart(e,t),xe({sortable:r,name:"choose",originalEvent:e}),J(Te,a.chosenClass,!0))},a.ignore.split(",").forEach((function(e){ne(Te,e.trim(),vt)})),X(s,"dragover",ft),X(s,"mousemove",ft),X(s,"touchmove",ft),a.supportPointer?(X(s,"pointerup",r._onDrop),!this.nativeDraggable&&X(s,"pointercancel",r._onDrop)):(X(s,"mouseup",r._onDrop),X(s,"touchend",r._onDrop),X(s,"touchcancel",r._onDrop)),j&&this.nativeDraggable&&(this.options.touchStartThreshold=4,Te.draggable=!0),Se("delayStart",this,{evt:e}),!a.delay||a.delayOnTouchOnly&&!t||this.nativeDraggable&&(G||B))o();else{if(mt.eventCanceled)return void this._onDrop();a.supportPointer?(X(s,"pointerup",r._disableDelayedDrag),X(s,"pointercancel",r._disableDelayedDrag)):(X(s,"mouseup",r._disableDelayedDrag),X(s,"touchend",r._disableDelayedDrag),X(s,"touchcancel",r._disableDelayedDrag)),X(s,"mousemove",r._delayedDragTouchMoveHandler),X(s,"touchmove",r._delayedDragTouchMoveHandler),a.supportPointer&&X(s,"pointermove",r._delayedDragTouchMoveHandler),r._dragStartTimer=setTimeout(o,a.delay)}}},_delayedDragTouchMoveHandler:function(e){var t=e.touches?e.touches[0]:e;Math.max(Math.abs(t.clientX-this._lastX),Math.abs(t.clientY-this._lastY))>=Math.floor(this.options.touchStartThreshold/(this.nativeDraggable&&window.devicePixelRatio||1))&&this._disableDelayedDrag()},_disableDelayedDrag:function(){Te&&vt(Te),clearTimeout(this._dragStartTimer),this._disableDelayedDragEvents()},_disableDelayedDragEvents:function(){var e=this.el.ownerDocument;q(e,"mouseup",this._disableDelayedDrag),q(e,"touchend",this._disableDelayedDrag),q(e,"touchcancel",this._disableDelayedDrag),q(e,"pointerup",this._disableDelayedDrag),q(e,"pointercancel",this._disableDelayedDrag),q(e,"mousemove",this._delayedDragTouchMoveHandler),q(e,"touchmove",this._delayedDragTouchMoveHandler),q(e,"pointermove",this._delayedDragTouchMoveHandler)},_triggerDragStart:function(e,t){t=t||"touch"==e.pointerType&&e,!this.nativeDraggable||t?this.options.supportPointer?X(document,"pointermove",this._onTouchMove):X(document,t?"touchmove":"mousemove",this._onTouchMove):(X(Te,"dragend",this),X(Ae,"dragstart",this._onDragStart));try{document.selection?bt((function(){document.selection.empty()})):window.getSelection().removeAllRanges()}catch(e){}},_dragStarted:function(e,t){if(Ke=!1,Ae&&Te){Se("dragStarted",this,{evt:t}),this.nativeDraggable&&X(document,"dragover",ht);var n=this.options;!e&&J(Te,n.dragClass,!1),J(Te,n.ghostClass,!0),mt.active=this,e&&this._appendGhost(),xe({sortable:this,name:"start",originalEvent:t})}else this._nulling()},_emulateDragOver:function(){if(je){this._lastX=je.clientX,this._lastY=je.clientY,dt();for(var e=document.elementFromPoint(je.clientX,je.clientY),t=e;e&&e.shadowRoot&&(e=e.shadowRoot.elementFromPoint(je.clientX,je.clientY))!==t;)t=e;if(Te.parentNode[ge]._isOutsideThisEl(e),t)do{if(t[ge]){if(t[ge]._onDragOver({clientX:je.clientX,clientY:je.clientY,target:e,rootEl:t})&&!this.options.dragoverBubble)break}e=t}while(t=z(t));pt()}},_onTouchMove:function(e){if(Ge){var t=this.options,n=t.fallbackTolerance,o=t.fallbackOffset,r=e.touches?e.touches[0]:e,i=Pe&&te(Pe,!0),a=Pe&&i&&i.a,s=Pe&&i&&i.d,l=it&&ze&&ce(ze),c=(r.clientX-Ge.clientX+o.x)/(a||1)+(l?l[0]-tt[0]:0)/(a||1),u=(r.clientY-Ge.clientY+o.y)/(s||1)+(l?l[1]-tt[1]:0)/(s||1);if(!mt.active&&!Ke){if(n&&Math.max(Math.abs(r.clientX-this._lastX),Math.abs(r.clientY-this._lastY))<n)return;this._onDragStart(e,!0)}if(Pe){i?(i.e+=c-($e||0),i.f+=u-(He||0)):i={a:1,b:0,c:0,d:1,e:c,f:u};var d="matrix(".concat(i.a,",").concat(i.b,",").concat(i.c,",").concat(i.d,",").concat(i.e,",").concat(i.f,")");ee(Pe,"webkitTransform",d),ee(Pe,"mozTransform",d),ee(Pe,"msTransform",d),ee(Pe,"transform",d),$e=c,He=u,je=r}e.cancelable&&e.preventDefault()}},_appendGhost:function(){if(!Pe){var e=this.options.fallbackOnBody?document.body:Ae,t=re(Te,!0,it,!0,e),n=this.options;if(it){for(ze=e;"static"===ee(ze,"position")&&"none"===ee(ze,"transform")&&ze!==document;)ze=ze.parentNode;ze!==document.body&&ze!==document.documentElement?(ze===document&&(ze=oe()),t.top+=ze.scrollTop,t.left+=ze.scrollLeft):ze=oe(),tt=ce(ze)}J(Pe=Te.cloneNode(!0),n.ghostClass,!1),J(Pe,n.fallbackClass,!0),J(Pe,n.dragClass,!0),ee(Pe,"transition",""),ee(Pe,"transform",""),ee(Pe,"box-sizing","border-box"),ee(Pe,"margin",0),ee(Pe,"top",t.top),ee(Pe,"left",t.left),ee(Pe,"width",t.width),ee(Pe,"height",t.height),ee(Pe,"opacity","0.8"),ee(Pe,"position",it?"absolute":"fixed"),ee(Pe,"zIndex","100000"),ee(Pe,"pointerEvents","none"),mt.ghost=Pe,e.appendChild(Pe),ee(Pe,"transform-origin",Ue/parseInt(Pe.style.width)*100+"% "+Ye/parseInt(Pe.style.height)*100+"%")}},_onDragStart:function(e,t){var n=this,o=e.dataTransfer,r=n.options;Se("dragStart",this,{evt:e}),mt.eventCanceled?this._onDrop():(Se("setupClone",this),mt.eventCanceled||((Re=he(Te)).removeAttribute("id"),Re.draggable=!1,Re.style["will-change"]="",this._hideClone(),J(Re,this.options.chosenClass,!1),mt.clone=Re),n.cloneId=bt((function(){Se("clone",n),mt.eventCanceled||(n.options.removeCloneOnHide||Ae.insertBefore(Re,Te),n._hideClone(),xe({sortable:n,name:"clone"}))})),!t&&J(Te,r.dragClass,!0),t?(Qe=!0,n._loopId=setInterval(n._emulateDragOver,50)):(q(document,"mouseup",n._onDrop),q(document,"touchend",n._onDrop),q(document,"touchcancel",n._onDrop),o&&(o.effectAllowed="move",r.setData&&r.setData.call(n,o,Te)),X(document,"drop",n),ee(Te,"transform","translateZ(0)")),Ke=!0,n._dragStartId=bt(n._dragStarted.bind(n,t,e)),X(document,"selectstart",n),Ve=!0,window.getSelection().removeAllRanges(),H&&ee(document.body,"user-select","none"))},_onDragOver:function(e){var t,n,o,r,i=this.el,a=e.target,s=this.options,l=s.group,c=mt.active,u=Fe===l,d=s.sort,p=Be||c,f=this,h=!1;if(!nt){if(void 0!==e.preventDefault&&e.cancelable&&e.preventDefault(),a=K(a,s.draggable,i,!0),D("dragOver"),mt.eventCanceled)return h;if(Te.contains(e.target)||a.animated&&a.animatingX&&a.animatingY||f._ignoreWhileAnimating===a)return R(!1);if(Qe=!1,c&&!s.disabled&&(u?d||(o=Ce!==Ae):Be===this||(this.lastPutMode=Fe.checkPull(this,c,Te,e))&&l.checkPut(this,c,Te,e))){if(r="vertical"===this._getDirection(e,a),t=re(Te),D("dragOverValid"),mt.eventCanceled)return h;if(o)return Ce=Ae,O(),this._hideClone(),D("revert"),mt.eventCanceled||(De?Ae.insertBefore(Te,De):Ae.appendChild(Te)),R(!0);var m=se(i,s.draggable);if(!m||function(e,t,n){var o=re(se(n.el,n.options.draggable)),r=me(n.el,n.options,Pe),i=10;return t?e.clientX>r.right+i||e.clientY>o.bottom&&e.clientX>o.left:e.clientY>r.bottom+i||e.clientX>o.right&&e.clientY>o.top}(e,r,this)&&!m.animated){if(m===Te)return R(!1);if(m&&i===e.target&&(a=m),a&&(n=re(a)),!1!==gt(Ae,i,Te,t,a,n,e,!!a))return O(),m&&m.nextSibling?i.insertBefore(Te,m.nextSibling):i.appendChild(Te),Ce=i,N(),R(!0)}else if(m&&function(e,t,n){var o=re(ae(n.el,0,n.options,!0)),r=me(n.el,n.options,Pe),i=10;return t?e.clientX<r.left-i||e.clientY<o.top&&e.clientX<o.right:e.clientY<r.top-i||e.clientY<o.bottom&&e.clientX<o.left}(e,r,this)){var g=ae(i,0,s,!0);if(g===Te)return R(!1);if(n=re(a=g),!1!==gt(Ae,i,Te,t,a,n,e,!1))return O(),i.insertBefore(Te,g),Ce=i,N(),R(!0)}else if(a.parentNode===i){n=re(a);var v,_,y,b=Te.parentNode!==i,E=!function(e,t,n){var o=n?e.left:e.top,r=n?e.right:e.bottom,i=n?e.width:e.height,a=n?t.left:t.top,s=n?t.right:t.bottom,l=n?t.width:t.height;return o===a||r===s||o+i/2===a+l/2}(Te.animated&&Te.toRect||t,a.animated&&a.toRect||n,r),w=r?"top":"left",S=ie(a,"top","top")||ie(Te,"top","top"),x=S?S.scrollTop:void 0;if(Xe!==a&&(_=n[w],Je=!1,et=!E&&s.invertSwap||b),v=function(e,t,n,o,r,i,a,s){var l=o?e.clientY:e.clientX,c=o?n.height:n.width,u=o?n.top:n.left,d=o?n.bottom:n.right,p=!1;if(!a)if(s&&We<c*r){if(!Je&&(1===qe?l>u+c*i/2:l<d-c*i/2)&&(Je=!0),Je)p=!0;else if(1===qe?l<u+We:l>d-We)return-qe}else if(l>u+c*(1-r)/2&&l<d-c*(1-r)/2)return function(e){return le(Te)<le(e)?1:-1}(t);if((p=p||a)&&(l<u+c*i/2||l>d-c*i/2))return l>u+c/2?1:-1;return 0}(e,a,n,r,E?1:s.swapThreshold,null==s.invertedSwapThreshold?s.swapThreshold:s.invertedSwapThreshold,et,Xe===a),0!==v){var T=le(Te);do{T-=v,y=Ce.children[T]}while(y&&("none"===ee(y,"display")||y===Pe))}if(0===v||y===a)return R(!1);Xe=a,qe=v;var C=a.nextElementSibling,P=!1,A=gt(Ae,i,Te,t,a,n,e,P=1===v);if(!1!==A)return 1!==A&&-1!==A||(P=1===A),nt=!0,setTimeout(_t,30),O(),P&&!C?i.appendChild(Te):a.parentNode.insertBefore(Te,P?C:a),S&&fe(S,0,x-S.scrollTop),Ce=Te.parentNode,void 0===_||et||(We=Math.abs(_-re(a)[w])),N(),R(!0)}if(i.contains(Te))return R(!1)}return!1}function D(s,l){Se(s,f,I({evt:e,isOwner:u,axis:r?"vertical":"horizontal",revert:o,dragRect:t,targetRect:n,canSort:d,fromSortable:p,target:a,completed:R,onMove:function(n,o){return gt(Ae,i,Te,t,n,re(n),e,o)},changed:N},l))}function O(){D("dragOverAnimationCapture"),f.captureAnimationState(),f!==p&&p.captureAnimationState()}function R(t){return D("dragOverCompleted",{insertion:t}),t&&(u?c._hideClone():c._showClone(f),f!==p&&(J(Te,Be?Be.options.ghostClass:c.options.ghostClass,!1),J(Te,s.ghostClass,!0)),Be!==f&&f!==mt.active?Be=f:f===mt.active&&Be&&(Be=null),p===f&&(f._ignoreWhileAnimating=a),f.animateAll((function(){D("dragOverAnimationComplete"),f._ignoreWhileAnimating=null})),f!==p&&(p.animateAll(),p._ignoreWhileAnimating=null)),(a===Te&&!Te.animated||a===i&&!a.animated)&&(Xe=null),s.dragoverBubble||e.rootEl||a===document||(Te.parentNode[ge]._isOutsideThisEl(e.target),!t&&ft(e)),!s.dragoverBubble&&e.stopPropagation&&e.stopPropagation(),h=!0}function N(){Me=le(Te),Le=le(Te,s.draggable),xe({sortable:f,name:"change",toEl:i,newIndex:Me,newDraggableIndex:Le,originalEvent:e})}},_ignoreWhileAnimating:null,_offMoveEvents:function(){q(document,"mousemove",this._onTouchMove),q(document,"touchmove",this._onTouchMove),q(document,"pointermove",this._onTouchMove),q(document,"dragover",ft),q(document,"mousemove",ft),q(document,"touchmove",ft)},_offUpEvents:function(){var e=this.el.ownerDocument;q(e,"mouseup",this._onDrop),q(e,"touchend",this._onDrop),q(e,"pointerup",this._onDrop),q(e,"pointercancel",this._onDrop),q(e,"touchcancel",this._onDrop),q(document,"selectstart",this)},_onDrop:function(e){var t=this.el,n=this.options;Me=le(Te),Le=le(Te,n.draggable),Se("drop",this,{evt:e}),Ce=Te&&Te.parentNode,Me=le(Te),Le=le(Te,n.draggable),mt.eventCanceled||(Ke=!1,et=!1,Je=!1,clearInterval(this._loopId),clearTimeout(this._dragStartTimer),Et(this.cloneId),Et(this._dragStartId),this.nativeDraggable&&(q(document,"drop",this),q(t,"dragstart",this._onDragStart)),this._offMoveEvents(),this._offUpEvents(),H&&ee(document.body,"user-select",""),ee(Te,"transform",""),e&&(Ve&&(e.cancelable&&e.preventDefault(),!n.dropBubble&&e.stopPropagation()),Pe&&Pe.parentNode&&Pe.parentNode.removeChild(Pe),(Ae===Ce||Be&&"clone"!==Be.lastPutMode)&&Re&&Re.parentNode&&Re.parentNode.removeChild(Re),Te&&(this.nativeDraggable&&q(Te,"dragend",this),vt(Te),Te.style["will-change"]="",Ve&&!Ke&&J(Te,Be?Be.options.ghostClass:this.options.ghostClass,!1),J(Te,this.options.chosenClass,!1),xe({sortable:this,name:"unchoose",toEl:Ce,newIndex:null,newDraggableIndex:null,originalEvent:e}),Ae!==Ce?(Me>=0&&(xe({rootEl:Ce,name:"add",toEl:Ce,fromEl:Ae,originalEvent:e}),xe({sortable:this,name:"remove",toEl:Ce,originalEvent:e}),xe({rootEl:Ce,name:"sort",toEl:Ce,fromEl:Ae,originalEvent:e}),xe({sortable:this,name:"sort",toEl:Ce,originalEvent:e})),Be&&Be.save()):Me!==Ne&&Me>=0&&(xe({sortable:this,name:"update",toEl:Ce,originalEvent:e}),xe({sortable:this,name:"sort",toEl:Ce,originalEvent:e})),mt.active&&(null!=Me&&-1!==Me||(Me=Ne,Le=ke),xe({sortable:this,name:"end",toEl:Ce,originalEvent:e}),this.save())))),this._nulling()},_nulling:function(){Se("nulling",this),Ae=Te=Ce=Pe=De=Re=Oe=Ie=Ge=je=Ve=Me=Le=Ne=ke=Xe=qe=Be=Fe=mt.dragged=mt.ghost=mt.clone=mt.active=null,ot.forEach((function(e){e.checked=!0})),ot.length=$e=He=0},handleEvent:function(e){switch(e.type){case"drop":case"dragend":this._onDrop(e);break;case"dragenter":case"dragover":Te&&(this._onDragOver(e),function(e){e.dataTransfer&&(e.dataTransfer.dropEffect="move");e.cancelable&&e.preventDefault()}(e));break;case"selectstart":e.preventDefault()}},toArray:function(){for(var e,t=[],n=this.el.children,o=0,r=n.length,i=this.options;o<r;o++)K(e=n[o],i.draggable,this.el,!1)&&t.push(e.getAttribute(i.dataIdAttr)||yt(e));return t},sort:function(e,t){var n={},o=this.el;this.toArray().forEach((function(e,t){var r=o.children[t];K(r,this.options.draggable,o,!1)&&(n[e]=r)}),this),t&&this.captureAnimationState(),e.forEach((function(e){n[e]&&(o.removeChild(n[e]),o.appendChild(n[e]))})),t&&this.animateAll()},save:function(){var e=this.options.store;e&&e.set&&e.set(this)},closest:function(e,t){return K(e,t||this.options.draggable,this.el,!1)},option:function(e,t){var n=this.options;if(void 0===t)return n[e];var o=be.modifyOption(this,e,t);n[e]=void 0!==o?o:t,"group"===e&&ut(n)},destroy:function(){Se("destroy",this);var e=this.el;e[ge]=null,q(e,"mousedown",this._onTapStart),q(e,"touchstart",this._onTapStart),q(e,"pointerdown",this._onTapStart),this.nativeDraggable&&(q(e,"dragover",this),q(e,"dragenter",this)),Array.prototype.forEach.call(e.querySelectorAll("[draggable]"),(function(e){e.removeAttribute("draggable")})),this._onDrop(),this._disableDelayedDragEvents(),Ze.splice(Ze.indexOf(this.el),1),this.el=e=null},_hideClone:function(){if(!Ie){if(Se("hideClone",this),mt.eventCanceled)return;ee(Re,"display","none"),this.options.removeCloneOnHide&&Re.parentNode&&Re.parentNode.removeChild(Re),Ie=!0}},_showClone:function(e){if("clone"===e.lastPutMode){if(Ie){if(Se("showClone",this),mt.eventCanceled)return;Te.parentNode!=Ae||this.options.group.revertClone?De?Ae.insertBefore(Re,De):Ae.appendChild(Re):Ae.insertBefore(Re,Te),this.options.group.revertClone&&this.animate(Te,Re),ee(Re,"display",""),Ie=!1}}else this._hideClone()}},rt&&X(document,"touchmove",(function(e){(mt.active||Ke)&&e.cancelable&&e.preventDefault()})),mt.utils={on:X,off:q,css:ee,find:ne,is:function(e,t){return!!K(e,t,e,!1)},extend:function(e,t){if(e&&t)for(var n in t)t.hasOwnProperty(n)&&(e[n]=t[n]);return e},throttle:pe,closest:K,toggleClass:J,clone:he,index:le,nextTick:bt,cancelNextTick:Et,detectDirection:ct,getChild:ae,expando:ge},mt.get=function(e){return e[ge]},mt.mount=function(){for(var e=arguments.length,t=new Array(e),n=0;n<e;n++)t[n]=arguments[n];t[0].constructor===Array&&(t=t[0]),t.forEach((function(e){if(!e.prototype||!e.prototype.constructor)throw"Sortable: Mounted plugin must be a constructor function, not ".concat({}.toString.call(e));e.utils&&(mt.utils=I(I({},mt.utils),e.utils)),be.mount(e)}))},mt.create=function(e,t){return new mt(e,t)},mt.version="1.15.6";var wt,St,xt,Tt,Ct,Pt,At=[],Dt=!1;function Ot(){At.forEach((function(e){clearInterval(e.pid)})),At=[]}function Rt(){clearInterval(Pt)}var It=pe((function(e,t,n,o){if(t.scroll){var r,i=(e.touches?e.touches[0]:e).clientX,a=(e.touches?e.touches[0]:e).clientY,s=t.scrollSensitivity,l=t.scrollSpeed,c=oe(),u=!1;St!==n&&(St=n,Ot(),wt=t.scroll,r=t.scrollFn,!0===wt&&(wt=ue(n,!0)));var d=0,p=wt;do{var f=p,h=re(f),m=h.top,g=h.bottom,v=h.left,_=h.right,y=h.width,b=h.height,E=void 0,w=void 0,S=f.scrollWidth,x=f.scrollHeight,T=ee(f),C=f.scrollLeft,P=f.scrollTop;f===c?(E=y<S&&("auto"===T.overflowX||"scroll"===T.overflowX||"visible"===T.overflowX),w=b<x&&("auto"===T.overflowY||"scroll"===T.overflowY||"visible"===T.overflowY)):(E=y<S&&("auto"===T.overflowX||"scroll"===T.overflowX),w=b<x&&("auto"===T.overflowY||"scroll"===T.overflowY));var A=E&&(Math.abs(_-i)<=s&&C+y<S)-(Math.abs(v-i)<=s&&!!C),D=w&&(Math.abs(g-a)<=s&&P+b<x)-(Math.abs(m-a)<=s&&!!P);if(!At[d])for(var O=0;O<=d;O++)At[O]||(At[O]={});At[d].vx==A&&At[d].vy==D&&At[d].el===f||(At[d].el=f,At[d].vx=A,At[d].vy=D,clearInterval(At[d].pid),0==A&&0==D||(u=!0,At[d].pid=setInterval(function(){o&&0===this.layer&&mt.active._onTouchMove(Ct);var t=At[this.layer].vy?At[this.layer].vy*l:0,n=At[this.layer].vx?At[this.layer].vx*l:0;"function"==typeof r&&"continue"!==r.call(mt.dragged.parentNode[ge],n,t,e,Ct,At[this.layer].el)||fe(At[this.layer].el,n,t)}.bind({layer:d}),24))),d++}while(t.bubbleScroll&&p!==c&&(p=ue(p,!1)));Dt=u}}),30),Nt=function(e){var t=e.originalEvent,n=e.putSortable,o=e.dragEl,r=e.activeSortable,i=e.dispatchSortableEvent,a=e.hideGhostForTarget,s=e.unhideGhostForTarget;if(t){var l=n||r;a();var c=t.changedTouches&&t.changedTouches.length?t.changedTouches[0]:t,u=document.elementFromPoint(c.clientX,c.clientY);s(),l&&!l.el.contains(u)&&(i("spill"),this.onSpill({dragEl:o,putSortable:n}))}};function Mt(){}function kt(){}Mt.prototype={startIndex:null,dragStart:function(e){var t=e.oldDraggableIndex;this.startIndex=t},onSpill:function(e){var t=e.dragEl,n=e.putSortable;this.sortable.captureAnimationState(),n&&n.captureAnimationState();var o=ae(this.sortable.el,this.startIndex,this.options);o?this.sortable.el.insertBefore(t,o):this.sortable.el.appendChild(t),this.sortable.animateAll(),n&&n.animateAll()},drop:Nt},k(Mt,{pluginName:"revertOnSpill"}),kt.prototype={onSpill:function(e){var t=e.dragEl,n=e.putSortable||this.sortable;n.captureAnimationState(),t.parentNode&&t.parentNode.removeChild(t),n.animateAll()},drop:Nt},k(kt,{pluginName:"removeOnSpill"});mt.mount(new function(){function e(){for(var e in this.defaults={scroll:!0,forceAutoScrollFallback:!1,scrollSensitivity:30,scrollSpeed:10,bubbleScroll:!0},this)"_"===e.charAt(0)&&"function"==typeof this[e]&&(this[e]=this[e].bind(this))}return e.prototype={dragStarted:function(e){var t=e.originalEvent;this.sortable.nativeDraggable?X(document,"dragover",this._handleAutoScroll):this.options.supportPointer?X(document,"pointermove",this._handleFallbackAutoScroll):t.touches?X(document,"touchmove",this._handleFallbackAutoScroll):X(document,"mousemove",this._handleFallbackAutoScroll)},dragOverCompleted:function(e){var t=e.originalEvent;this.options.dragOverBubble||t.rootEl||this._handleAutoScroll(t)},drop:function(){this.sortable.nativeDraggable?q(document,"dragover",this._handleAutoScroll):(q(document,"pointermove",this._handleFallbackAutoScroll),q(document,"touchmove",this._handleFallbackAutoScroll),q(document,"mousemove",this._handleFallbackAutoScroll)),Rt(),Ot(),clearTimeout(Q),Q=void 0},nulling:function(){Ct=St=wt=Dt=Pt=xt=Tt=null,At.length=0},_handleFallbackAutoScroll:function(e){this._handleAutoScroll(e,!0)},_handleAutoScroll:function(e,t){var n=this,o=(e.touches?e.touches[0]:e).clientX,r=(e.touches?e.touches[0]:e).clientY,i=document.elementFromPoint(o,r);if(Ct=e,t||this.options.forceAutoScrollFallback||G||B||H){It(e,this.options,i,t);var a=ue(i,!0);!Dt||Pt&&o===xt&&r===Tt||(Pt&&Rt(),Pt=setInterval((function(){var i=ue(document.elementFromPoint(o,r),!0);i!==a&&(a=i,Ot()),It(e,n.options,i,t)}),10),xt=o,Tt=r)}else{if(!this.options.bubbleScroll||ue(i,!0)===oe())return void Ot();It(e,this.options,ue(i,!1),!1)}}},k(e,{pluginName:"scroll",initializeByDefault:!0})}),mt.mount(kt,Mt);var Lt;function Ft(e){return Ft="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},Ft(e)}function Bt(e,t,n){return(t=function(e){var t=function(e,t){if("object"!=Ft(e)||!e)return e;var n=e[Symbol.toPrimitive];if(void 0!==n){var o=n.call(e,t||"default");if("object"!=Ft(o))return o;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==Ft(t)?t:t+""}(t))in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}function Gt(){/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */Gt=function(){return t};var e,t={},n=Object.prototype,o=n.hasOwnProperty,r=Object.defineProperty||function(e,t,n){e[t]=n.value},i="function"==typeof Symbol?Symbol:{},a=i.iterator||"@@iterator",s=i.asyncIterator||"@@asyncIterator",l=i.toStringTag||"@@toStringTag";function c(e,t,n){return Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}),e[t]}try{c({},"")}catch(e){c=function(e,t,n){return e[t]=n}}function u(e,t,n,o){var i=t&&t.prototype instanceof v?t:v,a=Object.create(i.prototype),s=new O(o||[]);return r(a,"_invoke",{value:C(e,n,s)}),a}function d(e,t,n){try{return{type:"normal",arg:e.call(t,n)}}catch(e){return{type:"throw",arg:e}}}t.wrap=u;var p="suspendedStart",f="suspendedYield",h="executing",m="completed",g={};function v(){}function _(){}function y(){}var b={};c(b,a,(function(){return this}));var E=Object.getPrototypeOf,w=E&&E(E(R([])));w&&w!==n&&o.call(w,a)&&(b=w);var S=y.prototype=v.prototype=Object.create(b);function x(e){["next","throw","return"].forEach((function(t){c(e,t,(function(e){return this._invoke(t,e)}))}))}function T(e,t){function n(r,i,a,s){var l=d(e[r],e,i);if("throw"!==l.type){var c=l.arg,u=c.value;return u&&"object"==Ft(u)&&o.call(u,"__await")?t.resolve(u.__await).then((function(e){n("next",e,a,s)}),(function(e){n("throw",e,a,s)})):t.resolve(u).then((function(e){c.value=e,a(c)}),(function(e){return n("throw",e,a,s)}))}s(l.arg)}var i;r(this,"_invoke",{value:function(e,o){function r(){return new t((function(t,r){n(e,o,t,r)}))}return i=i?i.then(r,r):r()}})}function C(t,n,o){var r=p;return function(i,a){if(r===h)throw Error("Generator is already running");if(r===m){if("throw"===i)throw a;return{value:e,done:!0}}for(o.method=i,o.arg=a;;){var s=o.delegate;if(s){var l=P(s,o);if(l){if(l===g)continue;return l}}if("next"===o.method)o.sent=o._sent=o.arg;else if("throw"===o.method){if(r===p)throw r=m,o.arg;o.dispatchException(o.arg)}else"return"===o.method&&o.abrupt("return",o.arg);r=h;var c=d(t,n,o);if("normal"===c.type){if(r=o.done?m:f,c.arg===g)continue;return{value:c.arg,done:o.done}}"throw"===c.type&&(r=m,o.method="throw",o.arg=c.arg)}}}function P(t,n){var o=n.method,r=t.iterator[o];if(r===e)return n.delegate=null,"throw"===o&&t.iterator.return&&(n.method="return",n.arg=e,P(t,n),"throw"===n.method)||"return"!==o&&(n.method="throw",n.arg=new TypeError("The iterator does not provide a '"+o+"' method")),g;var i=d(r,t.iterator,n.arg);if("throw"===i.type)return n.method="throw",n.arg=i.arg,n.delegate=null,g;var a=i.arg;return a?a.done?(n[t.resultName]=a.value,n.next=t.nextLoc,"return"!==n.method&&(n.method="next",n.arg=e),n.delegate=null,g):a:(n.method="throw",n.arg=new TypeError("iterator result is not an object"),n.delegate=null,g)}function A(e){var t={tryLoc:e[0]};1 in e&&(t.catchLoc=e[1]),2 in e&&(t.finallyLoc=e[2],t.afterLoc=e[3]),this.tryEntries.push(t)}function D(e){var t=e.completion||{};t.type="normal",delete t.arg,e.completion=t}function O(e){this.tryEntries=[{tryLoc:"root"}],e.forEach(A,this),this.reset(!0)}function R(t){if(t||""===t){var n=t[a];if(n)return n.call(t);if("function"==typeof t.next)return t;if(!isNaN(t.length)){var r=-1,i=function n(){for(;++r<t.length;)if(o.call(t,r))return n.value=t[r],n.done=!1,n;return n.value=e,n.done=!0,n};return i.next=i}}throw new TypeError(Ft(t)+" is not iterable")}return _.prototype=y,r(S,"constructor",{value:y,configurable:!0}),r(y,"constructor",{value:_,configurable:!0}),_.displayName=c(y,l,"GeneratorFunction"),t.isGeneratorFunction=function(e){var t="function"==typeof e&&e.constructor;return!!t&&(t===_||"GeneratorFunction"===(t.displayName||t.name))},t.mark=function(e){return Object.setPrototypeOf?Object.setPrototypeOf(e,y):(e.__proto__=y,c(e,l,"GeneratorFunction")),e.prototype=Object.create(S),e},t.awrap=function(e){return{__await:e}},x(T.prototype),c(T.prototype,s,(function(){return this})),t.AsyncIterator=T,t.async=function(e,n,o,r,i){void 0===i&&(i=Promise);var a=new T(u(e,n,o,r),i);return t.isGeneratorFunction(n)?a:a.next().then((function(e){return e.done?e.value:a.next()}))},x(S),c(S,l,"Generator"),c(S,a,(function(){return this})),c(S,"toString",(function(){return"[object Generator]"})),t.keys=function(e){var t=Object(e),n=[];for(var o in t)n.push(o);return n.reverse(),function e(){for(;n.length;){var o=n.pop();if(o in t)return e.value=o,e.done=!1,e}return e.done=!0,e}},t.values=R,O.prototype={constructor:O,reset:function(t){if(this.prev=0,this.next=0,this.sent=this._sent=e,this.done=!1,this.delegate=null,this.method="next",this.arg=e,this.tryEntries.forEach(D),!t)for(var n in this)"t"===n.charAt(0)&&o.call(this,n)&&!isNaN(+n.slice(1))&&(this[n]=e)},stop:function(){this.done=!0;var e=this.tryEntries[0].completion;if("throw"===e.type)throw e.arg;return this.rval},dispatchException:function(t){if(this.done)throw t;var n=this;function r(o,r){return s.type="throw",s.arg=t,n.next=o,r&&(n.method="next",n.arg=e),!!r}for(var i=this.tryEntries.length-1;i>=0;--i){var a=this.tryEntries[i],s=a.completion;if("root"===a.tryLoc)return r("end");if(a.tryLoc<=this.prev){var l=o.call(a,"catchLoc"),c=o.call(a,"finallyLoc");if(l&&c){if(this.prev<a.catchLoc)return r(a.catchLoc,!0);if(this.prev<a.finallyLoc)return r(a.finallyLoc)}else if(l){if(this.prev<a.catchLoc)return r(a.catchLoc,!0)}else{if(!c)throw Error("try statement without catch or finally");if(this.prev<a.finallyLoc)return r(a.finallyLoc)}}}},abrupt:function(e,t){for(var n=this.tryEntries.length-1;n>=0;--n){var r=this.tryEntries[n];if(r.tryLoc<=this.prev&&o.call(r,"finallyLoc")&&this.prev<r.finallyLoc){var i=r;break}}i&&("break"===e||"continue"===e)&&i.tryLoc<=t&&t<=i.finallyLoc&&(i=null);var a=i?i.completion:{};return a.type=e,a.arg=t,i?(this.method="next",this.next=i.finallyLoc,g):this.complete(a)},complete:function(e,t){if("throw"===e.type)throw e.arg;return"break"===e.type||"continue"===e.type?this.next=e.arg:"return"===e.type?(this.rval=this.arg=e.arg,this.method="return",this.next="end"):"normal"===e.type&&t&&(this.next=t),g},finish:function(e){for(var t=this.tryEntries.length-1;t>=0;--t){var n=this.tryEntries[t];if(n.finallyLoc===e)return this.complete(n.completion,n.afterLoc),D(n),g}},catch:function(e){for(var t=this.tryEntries.length-1;t>=0;--t){var n=this.tryEntries[t];if(n.tryLoc===e){var o=n.completion;if("throw"===o.type){var r=o.arg;D(n)}return r}}throw Error("illegal catch attempt")},delegateYield:function(t,n,o){return this.delegate={iterator:R(t),resultName:n,nextLoc:o},"next"===this.method&&(this.arg=e),g}},t}function jt(e,t,n,o,r,i,a){try{var s=e[i](a),l=s.value}catch(e){return void n(e)}s.done?t(l):Promise.resolve(l).then(o,r)}function $t(e){return function(){var t=this,n=arguments;return new Promise((function(o,r){var i=e.apply(t,n);function a(e){jt(i,o,r,a,s,"next",e)}function s(e){jt(i,o,r,a,s,"throw",e)}a(void 0)}))}}!function(e){e.APP_READY="app_ready",e.EXTRAS_CONNECTED="extras_connected",e.MESSAGE_SWIPED="message_swiped",e.MESSAGE_SENT="message_sent",e.MESSAGE_RECEIVED="message_received",e.MESSAGE_EDITED="message_edited",e.MESSAGE_DELETED="message_deleted",e.MESSAGE_UPDATED="message_updated",e.MESSAGE_FILE_EMBEDDED="message_file_embedded",e.MORE_MESSAGES_LOADED="more_messages_loaded",e.IMPERSONATE_READY="impersonate_ready",e.CHAT_CHANGED="chat_id_changed",e.GENERATION_AFTER_COMMANDS="GENERATION_AFTER_COMMANDS",e.GENERATION_STARTED="generation_started",e.GENERATION_STOPPED="generation_stopped",e.GENERATION_ENDED="generation_ended",e.EXTENSIONS_FIRST_LOAD="extensions_first_load",e.EXTENSION_SETTINGS_LOADED="extension_settings_loaded",e.SETTINGS_LOADED="settings_loaded",e.SETTINGS_UPDATED="settings_updated",e.GROUP_UPDATED="group_updated",e.MOVABLE_PANELS_RESET="movable_panels_reset",e.SETTINGS_LOADED_BEFORE="settings_loaded_before",e.SETTINGS_LOADED_AFTER="settings_loaded_after",e.CHATCOMPLETION_SOURCE_CHANGED="chatcompletion_source_changed",e.CHATCOMPLETION_MODEL_CHANGED="chatcompletion_model_changed",e.OAI_PRESET_CHANGED_BEFORE="oai_preset_changed_before",e.OAI_PRESET_CHANGED_AFTER="oai_preset_changed_after",e.OAI_PRESET_EXPORT_READY="oai_preset_export_ready",e.OAI_PRESET_IMPORT_READY="oai_preset_import_ready",e.WORLDINFO_SETTINGS_UPDATED="worldinfo_settings_updated",e.WORLDINFO_UPDATED="worldinfo_updated",e.CHARACTER_EDITED="character_edited",e.CHARACTER_PAGE_LOADED="character_page_loaded",e.CHARACTER_GROUP_OVERLAY_STATE_CHANGE_BEFORE="character_group_overlay_state_change_before",e.CHARACTER_GROUP_OVERLAY_STATE_CHANGE_AFTER="character_group_overlay_state_change_after",e.USER_MESSAGE_RENDERED="user_message_rendered",e.CHARACTER_MESSAGE_RENDERED="character_message_rendered",e.FORCE_SET_BACKGROUND="force_set_background",e.CHAT_DELETED="chat_deleted",e.CHAT_CREATED="chat_created",e.GROUP_CHAT_DELETED="group_chat_deleted",e.GROUP_CHAT_CREATED="group_chat_created",e.GENERATE_BEFORE_COMBINE_PROMPTS="generate_before_combine_prompts",e.GENERATE_AFTER_COMBINE_PROMPTS="generate_after_combine_prompts",e.GENERATE_AFTER_DATA="generate_after_data",e.GROUP_MEMBER_DRAFTED="group_member_drafted",e.GROUP_WRAPPER_STARTED="group_wrapper_started",e.GROUP_WRAPPER_FINISHED="group_wrapper_finished",e.WORLD_INFO_ACTIVATED="world_info_activated",e.TEXT_COMPLETION_SETTINGS_READY="text_completion_settings_ready",e.CHAT_COMPLETION_SETTINGS_READY="chat_completion_settings_ready",e.CHAT_COMPLETION_PROMPT_READY="chat_completion_prompt_ready",e.CHARACTER_FIRST_MESSAGE_SELECTED="character_first_message_selected",e.CHARACTER_DELETED="characterDeleted",e.CHARACTER_DUPLICATED="character_duplicated",e.CHARACTER_RENAMED="character_renamed",e.SMOOTH_STREAM_TOKEN_RECEIVED="stream_token_received",e.STREAM_TOKEN_RECEIVED="stream_token_received",e.STREAM_REASONING_DONE="stream_reasoning_done",e.FILE_ATTACHMENT_DELETED="file_attachment_deleted",e.WORLDINFO_FORCE_ACTIVATE="worldinfo_force_activate",e.OPEN_CHARACTER_LIBRARY="open_character_library",e.ONLINE_STATUS_CHANGED="online_status_changed",e.IMAGE_SWIPED="image_swiped",e.CONNECTION_PROFILE_LOADED="connection_profile_loaded",e.TOOL_CALLS_PERFORMED="tool_calls_performed",e.TOOL_CALLS_RENDERED="tool_calls_rendered"}(Lt||(Lt={}));var Ht=SillyTavern.getContext(),Ut="roadway",Yt={TARGET:"roadway_target_chat",RAW_CONTENT:"roadway_raw_content",OPTIONS:"roadway_options"},Vt="Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:\n\n{{roadwaySelected}}",Xt="You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences, **building upon the established context from our previous conversation.** Your task is to generate an *unpredictable* and *engaging* list of options for **{{user}}**, specifically tailored to their character, the world, and the current situation as established in our previous dialogue. These should be framed as possible actions that **{{user}}** *could* take.\n\nOutput ONLY a numbered list of possible actions. Each action should be a clear, actionable, concise, and *creative* sentence written in plain text suggesting an action **{{user}}** can perform in the game.\n\nPrioritize *varied* actions that span multiple domains:\n\n{Observation/Investigation; Dialogue/Persuasion; Stealth/Intrigue; Combat/Conflict; Crafting/Repair; Knowledge/Lore; Movement/Traversal; Deception/Manipulation; Performance/Entertainment; Technical/Mechanical}.\n\nAvoid obvious or repetitive actions **that {{user}} has already explored or are contrary to the established character/world.** Push the boundaries of the situation. Challenge **{{user}}'s** expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 6 actions. The actions must be written in plain text.\n\nHere are a few example actions to inspire creativity:\n\n1. Attempt to communicate with the forest creatures to learn the location of hidden trails.\n2. Bribe the corrupt city guard with a song and a dance.\n3. Stage a fake ambush to draw out a hidden enemy.",qt={version:"0.4.0",formatVersion:"F_1.0",profileId:"",maxContextType:"profile",maxContextValue:16384,maxResponseToken:500,promptPreset:"default",autoTrigger:!1,autoOpen:!0,impersonateApi:"main",showUseActionIcon:!0,autoSubmitUseAction:!1,promptPresets:{default:{content:Xt,extractionStrategy:"bullet",impersonate:Vt}}},Wt=new class{settingsKey;defaultSettings;constructor(e,t){this.settingsKey=e,this.defaultSettings=t}async initializeSettings(e={}){const{strategy:t="recursive"}=e,n=this.defaultSettings.version,o=this.defaultSettings.formatVersion,r=SillyTavern.getContext().extensionSettings[this.settingsKey],i={version:{changed:!1,new:n??""},formatVersion:{changed:!1,new:o??""},oldSettings:null,newSettings:this.defaultSettings};if(!r)return SillyTavern.getContext().extensionSettings[this.settingsKey]=this.defaultSettings,this.saveSettings(),i;const a={...i,oldSettings:structuredClone(r),version:{changed:!1,old:r.version,new:r.version},formatVersion:{changed:!1,old:r.formatVersion,new:r.formatVersion}};if("recursive"===t){function s(e,t){let n=!1;for(const o of Object.keys(t))void 0===e[o]?(e[o]=t[o],n=!0):"object"==typeof t[o]&&null!==t[o]&&(e[o]=e[o]||{},s(e[o],t[o])&&(n=!0));return n}n&&r.version!==n&&(a.version.changed=!0,a.version.new=n,r.version=n),o&&"*"!==o&&r.formatVersion!==o&&(a.formatVersion.changed=!0,a.formatVersion.new=o,r.formatVersion=o),(s(r,this.defaultSettings)||a.version.changed||a.formatVersion.changed)&&this.saveSettings()}else if(Array.isArray(t)){n&&!r.version&&(r.version=n,a.version.changed=!0,a.version.new=n),o&&!r.formatVersion&&(r.formatVersion=o,a.formatVersion.changed=!0,a.formatVersion.new=o);let l=structuredClone(r),c=r.formatVersion;try{let u;do{u=!1;let d=t.find((e=>e.from===c));if(d&&d.to>c)l=await d.action(l),c=d.to,l.formatVersion=d.to,u=!0;else for(const p of t)if("*"===p.from&&p.to>c&&c!==p.to){l=await p.action(l),c=p.to,l.formatVersion=p.to,u=!0;break}}while(u);if(c!==r.formatVersion){a.formatVersion.changed=!0,a.formatVersion.new=c;const f=this.defaultSettings.version;f&&(l.version=f)}if(a.formatVersion.changed){for(const h of Object.keys(r))delete r[h];Object.assign(r,l),this.saveSettings()}}catch(m){throw console.error("Failed to apply version changes:",m),new Error(`Version migration failed: ${m instanceof Error?m.message:m}`,{cause:m})}}return a.newSettings=r,a}getSettings(){return SillyTavern.getContext().extensionSettings[this.settingsKey]}updateSetting(e,t){SillyTavern.getContext().extensionSettings[this.settingsKey][e]=t,this.saveSettings()}saveSettings(){SillyTavern.getContext().saveSettingsDebounced()}resetSettings(){SillyTavern.getContext().extensionSettings[this.settingsKey]=this.defaultSettings,this.saveSettings()}}(Ut,qt);function zt(){return zt=$t(Gt().mark((function e(){var t,n,o,r,i,a,s,l,c,u,d,p,h,m,g,v,_,b,E,S,x,T,C,P;return Gt().wrap((function(e){for(;;)switch(e.prev=e.next){case 0:return P=function(e,t){var n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:"",o=document.createElement("details"),r=document.createElement("summary");if(r.textContent="Roadway",o.appendChild(r),null!=t&&t.length){var i=document.createElement("div");i.classList.add("".concat(n,"roadway_options")),t.forEach((function(e,t){var o=document.createElement("div");o.classList.add("".concat(n,"roadway_option"));var r=document.createElement("div");r.classList.add("".concat(n,"option_actions"));var a=document.createElement("div");a.classList.add("".concat(n,"action_button"),"".concat(n,"impersonate_action")),a.innerHTML="✍️",a.title="Impersonate";var s=document.createElement("div");s.classList.add("".concat(n,"action_button"),"".concat(n,"edit_action")),s.innerHTML="✏️",s.title="Edit";var l=Wt.getSettings(),c=document.createElement("div");c.classList.add("".concat(n,"action_button"),"".concat(n,"use_action")),c.innerHTML="▶️",c.title="Use option",c.style.display=l.showUseActionIcon?"inline-block":"none",r.appendChild(c),r.appendChild(a),r.appendChild(s);var u=document.createElement("div");u.classList.add("".concat(n,"option_content")),u.textContent=e,o.appendChild(r),o.appendChild(u),i.appendChild(o)})),o.appendChild(i)}else{var a=document.createElement("pre");a.classList.add("".concat(n,"roadway_pre")),a.textContent=e,o.appendChild(a)}return o.outerHTML},p=function(){var e,t=i.promptPresets[i.promptPreset];c.val(null==t?void 0:t.extractionStrategy);var n="none"===(null==t?void 0:t.extractionStrategy);u.toggle(!n),d.val(null!==(e=null==t?void 0:t.impersonate)&&void 0!==e?e:"")},e.next=4,Ht.renderExtensionTemplateAsync("third-party/".concat("SillyTavern-Roadway"),"templates/settings");case 4:o=e.sent,$("#extensions_settings").append(o),r=$(".roadway_settings"),i=Wt.getSettings(),Ht.ConnectionManagerRequestService.handleDropdown(".roadway_settings .connection_profile",i.profileId,(function(e){var t;i.profileId=null!==(t=null==e?void 0:e.id)&&void 0!==t?t:"",Wt.saveSettings()})),a=D(".roadway_settings select.prompt",{label:function(){return"prompt"},initialValue:i.promptPreset,initialList:Object.keys(i.promptPresets),readOnlyValues:["default"],onSelectChange:function(){var e=$t(Gt().mark((function e(t,n){var o,r,a,s,p,f,h;return Gt().wrap((function(e){for(;;)switch(e.prev=e.next){case 0:h=null!=n?n:"default",i.promptPreset=h,Wt.saveSettings(),l.val(null!==(o=null===(r=i.promptPresets[h])||void 0===r?void 0:r.content)&&void 0!==o?o:""),c.val(null===(a=i.promptPresets[h])||void 0===a?void 0:a.extractionStrategy),d.val(null!==(s=null===(p=i.promptPresets[h])||void 0===p?void 0:p.impersonate)&&void 0!==s?s:""),u.css("display","none"===(null===(f=i.promptPresets[h])||void 0===f?void 0:f.extractionStrategy)?"none":"block");case 7:case"end":return e.stop()}}),e)})));return function(t,n){return e.apply(this,arguments)}}(),create:{onAfterCreate:function(e){var t,n,o,r=i.promptPresets[i.promptPreset];i.promptPresets[e]={content:null!==(t=null==r?void 0:r.content)&&void 0!==t?t:Xt,extractionStrategy:null!==(n=null==r?void 0:r.extractionStrategy)&&void 0!==n?n:"bullet",impersonate:null!==(o=null==r?void 0:r.impersonate)&&void 0!==o?o:Vt}}},rename:{onAfterRename:function(e,t){i.promptPresets[t]=i.promptPresets[e],delete i.promptPresets[e]}},delete:{onAfterDelete:function(e){delete i.promptPresets[e]}}}),s=a.select,(l=r.find("textarea.prompt")).val(null!==(t=null===(n=i.promptPresets[i.promptPreset])||void 0===n?void 0:n.content)&&void 0!==t?t:""),l.on("change",(function(){var e=l.val();i.promptPresets[i.promptPreset].content=e,Wt.saveSettings()})),c=r.find("select.extraction_strategy"),u=r.find(".impersonate_section"),d=r.find("textarea.impersonate"),p(),c.on("change",(function(){var e=$(this).val();i.promptPresets[i.promptPreset].extractionStrategy=e,Wt.saveSettings();var t="none"===e;u.toggle(!t)})),d.on("change",(function(){i.promptPresets[i.promptPreset].impersonate=$(this).val(),Wt.saveSettings()})),s.addEventListener("change",p),r.find(".restore_default").on("click",$t(Gt().mark((function e(){return Gt().wrap((function(e){for(;;)switch(e.prev=e.next){case 0:return e.next=2,Ht.Popup.show.confirm("Are you sure you want to restore the default prompt?","Restore default");case 2:if(e.sent){e.next=5;break}return e.abrupt("return");case 5:i.promptPresets.default={content:Xt,extractionStrategy:"bullet",impersonate:Vt},l.val(Xt),c.val("bullet"),d.val(Vt),"default"!==s.value?(s.value="default",s.dispatchEvent(new Event("change"))):Wt.saveSettings();case 10:case"end":return e.stop()}}),e)})))),h=r.find(".max_context_type"),m=r.find(".max_context_value"),g=r.find(".max_context_custom"),h.val(i.maxContextType),m.val(i.maxContextValue),"custom"===i.maxContextType&&g.show(),h.on("change",(function(){var e=$(this).val();i.maxContextType=e,Wt.saveSettings(),g.toggle("custom"===e)})),m.on("change",(function(){i.maxContextValue=Number($(this).val()),Wt.saveSettings()})),(v=r.find(".max_response_tokens")).val(i.maxResponseToken),v.on("change",(function(){i.maxResponseToken=Number($(this).val()),Wt.saveSettings()})),(_=r.find(".auto_trigger")).prop("checked",i.autoTrigger),_.on("change",(function(){i.autoTrigger=$(this).prop("checked"),Wt.saveSettings()})),(b=r.find(".auto_open")).prop("checked",i.autoOpen),b.on("change",(function(){i.autoOpen=$(this).prop("checked"),Wt.saveSettings()})),(E=r.find(".show_use_action")).prop("checked",i.showUseActionIcon),E.on("change",(function(){i.showUseActionIcon=$(this).prop("checked"),Wt.saveSettings(),$(".custom-roadway_options .custom-use_action").toggle(i.showUseActionIcon)})),(S=r.find(".auto_submit_use_action")).prop("checked",i.autoSubmitUseAction),S.on("change",(function(){i.autoSubmitUseAction=$(this).prop("checked"),Wt.saveSettings()})),(x=r.find("select.impersonate_api")).val(i.impersonateApi),x.on("change",(function(){i.impersonateApi=$(this).val(),Wt.saveSettings()})),T=$('<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-road interactable" tabindex="0"></div>'),$("#message_template .mes_buttons .extraMesButtons").prepend(T),C=new Set,$(document).on("click",".mes_magic_roadway_button",$t(Gt().mark((function e(){var t,n,o,r,a,s,l,c,u,d,p,h,m,g,v,_,b,E,S;return Gt().wrap((function(e){for(;;)switch(e.prev=e.next){case 0:if(n=SillyTavern.getContext(),i.profileId){e.next=5;break}return e.next=4,w("error","Please select a connection profile first in the settings.");case 4:case 8:case 22:return e.abrupt("return");case 5:if(i.promptPreset){e.next=9;break}return e.next=8,w("error","Please enter a prompt first in the settings.");case 9:if(o=$(this).closest(".mes"),r=Number(o.attr("mesid")),a=null===(t=n.extensionSettings.connectionManager)||void 0===t||null===(t=t.profiles)||void 0===t?void 0:t.find((function(e){return e.id===i.profileId})),s=null!=a&&a.api?n.CONNECT_API_MAP[a.api]:null,l=n.chat.find((function(e,t){return t===r})),l){e.next=16;break}return e.abrupt("return");case 16:if(c=-1!==(c=f.characters.findIndex((function(e){return e.avatar===l.original_avatar})))?c:void 0,e.prev=18,!C.has(r)){e.next=23;break}return e.next=22,w("warning","A request for this message is already in progress. Please wait.");case 23:return C.add(r),$(this).addClass("spinning"),e.next=27,O(null==s?void 0:s.selected,{targetCharacterId:c,messageIndexesBetween:{end:r},presetName:null==a?void 0:a.preset,contextName:null==a?void 0:a.context,instructName:null==a?void 0:a.instruct,syspromptName:null==a?void 0:a.sysprompt,maxContext:"custom"===i.maxContextType?i.maxContextValue:"profile"===i.maxContextType?"preset":"active",includeNames:!!y.selected_group});case 27:return p=e.sent,(h=p.result).push({content:n.substituteParams(i.promptPresets[i.promptPreset].content),role:"system"}),e.next=32,n.ConnectionManagerRequestService.sendRequest(i.profileId,h,i.maxResponseToken);case 32:if(m=e.sent,g=[],"bullet"!==(v=null===(u=i.promptPresets[i.promptPreset])||void 0===u?void 0:u.extractionStrategy)){e.next=40;break}if(0!==(g=Kt(m.content)).length){e.next=40;break}return e.next=40,w("warning","Could not extract any bullet points from the response. Using original response.");case 40:return _=null!==(d=g)&&void 0!==d&&d.length?g.map((function(e,t){return"".concat(t+1,". ").concat(e)})).join("\n"):m.content,b=n.chat.find((function(e){var t;return(null===(t=e.extra)||void 0===t?void 0:t[Yt.TARGET])===r})),E=null!=b?b:{mes:P(_,"bullet"===v?g:void 0),name:f.systemUserName,force_avatar:f.system_avatar,is_system:!0,is_user:!1,extra:Bt(Bt(Bt({isSmallSys:!0},Yt.TARGET,r),Yt.RAW_CONTENT,_),Yt.OPTIONS,g)},b?(E.mes=P(_,"bullet"===v?g:void 0),E.extra[Yt.RAW_CONTENT]=m.content,E.extra[Yt.OPTIONS]=g,$('[mesid="'.concat(r+1,'"] .mes_text')).html(P(_,"bullet"===v?g:void 0,"custom-"))):(n.chat.push(E),n.addOneMessage(E,{insertAfter:r})),S=$('[mesid="'.concat(r+1,'"] .mes_text details')),i.autoOpen&&!S.attr("open")&&S.attr("open",""),Jt(r+1),e.next=49,n.saveChat();case 49:e.next=56;break;case 51:return e.prev=51,e.t0=e.catch(18),console.error(e.t0),e.next=56,w("error","Error: ".concat(e.t0));case 56:return e.prev=56,C.delete(r),$(".mes_magic_roadway_button").removeClass("spinning"),e.finish(56);case 60:case"end":return e.stop()}}),e,this,[[18,51,56,60]])}))));case 51:case"end":return e.stop()}}),e)}))),zt.apply(this,arguments)}function Kt(e){return(e.match(/^(?:\d+\.(?:\s+|(?=\S))|-\s+)(.*)$/gm)||[]).map((function(e){return e.replace(/^(?:\d+\.(?:\s+|(?=\S))|-\s+)/,"").trim()}))}var Qt,Zt=new class{requestMap;constructor(){this.requestMap=new Map}abortRequest(e){const t=this.requestMap.get(e);if(t){if(t.abortController)try{t.abortController.abort()}catch(e){}t.options?.onFinish&&t.options.onFinish(),this.requestMap.delete(e)}}async generateRequest(e,t){const n=SillyTavern.getContext(),o=n.uuidv4(),r=e?.custom?.stream??!1;if(this.requestMap.set(o,{abortController:t?.abortController,isStream:r,options:t}),r)try{const r=await n.ConnectionManagerRequestService.sendRequest(e.profileId,e.prompt,e.maxTokens,e.custom);let i;t?.onStart&&t.onStart(o);for await(const e of r())i=e,t?.onEntry&&t.onEntry(e);t?.onFinish&&t.onFinish(i)}catch(e){t?.onFinish&&t.onFinish(void 0,e)}finally{this.requestMap.delete(o)}else try{t?.onStart&&t.onStart(o);const r=await n.ConnectionManagerRequestService.sendRequest(e.profileId,e.prompt,e.maxTokens,e.custom);this.requestMap.get(o)&&(t?.onEntry&&t.onEntry(r),t?.onFinish&&t.onFinish(r))}catch(e){t?.onFinish&&t.onFinish(void 0,e)}finally{this.requestMap.delete(o)}return o}getActiveRequest(e){return this.requestMap.get(e)?.abortController}getAllActiveRequests(){const e=new Map;for(const[t,n]of this.requestMap)e.set(t,n.abortController);return e}};function Jt(e){var t=$('[mesid="'.concat(e,'"] .custom-roadway_options'));t.find(".custom-action_button").off();var n=SillyTavern.getContext();t.find(".custom-impersonate_action").on("click",$t(Gt().mark((function o(){var r,i,a,s,l,c,u,d,p,f,h,m,g,v,_,b,S,x,T,C,P;return Gt().wrap((function(o){for(;;)switch(o.prev=o.next){case 0:if(i=$(this).closest(".custom-roadway_option"),a=t.find(".custom-roadway_option").index(i),s=n.chat.find((function(t,n){return e===n})),s){o.next=5;break}return o.abrupt("return");case 5:if(l=Wt.getSettings(),(c=l.promptPresets[n.extensionSettings[Ut].promptPreset])&&c.impersonate){o.next=11;break}return o.next=10,w("error","Preset not found. Please check the extension settings.");case 10:return o.abrupt("return");case 11:if(u=Ht.substituteParams(c.impersonate,void 0,void 0,void 0,void 0,void 0,{roadwaySelected:null===(r=s.extra)||void 0===r||null===(r=r[Yt.OPTIONS])||void 0===r?void 0:r[a]},void 0),"profile"!==l.impersonateApi){o.next=49;break}if(l.profileId){o.next=17;break}return o.next=16,w("error","Please select a connection profile first in the settings.");case 16:return o.abrupt("return");case 17:if(p=null===(d=n.extensionSettings.connectionManager)||void 0===d||null===(d=d.profiles)||void 0===d?void 0:d.find((function(e){return e.id===l.profileId})),null!=(f=null!=p&&p.api?n.CONNECT_API_MAP[p.api]:null)&&f.selected){o.next=22;break}return w("error","Please select an API in the connection profile."),o.abrupt("return");case 22:return Ht.deactivateSendButtons(),o.prev=23,o.next=26,O(f.selected,{presetName:null==p?void 0:p.preset,contextName:null==p?void 0:p.context,instructName:null==p?void 0:p.instruct,syspromptName:null==p?void 0:p.sysprompt,maxContext:"custom"===l.maxContextType?l.maxContextValue:"profile"===l.maxContextType?"preset":"active",includeNames:!!y.selected_group});case 26:return h=o.sent,(m=h.result).push({role:"system",content:u}),g=!0,v=l.maxResponseToken,"openai"===f.selected?(_=Ht.getPresetManager("openai").getCompletionPresetByName(null==p?void 0:p.preset))&&(g=_.stream_openai,v=_.openai_max_tokens):"textgenerationwebui"===f.selected&&(b=Ht.getPresetManager("textgenerationwebui").getCompletionPresetByName(null==p?void 0:p.preset))&&(g=null!==(S=null!==(x=b.streaming)&&void 0!==x?x:n.textCompletionSettings.streaming)&&void 0!==S&&S,v=null!==(T=b.genamt)&&void 0!==T?T:v),C=$("#send_textarea"),P=new AbortController,o.next=36,Zt.generateRequest({profileId:l.profileId,prompt:m,maxTokens:v,custom:{stream:g,signal:g?P.signal:void 0}},{abortController:g?P:void 0,onStart:function(e){Qt=e,Ht.eventSource.emit(Lt.GENERATION_STARTED,"impersonate",{signal:g?P.signal:void 0})},onEntry:function(e){g&&e&&(C.val(e.text),C.trigger("input"),C.trigger("change"))},onFinish:function(e,t){!g&&e&&(C.val(e.content),C.trigger("input"),C.trigger("change")),t&&w("error","Error: ".concat(t)),Ht.activateSendButtons()}});case 36:o.next=43;break;case 38:return o.prev=38,o.t0=o.catch(23),console.error(o.t0),o.next=43,w("error","Error: ".concat(o.t0));case 43:return o.prev=43,Ht.activateSendButtons(),Qt=void 0,o.finish(43);case 47:o.next=50;break;case 49:E("impersonate",void 0,u);case 50:case"end":return o.stop()}}),o,this,[[23,38,43,47]])})))),t.find(".custom-use_action").on("click",(function(){var e=$(this).closest(".custom-roadway_option").find(".custom-option_content").text();if(e){$("#send_textarea").val(e),$("#send_textarea").trigger("input"),Wt.getSettings().autoSubmitUseAction&&$("#send_but").trigger("click");var t=$(this);t.html("✓"),setTimeout((function(){t.html("▶️")}),1e3)}})),t.find(".custom-edit_action").on("click",$t(Gt().mark((function o(){var r,i,a,s;return Gt().wrap((function(o){for(;;)switch(o.prev=o.next){case 0:r=$(this).closest(".custom-roadway_option"),i=r.find(".custom-option_content"),a=i.text(),s=$("<textarea>").val(a).css({width:"100%",minHeight:"50px",resize:"vertical",backgroundColor:"var(--SmartThemeBlurTintColor)",color:"var(--SmartThemeBodyColor)",border:"1px solid var(--SmartThemeBorderColor)",borderRadius:"var(--avatar-base-border-radius)",padding:"calc(var(--mainFontSize) * 0.5)"}),i.empty().append(s),s.trigger("focus"),s.on("blur",(function(){var o,a=s.val();i.text(a);var l=n.chat.find((function(t,n){return e===n}));if(null!=l&&null!==(o=l.extra)&&void 0!==o&&o[Yt.OPTIONS]){var c=t.find(".custom-roadway_option").index(r);l.extra[Yt.OPTIONS][c]=a,n.saveChat()}})),s.on("keydown",(function(e){"Enter"!==e.key||e.shiftKey||(e.preventDefault(),s.trigger("blur"))}));case 8:case"end":return o.stop()}}),o,this)}))))}function en(){!function(){zt.apply(this,arguments)}(),function(){Ht.eventSource.on(Lt.CHAT_CHANGED,(function(){var e,t=SillyTavern.getContext();t.chat.length&&($(".custom-roadway_options .custom-use_action").toggle(Wt.getSettings().showUseActionIcon),"number"==typeof(null===(e=t.chat[t.chat.length-1].extra)||void 0===e?void 0:e[Yt.TARGET])&&Jt(t.chat.length-1))}));var e=-1;Ht.eventSource.makeFirst(Lt.CHARACTER_MESSAGE_RENDERED,(function(t,n){e=t,Wt.getSettings().autoTrigger&&"group_chat"!==n&&!y.selected_group&&$('[mesid="'.concat(t,'"]')).find(".mes_magic_roadway_button").trigger("click")}));var t=["normal","continue","swipe"];Ht.eventSource.makeFirst(Lt.GROUP_WRAPPER_FINISHED,(function(n){Wt.getSettings().autoTrigger&&-1!==e&&t.includes(n.type)&&$('[mesid="'.concat(e,'"]')).find(".mes_magic_roadway_button").trigger("click")})),$("#mes_stop").on("click",(function(){Qt&&Zt.abortRequest(Qt)}))}()}if(Ht.ConnectionManagerRequestService&&Ht.getCharacterCardFields&&Ht.getWorldInfoPrompt)Wt.initializeSettings().then((function(e){e.version.changed&&e.oldSettings.version<"0.4.0"&&"0.4.0"===e.newSettings.version&&w("info","[Roadway] Added impersonate with connection profile api. Check extension settings."),en()})).catch((function(e){w("error",e),Ht.Popup.show.confirm("Data migration failed. Do you want to reset the roadway data?","Roadway").then((function(e){e&&(Wt.resetSettings(),en())}))}));else{w("error","[Roadway Error] Make sure ST is updated.")}
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+    keys.push.apply(keys, symbols);
+  }
+  return keys;
+}
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+  return target;
+}
+function _typeof(obj) {
+  "@babel/helpers - typeof";
+
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    _typeof = function (obj) {
+      return typeof obj;
+    };
+  } else {
+    _typeof = function (obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+  return _typeof(obj);
+}
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
+  return _extends.apply(this, arguments);
+}
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+  return target;
+}
+function _objectWithoutProperties(source, excluded) {
+  if (source == null) return {};
+  var target = _objectWithoutPropertiesLoose(source, excluded);
+  var key, i;
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+    for (i = 0; i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
+}
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+}
+function _iterableToArray(iter) {
+  if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+}
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+  return arr2;
+}
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+var version = "1.15.6";
+
+function userAgent(pattern) {
+  if (typeof window !== 'undefined' && window.navigator) {
+    return !! /*@__PURE__*/navigator.userAgent.match(pattern);
+  }
+}
+var IE11OrLess = userAgent(/(?:Trident.*rv[ :]?11\.|msie|iemobile|Windows Phone)/i);
+var Edge = userAgent(/Edge/i);
+var FireFox = userAgent(/firefox/i);
+var Safari = userAgent(/safari/i) && !userAgent(/chrome/i) && !userAgent(/android/i);
+var IOS = userAgent(/iP(ad|od|hone)/i);
+var ChromeForAndroid = userAgent(/chrome/i) && userAgent(/android/i);
+
+var captureMode = {
+  capture: false,
+  passive: false
+};
+function on(el, event, fn) {
+  el.addEventListener(event, fn, !IE11OrLess && captureMode);
+}
+function off(el, event, fn) {
+  el.removeEventListener(event, fn, !IE11OrLess && captureMode);
+}
+function matches( /**HTMLElement*/el, /**String*/selector) {
+  if (!selector) return;
+  selector[0] === '>' && (selector = selector.substring(1));
+  if (el) {
+    try {
+      if (el.matches) {
+        return el.matches(selector);
+      } else if (el.msMatchesSelector) {
+        return el.msMatchesSelector(selector);
+      } else if (el.webkitMatchesSelector) {
+        return el.webkitMatchesSelector(selector);
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+  return false;
+}
+function getParentOrHost(el) {
+  return el.host && el !== document && el.host.nodeType ? el.host : el.parentNode;
+}
+function closest( /**HTMLElement*/el, /**String*/selector, /**HTMLElement*/ctx, includeCTX) {
+  if (el) {
+    ctx = ctx || document;
+    do {
+      if (selector != null && (selector[0] === '>' ? el.parentNode === ctx && matches(el, selector) : matches(el, selector)) || includeCTX && el === ctx) {
+        return el;
+      }
+      if (el === ctx) break;
+      /* jshint boss:true */
+    } while (el = getParentOrHost(el));
+  }
+  return null;
+}
+var R_SPACE = /\s+/g;
+function toggleClass(el, name, state) {
+  if (el && name) {
+    if (el.classList) {
+      el.classList[state ? 'add' : 'remove'](name);
+    } else {
+      var className = (' ' + el.className + ' ').replace(R_SPACE, ' ').replace(' ' + name + ' ', ' ');
+      el.className = (className + (state ? ' ' + name : '')).replace(R_SPACE, ' ');
+    }
+  }
+}
+function css(el, prop, val) {
+  var style = el && el.style;
+  if (style) {
+    if (val === void 0) {
+      if (document.defaultView && document.defaultView.getComputedStyle) {
+        val = document.defaultView.getComputedStyle(el, '');
+      } else if (el.currentStyle) {
+        val = el.currentStyle;
+      }
+      return prop === void 0 ? val : val[prop];
+    } else {
+      if (!(prop in style) && prop.indexOf('webkit') === -1) {
+        prop = '-webkit-' + prop;
+      }
+      style[prop] = val + (typeof val === 'string' ? '' : 'px');
+    }
+  }
+}
+function matrix(el, selfOnly) {
+  var appliedTransforms = '';
+  if (typeof el === 'string') {
+    appliedTransforms = el;
+  } else {
+    do {
+      var transform = css(el, 'transform');
+      if (transform && transform !== 'none') {
+        appliedTransforms = transform + ' ' + appliedTransforms;
+      }
+      /* jshint boss:true */
+    } while (!selfOnly && (el = el.parentNode));
+  }
+  var matrixFn = window.DOMMatrix || window.WebKitCSSMatrix || window.CSSMatrix || window.MSCSSMatrix;
+  /*jshint -W056 */
+  return matrixFn && new matrixFn(appliedTransforms);
+}
+function find(ctx, tagName, iterator) {
+  if (ctx) {
+    var list = ctx.getElementsByTagName(tagName),
+      i = 0,
+      n = list.length;
+    if (iterator) {
+      for (; i < n; i++) {
+        iterator(list[i], i);
+      }
+    }
+    return list;
+  }
+  return [];
+}
+function getWindowScrollingElement() {
+  var scrollingElement = document.scrollingElement;
+  if (scrollingElement) {
+    return scrollingElement;
+  } else {
+    return document.documentElement;
+  }
+}
+
+/**
+ * Returns the "bounding client rect" of given element
+ * @param  {HTMLElement} el                       The element whose boundingClientRect is wanted
+ * @param  {[Boolean]} relativeToContainingBlock  Whether the rect should be relative to the containing block of (including) the container
+ * @param  {[Boolean]} relativeToNonStaticParent  Whether the rect should be relative to the relative parent of (including) the contaienr
+ * @param  {[Boolean]} undoScale                  Whether the container's scale() should be undone
+ * @param  {[HTMLElement]} container              The parent the element will be placed in
+ * @return {Object}                               The boundingClientRect of el, with specified adjustments
+ */
+function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoScale, container) {
+  if (!el.getBoundingClientRect && el !== window) return;
+  var elRect, top, left, bottom, right, height, width;
+  if (el !== window && el.parentNode && el !== getWindowScrollingElement()) {
+    elRect = el.getBoundingClientRect();
+    top = elRect.top;
+    left = elRect.left;
+    bottom = elRect.bottom;
+    right = elRect.right;
+    height = elRect.height;
+    width = elRect.width;
+  } else {
+    top = 0;
+    left = 0;
+    bottom = window.innerHeight;
+    right = window.innerWidth;
+    height = window.innerHeight;
+    width = window.innerWidth;
+  }
+  if ((relativeToContainingBlock || relativeToNonStaticParent) && el !== window) {
+    // Adjust for translate()
+    container = container || el.parentNode;
+
+    // solves #1123 (see: https://stackoverflow.com/a/37953806/6088312)
+    // Not needed on <= IE11
+    if (!IE11OrLess) {
+      do {
+        if (container && container.getBoundingClientRect && (css(container, 'transform') !== 'none' || relativeToNonStaticParent && css(container, 'position') !== 'static')) {
+          var containerRect = container.getBoundingClientRect();
+
+          // Set relative to edges of padding box of container
+          top -= containerRect.top + parseInt(css(container, 'border-top-width'));
+          left -= containerRect.left + parseInt(css(container, 'border-left-width'));
+          bottom = top + elRect.height;
+          right = left + elRect.width;
+          break;
+        }
+        /* jshint boss:true */
+      } while (container = container.parentNode);
+    }
+  }
+  if (undoScale && el !== window) {
+    // Adjust for scale()
+    var elMatrix = matrix(container || el),
+      scaleX = elMatrix && elMatrix.a,
+      scaleY = elMatrix && elMatrix.d;
+    if (elMatrix) {
+      top /= scaleY;
+      left /= scaleX;
+      width /= scaleX;
+      height /= scaleY;
+      bottom = top + height;
+      right = left + width;
+    }
+  }
+  return {
+    top: top,
+    left: left,
+    bottom: bottom,
+    right: right,
+    width: width,
+    height: height
+  };
+}
+
+/**
+ * Checks if a side of an element is scrolled past a side of its parents
+ * @param  {HTMLElement}  el           The element who's side being scrolled out of view is in question
+ * @param  {String}       elSide       Side of the element in question ('top', 'left', 'right', 'bottom')
+ * @param  {String}       parentSide   Side of the parent in question ('top', 'left', 'right', 'bottom')
+ * @return {HTMLElement}               The parent scroll element that the el's side is scrolled past, or null if there is no such element
+ */
+function isScrolledPast(el, elSide, parentSide) {
+  var parent = getParentAutoScrollElement(el, true),
+    elSideVal = getRect(el)[elSide];
+
+  /* jshint boss:true */
+  while (parent) {
+    var parentSideVal = getRect(parent)[parentSide],
+      visible = void 0;
+    if (parentSide === 'top' || parentSide === 'left') {
+      visible = elSideVal >= parentSideVal;
+    } else {
+      visible = elSideVal <= parentSideVal;
+    }
+    if (!visible) return parent;
+    if (parent === getWindowScrollingElement()) break;
+    parent = getParentAutoScrollElement(parent, false);
+  }
+  return false;
+}
+
+/**
+ * Gets nth child of el, ignoring hidden children, sortable's elements (does not ignore clone if it's visible)
+ * and non-draggable elements
+ * @param  {HTMLElement} el       The parent element
+ * @param  {Number} childNum      The index of the child
+ * @param  {Object} options       Parent Sortable's options
+ * @return {HTMLElement}          The child at index childNum, or null if not found
+ */
+function getChild(el, childNum, options, includeDragEl) {
+  var currentChild = 0,
+    i = 0,
+    children = el.children;
+  while (i < children.length) {
+    if (children[i].style.display !== 'none' && children[i] !== Sortable.ghost && (includeDragEl || children[i] !== Sortable.dragged) && closest(children[i], options.draggable, el, false)) {
+      if (currentChild === childNum) {
+        return children[i];
+      }
+      currentChild++;
+    }
+    i++;
+  }
+  return null;
+}
+
+/**
+ * Gets the last child in the el, ignoring ghostEl or invisible elements (clones)
+ * @param  {HTMLElement} el       Parent element
+ * @param  {selector} selector    Any other elements that should be ignored
+ * @return {HTMLElement}          The last child, ignoring ghostEl
+ */
+function lastChild(el, selector) {
+  var last = el.lastElementChild;
+  while (last && (last === Sortable.ghost || css(last, 'display') === 'none' || selector && !matches(last, selector))) {
+    last = last.previousElementSibling;
+  }
+  return last || null;
+}
+
+/**
+ * Returns the index of an element within its parent for a selected set of
+ * elements
+ * @param  {HTMLElement} el
+ * @param  {selector} selector
+ * @return {number}
+ */
+function index(el, selector) {
+  var index = 0;
+  if (!el || !el.parentNode) {
+    return -1;
+  }
+
+  /* jshint boss:true */
+  while (el = el.previousElementSibling) {
+    if (el.nodeName.toUpperCase() !== 'TEMPLATE' && el !== Sortable.clone && (!selector || matches(el, selector))) {
+      index++;
+    }
+  }
+  return index;
+}
+
+/**
+ * Returns the scroll offset of the given element, added with all the scroll offsets of parent elements.
+ * The value is returned in real pixels.
+ * @param  {HTMLElement} el
+ * @return {Array}             Offsets in the format of [left, top]
+ */
+function getRelativeScrollOffset(el) {
+  var offsetLeft = 0,
+    offsetTop = 0,
+    winScroller = getWindowScrollingElement();
+  if (el) {
+    do {
+      var elMatrix = matrix(el),
+        scaleX = elMatrix.a,
+        scaleY = elMatrix.d;
+      offsetLeft += el.scrollLeft * scaleX;
+      offsetTop += el.scrollTop * scaleY;
+    } while (el !== winScroller && (el = el.parentNode));
+  }
+  return [offsetLeft, offsetTop];
+}
+
+/**
+ * Returns the index of the object within the given array
+ * @param  {Array} arr   Array that may or may not hold the object
+ * @param  {Object} obj  An object that has a key-value pair unique to and identical to a key-value pair in the object you want to find
+ * @return {Number}      The index of the object in the array, or -1
+ */
+function indexOfObject(arr, obj) {
+  for (var i in arr) {
+    if (!arr.hasOwnProperty(i)) continue;
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key) && obj[key] === arr[i][key]) return Number(i);
+    }
+  }
+  return -1;
+}
+function getParentAutoScrollElement(el, includeSelf) {
+  // skip to window
+  if (!el || !el.getBoundingClientRect) return getWindowScrollingElement();
+  var elem = el;
+  var gotSelf = false;
+  do {
+    // we don't need to get elem css if it isn't even overflowing in the first place (performance)
+    if (elem.clientWidth < elem.scrollWidth || elem.clientHeight < elem.scrollHeight) {
+      var elemCSS = css(elem);
+      if (elem.clientWidth < elem.scrollWidth && (elemCSS.overflowX == 'auto' || elemCSS.overflowX == 'scroll') || elem.clientHeight < elem.scrollHeight && (elemCSS.overflowY == 'auto' || elemCSS.overflowY == 'scroll')) {
+        if (!elem.getBoundingClientRect || elem === document.body) return getWindowScrollingElement();
+        if (gotSelf || includeSelf) return elem;
+        gotSelf = true;
+      }
+    }
+    /* jshint boss:true */
+  } while (elem = elem.parentNode);
+  return getWindowScrollingElement();
+}
+function extend(dst, src) {
+  if (dst && src) {
+    for (var key in src) {
+      if (src.hasOwnProperty(key)) {
+        dst[key] = src[key];
+      }
+    }
+  }
+  return dst;
+}
+function isRectEqual(rect1, rect2) {
+  return Math.round(rect1.top) === Math.round(rect2.top) && Math.round(rect1.left) === Math.round(rect2.left) && Math.round(rect1.height) === Math.round(rect2.height) && Math.round(rect1.width) === Math.round(rect2.width);
+}
+var _throttleTimeout;
+function throttle(callback, ms) {
+  return function () {
+    if (!_throttleTimeout) {
+      var args = arguments,
+        _this = this;
+      if (args.length === 1) {
+        callback.call(_this, args[0]);
+      } else {
+        callback.apply(_this, args);
+      }
+      _throttleTimeout = setTimeout(function () {
+        _throttleTimeout = void 0;
+      }, ms);
+    }
+  };
+}
+function cancelThrottle() {
+  clearTimeout(_throttleTimeout);
+  _throttleTimeout = void 0;
+}
+function scrollBy(el, x, y) {
+  el.scrollLeft += x;
+  el.scrollTop += y;
+}
+function clone(el) {
+  var Polymer = window.Polymer;
+  var $ = window.jQuery || window.Zepto;
+  if (Polymer && Polymer.dom) {
+    return Polymer.dom(el).cloneNode(true);
+  } else if ($) {
+    return $(el).clone(true)[0];
+  } else {
+    return el.cloneNode(true);
+  }
+}
+function setRect(el, rect) {
+  css(el, 'position', 'absolute');
+  css(el, 'top', rect.top);
+  css(el, 'left', rect.left);
+  css(el, 'width', rect.width);
+  css(el, 'height', rect.height);
+}
+function unsetRect(el) {
+  css(el, 'position', '');
+  css(el, 'top', '');
+  css(el, 'left', '');
+  css(el, 'width', '');
+  css(el, 'height', '');
+}
+function getChildContainingRectFromElement(container, options, ghostEl) {
+  var rect = {};
+  Array.from(container.children).forEach(function (child) {
+    var _rect$left, _rect$top, _rect$right, _rect$bottom;
+    if (!closest(child, options.draggable, container, false) || child.animated || child === ghostEl) return;
+    var childRect = getRect(child);
+    rect.left = Math.min((_rect$left = rect.left) !== null && _rect$left !== void 0 ? _rect$left : Infinity, childRect.left);
+    rect.top = Math.min((_rect$top = rect.top) !== null && _rect$top !== void 0 ? _rect$top : Infinity, childRect.top);
+    rect.right = Math.max((_rect$right = rect.right) !== null && _rect$right !== void 0 ? _rect$right : -Infinity, childRect.right);
+    rect.bottom = Math.max((_rect$bottom = rect.bottom) !== null && _rect$bottom !== void 0 ? _rect$bottom : -Infinity, childRect.bottom);
+  });
+  rect.width = rect.right - rect.left;
+  rect.height = rect.bottom - rect.top;
+  rect.x = rect.left;
+  rect.y = rect.top;
+  return rect;
+}
+var expando = 'Sortable' + new Date().getTime();
+
+function AnimationStateManager() {
+  var animationStates = [],
+    animationCallbackId;
+  return {
+    captureAnimationState: function captureAnimationState() {
+      animationStates = [];
+      if (!this.options.animation) return;
+      var children = [].slice.call(this.el.children);
+      children.forEach(function (child) {
+        if (css(child, 'display') === 'none' || child === Sortable.ghost) return;
+        animationStates.push({
+          target: child,
+          rect: getRect(child)
+        });
+        var fromRect = _objectSpread2({}, animationStates[animationStates.length - 1].rect);
+
+        // If animating: compensate for current animation
+        if (child.thisAnimationDuration) {
+          var childMatrix = matrix(child, true);
+          if (childMatrix) {
+            fromRect.top -= childMatrix.f;
+            fromRect.left -= childMatrix.e;
+          }
+        }
+        child.fromRect = fromRect;
+      });
+    },
+    addAnimationState: function addAnimationState(state) {
+      animationStates.push(state);
+    },
+    removeAnimationState: function removeAnimationState(target) {
+      animationStates.splice(indexOfObject(animationStates, {
+        target: target
+      }), 1);
+    },
+    animateAll: function animateAll(callback) {
+      var _this = this;
+      if (!this.options.animation) {
+        clearTimeout(animationCallbackId);
+        if (typeof callback === 'function') callback();
+        return;
+      }
+      var animating = false,
+        animationTime = 0;
+      animationStates.forEach(function (state) {
+        var time = 0,
+          target = state.target,
+          fromRect = target.fromRect,
+          toRect = getRect(target),
+          prevFromRect = target.prevFromRect,
+          prevToRect = target.prevToRect,
+          animatingRect = state.rect,
+          targetMatrix = matrix(target, true);
+        if (targetMatrix) {
+          // Compensate for current animation
+          toRect.top -= targetMatrix.f;
+          toRect.left -= targetMatrix.e;
+        }
+        target.toRect = toRect;
+        if (target.thisAnimationDuration) {
+          // Could also check if animatingRect is between fromRect and toRect
+          if (isRectEqual(prevFromRect, toRect) && !isRectEqual(fromRect, toRect) &&
+          // Make sure animatingRect is on line between toRect & fromRect
+          (animatingRect.top - toRect.top) / (animatingRect.left - toRect.left) === (fromRect.top - toRect.top) / (fromRect.left - toRect.left)) {
+            // If returning to same place as started from animation and on same axis
+            time = calculateRealTime(animatingRect, prevFromRect, prevToRect, _this.options);
+          }
+        }
+
+        // if fromRect != toRect: animate
+        if (!isRectEqual(toRect, fromRect)) {
+          target.prevFromRect = fromRect;
+          target.prevToRect = toRect;
+          if (!time) {
+            time = _this.options.animation;
+          }
+          _this.animate(target, animatingRect, toRect, time);
+        }
+        if (time) {
+          animating = true;
+          animationTime = Math.max(animationTime, time);
+          clearTimeout(target.animationResetTimer);
+          target.animationResetTimer = setTimeout(function () {
+            target.animationTime = 0;
+            target.prevFromRect = null;
+            target.fromRect = null;
+            target.prevToRect = null;
+            target.thisAnimationDuration = null;
+          }, time);
+          target.thisAnimationDuration = time;
+        }
+      });
+      clearTimeout(animationCallbackId);
+      if (!animating) {
+        if (typeof callback === 'function') callback();
+      } else {
+        animationCallbackId = setTimeout(function () {
+          if (typeof callback === 'function') callback();
+        }, animationTime);
+      }
+      animationStates = [];
+    },
+    animate: function animate(target, currentRect, toRect, duration) {
+      if (duration) {
+        css(target, 'transition', '');
+        css(target, 'transform', '');
+        var elMatrix = matrix(this.el),
+          scaleX = elMatrix && elMatrix.a,
+          scaleY = elMatrix && elMatrix.d,
+          translateX = (currentRect.left - toRect.left) / (scaleX || 1),
+          translateY = (currentRect.top - toRect.top) / (scaleY || 1);
+        target.animatingX = !!translateX;
+        target.animatingY = !!translateY;
+        css(target, 'transform', 'translate3d(' + translateX + 'px,' + translateY + 'px,0)');
+        this.forRepaintDummy = repaint(target); // repaint
+
+        css(target, 'transition', 'transform ' + duration + 'ms' + (this.options.easing ? ' ' + this.options.easing : ''));
+        css(target, 'transform', 'translate3d(0,0,0)');
+        typeof target.animated === 'number' && clearTimeout(target.animated);
+        target.animated = setTimeout(function () {
+          css(target, 'transition', '');
+          css(target, 'transform', '');
+          target.animated = false;
+          target.animatingX = false;
+          target.animatingY = false;
+        }, duration);
+      }
+    }
+  };
+}
+function repaint(target) {
+  return target.offsetWidth;
+}
+function calculateRealTime(animatingRect, fromRect, toRect, options) {
+  return Math.sqrt(Math.pow(fromRect.top - animatingRect.top, 2) + Math.pow(fromRect.left - animatingRect.left, 2)) / Math.sqrt(Math.pow(fromRect.top - toRect.top, 2) + Math.pow(fromRect.left - toRect.left, 2)) * options.animation;
+}
+
+var plugins = [];
+var defaults = {
+  initializeByDefault: true
+};
+var PluginManager = {
+  mount: function mount(plugin) {
+    // Set default static properties
+    for (var option in defaults) {
+      if (defaults.hasOwnProperty(option) && !(option in plugin)) {
+        plugin[option] = defaults[option];
+      }
+    }
+    plugins.forEach(function (p) {
+      if (p.pluginName === plugin.pluginName) {
+        throw "Sortable: Cannot mount plugin ".concat(plugin.pluginName, " more than once");
+      }
+    });
+    plugins.push(plugin);
+  },
+  pluginEvent: function pluginEvent(eventName, sortable, evt) {
+    var _this = this;
+    this.eventCanceled = false;
+    evt.cancel = function () {
+      _this.eventCanceled = true;
+    };
+    var eventNameGlobal = eventName + 'Global';
+    plugins.forEach(function (plugin) {
+      if (!sortable[plugin.pluginName]) return;
+      // Fire global events if it exists in this sortable
+      if (sortable[plugin.pluginName][eventNameGlobal]) {
+        sortable[plugin.pluginName][eventNameGlobal](_objectSpread2({
+          sortable: sortable
+        }, evt));
+      }
+
+      // Only fire plugin event if plugin is enabled in this sortable,
+      // and plugin has event defined
+      if (sortable.options[plugin.pluginName] && sortable[plugin.pluginName][eventName]) {
+        sortable[plugin.pluginName][eventName](_objectSpread2({
+          sortable: sortable
+        }, evt));
+      }
+    });
+  },
+  initializePlugins: function initializePlugins(sortable, el, defaults, options) {
+    plugins.forEach(function (plugin) {
+      var pluginName = plugin.pluginName;
+      if (!sortable.options[pluginName] && !plugin.initializeByDefault) return;
+      var initialized = new plugin(sortable, el, sortable.options);
+      initialized.sortable = sortable;
+      initialized.options = sortable.options;
+      sortable[pluginName] = initialized;
+
+      // Add default options from plugin
+      _extends(defaults, initialized.defaults);
+    });
+    for (var option in sortable.options) {
+      if (!sortable.options.hasOwnProperty(option)) continue;
+      var modified = this.modifyOption(sortable, option, sortable.options[option]);
+      if (typeof modified !== 'undefined') {
+        sortable.options[option] = modified;
+      }
+    }
+  },
+  getEventProperties: function getEventProperties(name, sortable) {
+    var eventProperties = {};
+    plugins.forEach(function (plugin) {
+      if (typeof plugin.eventProperties !== 'function') return;
+      _extends(eventProperties, plugin.eventProperties.call(sortable[plugin.pluginName], name));
+    });
+    return eventProperties;
+  },
+  modifyOption: function modifyOption(sortable, name, value) {
+    var modifiedValue;
+    plugins.forEach(function (plugin) {
+      // Plugin must exist on the Sortable
+      if (!sortable[plugin.pluginName]) return;
+
+      // If static option listener exists for this option, call in the context of the Sortable's instance of this plugin
+      if (plugin.optionListeners && typeof plugin.optionListeners[name] === 'function') {
+        modifiedValue = plugin.optionListeners[name].call(sortable[plugin.pluginName], value);
+      }
+    });
+    return modifiedValue;
+  }
+};
+
+function dispatchEvent(_ref) {
+  var sortable = _ref.sortable,
+    rootEl = _ref.rootEl,
+    name = _ref.name,
+    targetEl = _ref.targetEl,
+    cloneEl = _ref.cloneEl,
+    toEl = _ref.toEl,
+    fromEl = _ref.fromEl,
+    oldIndex = _ref.oldIndex,
+    newIndex = _ref.newIndex,
+    oldDraggableIndex = _ref.oldDraggableIndex,
+    newDraggableIndex = _ref.newDraggableIndex,
+    originalEvent = _ref.originalEvent,
+    putSortable = _ref.putSortable,
+    extraEventProperties = _ref.extraEventProperties;
+  sortable = sortable || rootEl && rootEl[expando];
+  if (!sortable) return;
+  var evt,
+    options = sortable.options,
+    onName = 'on' + name.charAt(0).toUpperCase() + name.substr(1);
+  // Support for new CustomEvent feature
+  if (window.CustomEvent && !IE11OrLess && !Edge) {
+    evt = new CustomEvent(name, {
+      bubbles: true,
+      cancelable: true
+    });
+  } else {
+    evt = document.createEvent('Event');
+    evt.initEvent(name, true, true);
+  }
+  evt.to = toEl || rootEl;
+  evt.from = fromEl || rootEl;
+  evt.item = targetEl || rootEl;
+  evt.clone = cloneEl;
+  evt.oldIndex = oldIndex;
+  evt.newIndex = newIndex;
+  evt.oldDraggableIndex = oldDraggableIndex;
+  evt.newDraggableIndex = newDraggableIndex;
+  evt.originalEvent = originalEvent;
+  evt.pullMode = putSortable ? putSortable.lastPutMode : undefined;
+  var allEventProperties = _objectSpread2(_objectSpread2({}, extraEventProperties), PluginManager.getEventProperties(name, sortable));
+  for (var option in allEventProperties) {
+    evt[option] = allEventProperties[option];
+  }
+  if (rootEl) {
+    rootEl.dispatchEvent(evt);
+  }
+  if (options[onName]) {
+    options[onName].call(sortable, evt);
+  }
+}
+
+var _excluded = ["evt"];
+var pluginEvent = function pluginEvent(eventName, sortable) {
+  var _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+    originalEvent = _ref.evt,
+    data = _objectWithoutProperties(_ref, _excluded);
+  PluginManager.pluginEvent.bind(Sortable)(eventName, sortable, _objectSpread2({
+    dragEl: dragEl,
+    parentEl: parentEl,
+    ghostEl: ghostEl,
+    rootEl: rootEl,
+    nextEl: nextEl,
+    lastDownEl: lastDownEl,
+    cloneEl: cloneEl,
+    cloneHidden: cloneHidden,
+    dragStarted: moved,
+    putSortable: putSortable,
+    activeSortable: Sortable.active,
+    originalEvent: originalEvent,
+    oldIndex: oldIndex,
+    oldDraggableIndex: oldDraggableIndex,
+    newIndex: newIndex,
+    newDraggableIndex: newDraggableIndex,
+    hideGhostForTarget: _hideGhostForTarget,
+    unhideGhostForTarget: _unhideGhostForTarget,
+    cloneNowHidden: function cloneNowHidden() {
+      cloneHidden = true;
+    },
+    cloneNowShown: function cloneNowShown() {
+      cloneHidden = false;
+    },
+    dispatchSortableEvent: function dispatchSortableEvent(name) {
+      _dispatchEvent({
+        sortable: sortable,
+        name: name,
+        originalEvent: originalEvent
+      });
+    }
+  }, data));
+};
+function _dispatchEvent(info) {
+  dispatchEvent(_objectSpread2({
+    putSortable: putSortable,
+    cloneEl: cloneEl,
+    targetEl: dragEl,
+    rootEl: rootEl,
+    oldIndex: oldIndex,
+    oldDraggableIndex: oldDraggableIndex,
+    newIndex: newIndex,
+    newDraggableIndex: newDraggableIndex
+  }, info));
+}
+var dragEl,
+  parentEl,
+  ghostEl,
+  rootEl,
+  nextEl,
+  lastDownEl,
+  cloneEl,
+  cloneHidden,
+  oldIndex,
+  newIndex,
+  oldDraggableIndex,
+  newDraggableIndex,
+  activeGroup,
+  putSortable,
+  awaitingDragStarted = false,
+  ignoreNextClick = false,
+  sortables = [],
+  tapEvt,
+  touchEvt,
+  lastDx,
+  lastDy,
+  tapDistanceLeft,
+  tapDistanceTop,
+  moved,
+  lastTarget,
+  lastDirection,
+  pastFirstInvertThresh = false,
+  isCircumstantialInvert = false,
+  targetMoveDistance,
+  // For positioning ghost absolutely
+  ghostRelativeParent,
+  ghostRelativeParentInitialScroll = [],
+  // (left, top)
+
+  _silent = false,
+  savedInputChecked = [];
+
+/** @const */
+var documentExists = typeof document !== 'undefined',
+  PositionGhostAbsolutely = IOS,
+  CSSFloatProperty = Edge || IE11OrLess ? 'cssFloat' : 'float',
+  // This will not pass for IE9, because IE9 DnD only works on anchors
+  supportDraggable = documentExists && !ChromeForAndroid && !IOS && 'draggable' in document.createElement('div'),
+  supportCssPointerEvents = function () {
+    if (!documentExists) return;
+    // false when <= IE11
+    if (IE11OrLess) {
+      return false;
+    }
+    var el = document.createElement('x');
+    el.style.cssText = 'pointer-events:auto';
+    return el.style.pointerEvents === 'auto';
+  }(),
+  _detectDirection = function _detectDirection(el, options) {
+    var elCSS = css(el),
+      elWidth = parseInt(elCSS.width) - parseInt(elCSS.paddingLeft) - parseInt(elCSS.paddingRight) - parseInt(elCSS.borderLeftWidth) - parseInt(elCSS.borderRightWidth),
+      child1 = getChild(el, 0, options),
+      child2 = getChild(el, 1, options),
+      firstChildCSS = child1 && css(child1),
+      secondChildCSS = child2 && css(child2),
+      firstChildWidth = firstChildCSS && parseInt(firstChildCSS.marginLeft) + parseInt(firstChildCSS.marginRight) + getRect(child1).width,
+      secondChildWidth = secondChildCSS && parseInt(secondChildCSS.marginLeft) + parseInt(secondChildCSS.marginRight) + getRect(child2).width;
+    if (elCSS.display === 'flex') {
+      return elCSS.flexDirection === 'column' || elCSS.flexDirection === 'column-reverse' ? 'vertical' : 'horizontal';
+    }
+    if (elCSS.display === 'grid') {
+      return elCSS.gridTemplateColumns.split(' ').length <= 1 ? 'vertical' : 'horizontal';
+    }
+    if (child1 && firstChildCSS["float"] && firstChildCSS["float"] !== 'none') {
+      var touchingSideChild2 = firstChildCSS["float"] === 'left' ? 'left' : 'right';
+      return child2 && (secondChildCSS.clear === 'both' || secondChildCSS.clear === touchingSideChild2) ? 'vertical' : 'horizontal';
+    }
+    return child1 && (firstChildCSS.display === 'block' || firstChildCSS.display === 'flex' || firstChildCSS.display === 'table' || firstChildCSS.display === 'grid' || firstChildWidth >= elWidth && elCSS[CSSFloatProperty] === 'none' || child2 && elCSS[CSSFloatProperty] === 'none' && firstChildWidth + secondChildWidth > elWidth) ? 'vertical' : 'horizontal';
+  },
+  _dragElInRowColumn = function _dragElInRowColumn(dragRect, targetRect, vertical) {
+    var dragElS1Opp = vertical ? dragRect.left : dragRect.top,
+      dragElS2Opp = vertical ? dragRect.right : dragRect.bottom,
+      dragElOppLength = vertical ? dragRect.width : dragRect.height,
+      targetS1Opp = vertical ? targetRect.left : targetRect.top,
+      targetS2Opp = vertical ? targetRect.right : targetRect.bottom,
+      targetOppLength = vertical ? targetRect.width : targetRect.height;
+    return dragElS1Opp === targetS1Opp || dragElS2Opp === targetS2Opp || dragElS1Opp + dragElOppLength / 2 === targetS1Opp + targetOppLength / 2;
+  },
+  /**
+   * Detects first nearest empty sortable to X and Y position using emptyInsertThreshold.
+   * @param  {Number} x      X position
+   * @param  {Number} y      Y position
+   * @return {HTMLElement}   Element of the first found nearest Sortable
+   */
+  _detectNearestEmptySortable = function _detectNearestEmptySortable(x, y) {
+    var ret;
+    sortables.some(function (sortable) {
+      var threshold = sortable[expando].options.emptyInsertThreshold;
+      if (!threshold || lastChild(sortable)) return;
+      var rect = getRect(sortable),
+        insideHorizontally = x >= rect.left - threshold && x <= rect.right + threshold,
+        insideVertically = y >= rect.top - threshold && y <= rect.bottom + threshold;
+      if (insideHorizontally && insideVertically) {
+        return ret = sortable;
+      }
+    });
+    return ret;
+  },
+  _prepareGroup = function _prepareGroup(options) {
+    function toFn(value, pull) {
+      return function (to, from, dragEl, evt) {
+        var sameGroup = to.options.group.name && from.options.group.name && to.options.group.name === from.options.group.name;
+        if (value == null && (pull || sameGroup)) {
+          // Default pull value
+          // Default pull and put value if same group
+          return true;
+        } else if (value == null || value === false) {
+          return false;
+        } else if (pull && value === 'clone') {
+          return value;
+        } else if (typeof value === 'function') {
+          return toFn(value(to, from, dragEl, evt), pull)(to, from, dragEl, evt);
+        } else {
+          var otherGroup = (pull ? to : from).options.group.name;
+          return value === true || typeof value === 'string' && value === otherGroup || value.join && value.indexOf(otherGroup) > -1;
+        }
+      };
+    }
+    var group = {};
+    var originalGroup = options.group;
+    if (!originalGroup || _typeof(originalGroup) != 'object') {
+      originalGroup = {
+        name: originalGroup
+      };
+    }
+    group.name = originalGroup.name;
+    group.checkPull = toFn(originalGroup.pull, true);
+    group.checkPut = toFn(originalGroup.put);
+    group.revertClone = originalGroup.revertClone;
+    options.group = group;
+  },
+  _hideGhostForTarget = function _hideGhostForTarget() {
+    if (!supportCssPointerEvents && ghostEl) {
+      css(ghostEl, 'display', 'none');
+    }
+  },
+  _unhideGhostForTarget = function _unhideGhostForTarget() {
+    if (!supportCssPointerEvents && ghostEl) {
+      css(ghostEl, 'display', '');
+    }
+  };
+
+// #1184 fix - Prevent click event on fallback if dragged but item not changed position
+if (documentExists && !ChromeForAndroid) {
+  document.addEventListener('click', function (evt) {
+    if (ignoreNextClick) {
+      evt.preventDefault();
+      evt.stopPropagation && evt.stopPropagation();
+      evt.stopImmediatePropagation && evt.stopImmediatePropagation();
+      ignoreNextClick = false;
+      return false;
+    }
+  }, true);
+}
+var nearestEmptyInsertDetectEvent = function nearestEmptyInsertDetectEvent(evt) {
+  if (dragEl) {
+    evt = evt.touches ? evt.touches[0] : evt;
+    var nearest = _detectNearestEmptySortable(evt.clientX, evt.clientY);
+    if (nearest) {
+      // Create imitation event
+      var event = {};
+      for (var i in evt) {
+        if (evt.hasOwnProperty(i)) {
+          event[i] = evt[i];
+        }
+      }
+      event.target = event.rootEl = nearest;
+      event.preventDefault = void 0;
+      event.stopPropagation = void 0;
+      nearest[expando]._onDragOver(event);
+    }
+  }
+};
+var _checkOutsideTargetEl = function _checkOutsideTargetEl(evt) {
+  if (dragEl) {
+    dragEl.parentNode[expando]._isOutsideThisEl(evt.target);
+  }
+};
+
+/**
+ * @class  Sortable
+ * @param  {HTMLElement}  el
+ * @param  {Object}       [options]
+ */
+function Sortable(el, options) {
+  if (!(el && el.nodeType && el.nodeType === 1)) {
+    throw "Sortable: `el` must be an HTMLElement, not ".concat({}.toString.call(el));
+  }
+  this.el = el; // root element
+  this.options = options = _extends({}, options);
+
+  // Export instance
+  el[expando] = this;
+  var defaults = {
+    group: null,
+    sort: true,
+    disabled: false,
+    store: null,
+    handle: null,
+    draggable: /^[uo]l$/i.test(el.nodeName) ? '>li' : '>*',
+    swapThreshold: 1,
+    // percentage; 0 <= x <= 1
+    invertSwap: false,
+    // invert always
+    invertedSwapThreshold: null,
+    // will be set to same as swapThreshold if default
+    removeCloneOnHide: true,
+    direction: function direction() {
+      return _detectDirection(el, this.options);
+    },
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    dragClass: 'sortable-drag',
+    ignore: 'a, img',
+    filter: null,
+    preventOnFilter: true,
+    animation: 0,
+    easing: null,
+    setData: function setData(dataTransfer, dragEl) {
+      dataTransfer.setData('Text', dragEl.textContent);
+    },
+    dropBubble: false,
+    dragoverBubble: false,
+    dataIdAttr: 'data-id',
+    delay: 0,
+    delayOnTouchOnly: false,
+    touchStartThreshold: (Number.parseInt ? Number : window).parseInt(window.devicePixelRatio, 10) || 1,
+    forceFallback: false,
+    fallbackClass: 'sortable-fallback',
+    fallbackOnBody: false,
+    fallbackTolerance: 0,
+    fallbackOffset: {
+      x: 0,
+      y: 0
+    },
+    // Disabled on Safari: #1571; Enabled on Safari IOS: #2244
+    supportPointer: Sortable.supportPointer !== false && 'PointerEvent' in window && (!Safari || IOS),
+    emptyInsertThreshold: 5
+  };
+  PluginManager.initializePlugins(this, el, defaults);
+
+  // Set default options
+  for (var name in defaults) {
+    !(name in options) && (options[name] = defaults[name]);
+  }
+  _prepareGroup(options);
+
+  // Bind all private methods
+  for (var fn in this) {
+    if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
+      this[fn] = this[fn].bind(this);
+    }
+  }
+
+  // Setup drag mode
+  this.nativeDraggable = options.forceFallback ? false : supportDraggable;
+  if (this.nativeDraggable) {
+    // Touch start threshold cannot be greater than the native dragstart threshold
+    this.options.touchStartThreshold = 1;
+  }
+
+  // Bind events
+  if (options.supportPointer) {
+    on(el, 'pointerdown', this._onTapStart);
+  } else {
+    on(el, 'mousedown', this._onTapStart);
+    on(el, 'touchstart', this._onTapStart);
+  }
+  if (this.nativeDraggable) {
+    on(el, 'dragover', this);
+    on(el, 'dragenter', this);
+  }
+  sortables.push(this.el);
+
+  // Restore sorting
+  options.store && options.store.get && this.sort(options.store.get(this) || []);
+
+  // Add animation state manager
+  _extends(this, AnimationStateManager());
+}
+Sortable.prototype = /** @lends Sortable.prototype */{
+  constructor: Sortable,
+  _isOutsideThisEl: function _isOutsideThisEl(target) {
+    if (!this.el.contains(target) && target !== this.el) {
+      lastTarget = null;
+    }
+  },
+  _getDirection: function _getDirection(evt, target) {
+    return typeof this.options.direction === 'function' ? this.options.direction.call(this, evt, target, dragEl) : this.options.direction;
+  },
+  _onTapStart: function _onTapStart( /** Event|TouchEvent */evt) {
+    if (!evt.cancelable) return;
+    var _this = this,
+      el = this.el,
+      options = this.options,
+      preventOnFilter = options.preventOnFilter,
+      type = evt.type,
+      touch = evt.touches && evt.touches[0] || evt.pointerType && evt.pointerType === 'touch' && evt,
+      target = (touch || evt).target,
+      originalTarget = evt.target.shadowRoot && (evt.path && evt.path[0] || evt.composedPath && evt.composedPath()[0]) || target,
+      filter = options.filter;
+    _saveInputCheckedState(el);
+
+    // Don't trigger start event when an element is been dragged, otherwise the evt.oldindex always wrong when set option.group.
+    if (dragEl) {
+      return;
+    }
+    if (/mousedown|pointerdown/.test(type) && evt.button !== 0 || options.disabled) {
+      return; // only left button and enabled
+    }
+
+    // cancel dnd if original target is content editable
+    if (originalTarget.isContentEditable) {
+      return;
+    }
+
+    // Safari ignores further event handling after mousedown
+    if (!this.nativeDraggable && Safari && target && target.tagName.toUpperCase() === 'SELECT') {
+      return;
+    }
+    target = closest(target, options.draggable, el, false);
+    if (target && target.animated) {
+      return;
+    }
+    if (lastDownEl === target) {
+      // Ignoring duplicate `down`
+      return;
+    }
+
+    // Get the index of the dragged element within its parent
+    oldIndex = index(target);
+    oldDraggableIndex = index(target, options.draggable);
+
+    // Check filter
+    if (typeof filter === 'function') {
+      if (filter.call(this, evt, target, this)) {
+        _dispatchEvent({
+          sortable: _this,
+          rootEl: originalTarget,
+          name: 'filter',
+          targetEl: target,
+          toEl: el,
+          fromEl: el
+        });
+        pluginEvent('filter', _this, {
+          evt: evt
+        });
+        preventOnFilter && evt.preventDefault();
+        return; // cancel dnd
+      }
+    } else if (filter) {
+      filter = filter.split(',').some(function (criteria) {
+        criteria = closest(originalTarget, criteria.trim(), el, false);
+        if (criteria) {
+          _dispatchEvent({
+            sortable: _this,
+            rootEl: criteria,
+            name: 'filter',
+            targetEl: target,
+            fromEl: el,
+            toEl: el
+          });
+          pluginEvent('filter', _this, {
+            evt: evt
+          });
+          return true;
+        }
+      });
+      if (filter) {
+        preventOnFilter && evt.preventDefault();
+        return; // cancel dnd
+      }
+    }
+    if (options.handle && !closest(originalTarget, options.handle, el, false)) {
+      return;
+    }
+
+    // Prepare `dragstart`
+    this._prepareDragStart(evt, touch, target);
+  },
+  _prepareDragStart: function _prepareDragStart( /** Event */evt, /** Touch */touch, /** HTMLElement */target) {
+    var _this = this,
+      el = _this.el,
+      options = _this.options,
+      ownerDocument = el.ownerDocument,
+      dragStartFn;
+    if (target && !dragEl && target.parentNode === el) {
+      var dragRect = getRect(target);
+      rootEl = el;
+      dragEl = target;
+      parentEl = dragEl.parentNode;
+      nextEl = dragEl.nextSibling;
+      lastDownEl = target;
+      activeGroup = options.group;
+      Sortable.dragged = dragEl;
+      tapEvt = {
+        target: dragEl,
+        clientX: (touch || evt).clientX,
+        clientY: (touch || evt).clientY
+      };
+      tapDistanceLeft = tapEvt.clientX - dragRect.left;
+      tapDistanceTop = tapEvt.clientY - dragRect.top;
+      this._lastX = (touch || evt).clientX;
+      this._lastY = (touch || evt).clientY;
+      dragEl.style['will-change'] = 'all';
+      dragStartFn = function dragStartFn() {
+        pluginEvent('delayEnded', _this, {
+          evt: evt
+        });
+        if (Sortable.eventCanceled) {
+          _this._onDrop();
+          return;
+        }
+        // Delayed drag has been triggered
+        // we can re-enable the events: touchmove/mousemove
+        _this._disableDelayedDragEvents();
+        if (!FireFox && _this.nativeDraggable) {
+          dragEl.draggable = true;
+        }
+
+        // Bind the events: dragstart/dragend
+        _this._triggerDragStart(evt, touch);
+
+        // Drag start event
+        _dispatchEvent({
+          sortable: _this,
+          name: 'choose',
+          originalEvent: evt
+        });
+
+        // Chosen item
+        toggleClass(dragEl, options.chosenClass, true);
+      };
+
+      // Disable "draggable"
+      options.ignore.split(',').forEach(function (criteria) {
+        find(dragEl, criteria.trim(), _disableDraggable);
+      });
+      on(ownerDocument, 'dragover', nearestEmptyInsertDetectEvent);
+      on(ownerDocument, 'mousemove', nearestEmptyInsertDetectEvent);
+      on(ownerDocument, 'touchmove', nearestEmptyInsertDetectEvent);
+      if (options.supportPointer) {
+        on(ownerDocument, 'pointerup', _this._onDrop);
+        // Native D&D triggers pointercancel
+        !this.nativeDraggable && on(ownerDocument, 'pointercancel', _this._onDrop);
+      } else {
+        on(ownerDocument, 'mouseup', _this._onDrop);
+        on(ownerDocument, 'touchend', _this._onDrop);
+        on(ownerDocument, 'touchcancel', _this._onDrop);
+      }
+
+      // Make dragEl draggable (must be before delay for FireFox)
+      if (FireFox && this.nativeDraggable) {
+        this.options.touchStartThreshold = 4;
+        dragEl.draggable = true;
+      }
+      pluginEvent('delayStart', this, {
+        evt: evt
+      });
+
+      // Delay is impossible for native DnD in Edge or IE
+      if (options.delay && (!options.delayOnTouchOnly || touch) && (!this.nativeDraggable || !(Edge || IE11OrLess))) {
+        if (Sortable.eventCanceled) {
+          this._onDrop();
+          return;
+        }
+        // If the user moves the pointer or let go the click or touch
+        // before the delay has been reached:
+        // disable the delayed drag
+        if (options.supportPointer) {
+          on(ownerDocument, 'pointerup', _this._disableDelayedDrag);
+          on(ownerDocument, 'pointercancel', _this._disableDelayedDrag);
+        } else {
+          on(ownerDocument, 'mouseup', _this._disableDelayedDrag);
+          on(ownerDocument, 'touchend', _this._disableDelayedDrag);
+          on(ownerDocument, 'touchcancel', _this._disableDelayedDrag);
+        }
+        on(ownerDocument, 'mousemove', _this._delayedDragTouchMoveHandler);
+        on(ownerDocument, 'touchmove', _this._delayedDragTouchMoveHandler);
+        options.supportPointer && on(ownerDocument, 'pointermove', _this._delayedDragTouchMoveHandler);
+        _this._dragStartTimer = setTimeout(dragStartFn, options.delay);
+      } else {
+        dragStartFn();
+      }
+    }
+  },
+  _delayedDragTouchMoveHandler: function _delayedDragTouchMoveHandler( /** TouchEvent|PointerEvent **/e) {
+    var touch = e.touches ? e.touches[0] : e;
+    if (Math.max(Math.abs(touch.clientX - this._lastX), Math.abs(touch.clientY - this._lastY)) >= Math.floor(this.options.touchStartThreshold / (this.nativeDraggable && window.devicePixelRatio || 1))) {
+      this._disableDelayedDrag();
+    }
+  },
+  _disableDelayedDrag: function _disableDelayedDrag() {
+    dragEl && _disableDraggable(dragEl);
+    clearTimeout(this._dragStartTimer);
+    this._disableDelayedDragEvents();
+  },
+  _disableDelayedDragEvents: function _disableDelayedDragEvents() {
+    var ownerDocument = this.el.ownerDocument;
+    off(ownerDocument, 'mouseup', this._disableDelayedDrag);
+    off(ownerDocument, 'touchend', this._disableDelayedDrag);
+    off(ownerDocument, 'touchcancel', this._disableDelayedDrag);
+    off(ownerDocument, 'pointerup', this._disableDelayedDrag);
+    off(ownerDocument, 'pointercancel', this._disableDelayedDrag);
+    off(ownerDocument, 'mousemove', this._delayedDragTouchMoveHandler);
+    off(ownerDocument, 'touchmove', this._delayedDragTouchMoveHandler);
+    off(ownerDocument, 'pointermove', this._delayedDragTouchMoveHandler);
+  },
+  _triggerDragStart: function _triggerDragStart( /** Event */evt, /** Touch */touch) {
+    touch = touch || evt.pointerType == 'touch' && evt;
+    if (!this.nativeDraggable || touch) {
+      if (this.options.supportPointer) {
+        on(document, 'pointermove', this._onTouchMove);
+      } else if (touch) {
+        on(document, 'touchmove', this._onTouchMove);
+      } else {
+        on(document, 'mousemove', this._onTouchMove);
+      }
+    } else {
+      on(dragEl, 'dragend', this);
+      on(rootEl, 'dragstart', this._onDragStart);
+    }
+    try {
+      if (document.selection) {
+        _nextTick(function () {
+          document.selection.empty();
+        });
+      } else {
+        window.getSelection().removeAllRanges();
+      }
+    } catch (err) {}
+  },
+  _dragStarted: function _dragStarted(fallback, evt) {
+    awaitingDragStarted = false;
+    if (rootEl && dragEl) {
+      pluginEvent('dragStarted', this, {
+        evt: evt
+      });
+      if (this.nativeDraggable) {
+        on(document, 'dragover', _checkOutsideTargetEl);
+      }
+      var options = this.options;
+
+      // Apply effect
+      !fallback && toggleClass(dragEl, options.dragClass, false);
+      toggleClass(dragEl, options.ghostClass, true);
+      Sortable.active = this;
+      fallback && this._appendGhost();
+
+      // Drag start event
+      _dispatchEvent({
+        sortable: this,
+        name: 'start',
+        originalEvent: evt
+      });
+    } else {
+      this._nulling();
+    }
+  },
+  _emulateDragOver: function _emulateDragOver() {
+    if (touchEvt) {
+      this._lastX = touchEvt.clientX;
+      this._lastY = touchEvt.clientY;
+      _hideGhostForTarget();
+      var target = document.elementFromPoint(touchEvt.clientX, touchEvt.clientY);
+      var parent = target;
+      while (target && target.shadowRoot) {
+        target = target.shadowRoot.elementFromPoint(touchEvt.clientX, touchEvt.clientY);
+        if (target === parent) break;
+        parent = target;
+      }
+      dragEl.parentNode[expando]._isOutsideThisEl(target);
+      if (parent) {
+        do {
+          if (parent[expando]) {
+            var inserted = void 0;
+            inserted = parent[expando]._onDragOver({
+              clientX: touchEvt.clientX,
+              clientY: touchEvt.clientY,
+              target: target,
+              rootEl: parent
+            });
+            if (inserted && !this.options.dragoverBubble) {
+              break;
+            }
+          }
+          target = parent; // store last element
+        }
+        /* jshint boss:true */ while (parent = getParentOrHost(parent));
+      }
+      _unhideGhostForTarget();
+    }
+  },
+  _onTouchMove: function _onTouchMove( /**TouchEvent*/evt) {
+    if (tapEvt) {
+      var options = this.options,
+        fallbackTolerance = options.fallbackTolerance,
+        fallbackOffset = options.fallbackOffset,
+        touch = evt.touches ? evt.touches[0] : evt,
+        ghostMatrix = ghostEl && matrix(ghostEl, true),
+        scaleX = ghostEl && ghostMatrix && ghostMatrix.a,
+        scaleY = ghostEl && ghostMatrix && ghostMatrix.d,
+        relativeScrollOffset = PositionGhostAbsolutely && ghostRelativeParent && getRelativeScrollOffset(ghostRelativeParent),
+        dx = (touch.clientX - tapEvt.clientX + fallbackOffset.x) / (scaleX || 1) + (relativeScrollOffset ? relativeScrollOffset[0] - ghostRelativeParentInitialScroll[0] : 0) / (scaleX || 1),
+        dy = (touch.clientY - tapEvt.clientY + fallbackOffset.y) / (scaleY || 1) + (relativeScrollOffset ? relativeScrollOffset[1] - ghostRelativeParentInitialScroll[1] : 0) / (scaleY || 1);
+
+      // only set the status to dragging, when we are actually dragging
+      if (!Sortable.active && !awaitingDragStarted) {
+        if (fallbackTolerance && Math.max(Math.abs(touch.clientX - this._lastX), Math.abs(touch.clientY - this._lastY)) < fallbackTolerance) {
+          return;
+        }
+        this._onDragStart(evt, true);
+      }
+      if (ghostEl) {
+        if (ghostMatrix) {
+          ghostMatrix.e += dx - (lastDx || 0);
+          ghostMatrix.f += dy - (lastDy || 0);
+        } else {
+          ghostMatrix = {
+            a: 1,
+            b: 0,
+            c: 0,
+            d: 1,
+            e: dx,
+            f: dy
+          };
+        }
+        var cssMatrix = "matrix(".concat(ghostMatrix.a, ",").concat(ghostMatrix.b, ",").concat(ghostMatrix.c, ",").concat(ghostMatrix.d, ",").concat(ghostMatrix.e, ",").concat(ghostMatrix.f, ")");
+        css(ghostEl, 'webkitTransform', cssMatrix);
+        css(ghostEl, 'mozTransform', cssMatrix);
+        css(ghostEl, 'msTransform', cssMatrix);
+        css(ghostEl, 'transform', cssMatrix);
+        lastDx = dx;
+        lastDy = dy;
+        touchEvt = touch;
+      }
+      evt.cancelable && evt.preventDefault();
+    }
+  },
+  _appendGhost: function _appendGhost() {
+    // Bug if using scale(): https://stackoverflow.com/questions/2637058
+    // Not being adjusted for
+    if (!ghostEl) {
+      var container = this.options.fallbackOnBody ? document.body : rootEl,
+        rect = getRect(dragEl, true, PositionGhostAbsolutely, true, container),
+        options = this.options;
+
+      // Position absolutely
+      if (PositionGhostAbsolutely) {
+        // Get relatively positioned parent
+        ghostRelativeParent = container;
+        while (css(ghostRelativeParent, 'position') === 'static' && css(ghostRelativeParent, 'transform') === 'none' && ghostRelativeParent !== document) {
+          ghostRelativeParent = ghostRelativeParent.parentNode;
+        }
+        if (ghostRelativeParent !== document.body && ghostRelativeParent !== document.documentElement) {
+          if (ghostRelativeParent === document) ghostRelativeParent = getWindowScrollingElement();
+          rect.top += ghostRelativeParent.scrollTop;
+          rect.left += ghostRelativeParent.scrollLeft;
+        } else {
+          ghostRelativeParent = getWindowScrollingElement();
+        }
+        ghostRelativeParentInitialScroll = getRelativeScrollOffset(ghostRelativeParent);
+      }
+      ghostEl = dragEl.cloneNode(true);
+      toggleClass(ghostEl, options.ghostClass, false);
+      toggleClass(ghostEl, options.fallbackClass, true);
+      toggleClass(ghostEl, options.dragClass, true);
+      css(ghostEl, 'transition', '');
+      css(ghostEl, 'transform', '');
+      css(ghostEl, 'box-sizing', 'border-box');
+      css(ghostEl, 'margin', 0);
+      css(ghostEl, 'top', rect.top);
+      css(ghostEl, 'left', rect.left);
+      css(ghostEl, 'width', rect.width);
+      css(ghostEl, 'height', rect.height);
+      css(ghostEl, 'opacity', '0.8');
+      css(ghostEl, 'position', PositionGhostAbsolutely ? 'absolute' : 'fixed');
+      css(ghostEl, 'zIndex', '100000');
+      css(ghostEl, 'pointerEvents', 'none');
+      Sortable.ghost = ghostEl;
+      container.appendChild(ghostEl);
+
+      // Set transform-origin
+      css(ghostEl, 'transform-origin', tapDistanceLeft / parseInt(ghostEl.style.width) * 100 + '% ' + tapDistanceTop / parseInt(ghostEl.style.height) * 100 + '%');
+    }
+  },
+  _onDragStart: function _onDragStart( /**Event*/evt, /**boolean*/fallback) {
+    var _this = this;
+    var dataTransfer = evt.dataTransfer;
+    var options = _this.options;
+    pluginEvent('dragStart', this, {
+      evt: evt
+    });
+    if (Sortable.eventCanceled) {
+      this._onDrop();
+      return;
+    }
+    pluginEvent('setupClone', this);
+    if (!Sortable.eventCanceled) {
+      cloneEl = clone(dragEl);
+      cloneEl.removeAttribute("id");
+      cloneEl.draggable = false;
+      cloneEl.style['will-change'] = '';
+      this._hideClone();
+      toggleClass(cloneEl, this.options.chosenClass, false);
+      Sortable.clone = cloneEl;
+    }
+
+    // #1143: IFrame support workaround
+    _this.cloneId = _nextTick(function () {
+      pluginEvent('clone', _this);
+      if (Sortable.eventCanceled) return;
+      if (!_this.options.removeCloneOnHide) {
+        rootEl.insertBefore(cloneEl, dragEl);
+      }
+      _this._hideClone();
+      _dispatchEvent({
+        sortable: _this,
+        name: 'clone'
+      });
+    });
+    !fallback && toggleClass(dragEl, options.dragClass, true);
+
+    // Set proper drop events
+    if (fallback) {
+      ignoreNextClick = true;
+      _this._loopId = setInterval(_this._emulateDragOver, 50);
+    } else {
+      // Undo what was set in _prepareDragStart before drag started
+      off(document, 'mouseup', _this._onDrop);
+      off(document, 'touchend', _this._onDrop);
+      off(document, 'touchcancel', _this._onDrop);
+      if (dataTransfer) {
+        dataTransfer.effectAllowed = 'move';
+        options.setData && options.setData.call(_this, dataTransfer, dragEl);
+      }
+      on(document, 'drop', _this);
+
+      // #1276 fix:
+      css(dragEl, 'transform', 'translateZ(0)');
+    }
+    awaitingDragStarted = true;
+    _this._dragStartId = _nextTick(_this._dragStarted.bind(_this, fallback, evt));
+    on(document, 'selectstart', _this);
+    moved = true;
+    window.getSelection().removeAllRanges();
+    if (Safari) {
+      css(document.body, 'user-select', 'none');
+    }
+  },
+  // Returns true - if no further action is needed (either inserted or another condition)
+  _onDragOver: function _onDragOver( /**Event*/evt) {
+    var el = this.el,
+      target = evt.target,
+      dragRect,
+      targetRect,
+      revert,
+      options = this.options,
+      group = options.group,
+      activeSortable = Sortable.active,
+      isOwner = activeGroup === group,
+      canSort = options.sort,
+      fromSortable = putSortable || activeSortable,
+      vertical,
+      _this = this,
+      completedFired = false;
+    if (_silent) return;
+    function dragOverEvent(name, extra) {
+      pluginEvent(name, _this, _objectSpread2({
+        evt: evt,
+        isOwner: isOwner,
+        axis: vertical ? 'vertical' : 'horizontal',
+        revert: revert,
+        dragRect: dragRect,
+        targetRect: targetRect,
+        canSort: canSort,
+        fromSortable: fromSortable,
+        target: target,
+        completed: completed,
+        onMove: function onMove(target, after) {
+          return _onMove(rootEl, el, dragEl, dragRect, target, getRect(target), evt, after);
+        },
+        changed: changed
+      }, extra));
+    }
+
+    // Capture animation state
+    function capture() {
+      dragOverEvent('dragOverAnimationCapture');
+      _this.captureAnimationState();
+      if (_this !== fromSortable) {
+        fromSortable.captureAnimationState();
+      }
+    }
+
+    // Return invocation when dragEl is inserted (or completed)
+    function completed(insertion) {
+      dragOverEvent('dragOverCompleted', {
+        insertion: insertion
+      });
+      if (insertion) {
+        // Clones must be hidden before folding animation to capture dragRectAbsolute properly
+        if (isOwner) {
+          activeSortable._hideClone();
+        } else {
+          activeSortable._showClone(_this);
+        }
+        if (_this !== fromSortable) {
+          // Set ghost class to new sortable's ghost class
+          toggleClass(dragEl, putSortable ? putSortable.options.ghostClass : activeSortable.options.ghostClass, false);
+          toggleClass(dragEl, options.ghostClass, true);
+        }
+        if (putSortable !== _this && _this !== Sortable.active) {
+          putSortable = _this;
+        } else if (_this === Sortable.active && putSortable) {
+          putSortable = null;
+        }
+
+        // Animation
+        if (fromSortable === _this) {
+          _this._ignoreWhileAnimating = target;
+        }
+        _this.animateAll(function () {
+          dragOverEvent('dragOverAnimationComplete');
+          _this._ignoreWhileAnimating = null;
+        });
+        if (_this !== fromSortable) {
+          fromSortable.animateAll();
+          fromSortable._ignoreWhileAnimating = null;
+        }
+      }
+
+      // Null lastTarget if it is not inside a previously swapped element
+      if (target === dragEl && !dragEl.animated || target === el && !target.animated) {
+        lastTarget = null;
+      }
+
+      // no bubbling and not fallback
+      if (!options.dragoverBubble && !evt.rootEl && target !== document) {
+        dragEl.parentNode[expando]._isOutsideThisEl(evt.target);
+
+        // Do not detect for empty insert if already inserted
+        !insertion && nearestEmptyInsertDetectEvent(evt);
+      }
+      !options.dragoverBubble && evt.stopPropagation && evt.stopPropagation();
+      return completedFired = true;
+    }
+
+    // Call when dragEl has been inserted
+    function changed() {
+      newIndex = index(dragEl);
+      newDraggableIndex = index(dragEl, options.draggable);
+      _dispatchEvent({
+        sortable: _this,
+        name: 'change',
+        toEl: el,
+        newIndex: newIndex,
+        newDraggableIndex: newDraggableIndex,
+        originalEvent: evt
+      });
+    }
+    if (evt.preventDefault !== void 0) {
+      evt.cancelable && evt.preventDefault();
+    }
+    target = closest(target, options.draggable, el, true);
+    dragOverEvent('dragOver');
+    if (Sortable.eventCanceled) return completedFired;
+    if (dragEl.contains(evt.target) || target.animated && target.animatingX && target.animatingY || _this._ignoreWhileAnimating === target) {
+      return completed(false);
+    }
+    ignoreNextClick = false;
+    if (activeSortable && !options.disabled && (isOwner ? canSort || (revert = parentEl !== rootEl) // Reverting item into the original list
+    : putSortable === this || (this.lastPutMode = activeGroup.checkPull(this, activeSortable, dragEl, evt)) && group.checkPut(this, activeSortable, dragEl, evt))) {
+      vertical = this._getDirection(evt, target) === 'vertical';
+      dragRect = getRect(dragEl);
+      dragOverEvent('dragOverValid');
+      if (Sortable.eventCanceled) return completedFired;
+      if (revert) {
+        parentEl = rootEl; // actualization
+        capture();
+        this._hideClone();
+        dragOverEvent('revert');
+        if (!Sortable.eventCanceled) {
+          if (nextEl) {
+            rootEl.insertBefore(dragEl, nextEl);
+          } else {
+            rootEl.appendChild(dragEl);
+          }
+        }
+        return completed(true);
+      }
+      var elLastChild = lastChild(el, options.draggable);
+      if (!elLastChild || _ghostIsLast(evt, vertical, this) && !elLastChild.animated) {
+        // Insert to end of list
+
+        // If already at end of list: Do not insert
+        if (elLastChild === dragEl) {
+          return completed(false);
+        }
+
+        // if there is a last element, it is the target
+        if (elLastChild && el === evt.target) {
+          target = elLastChild;
+        }
+        if (target) {
+          targetRect = getRect(target);
+        }
+        if (_onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, !!target) !== false) {
+          capture();
+          if (elLastChild && elLastChild.nextSibling) {
+            // the last draggable element is not the last node
+            el.insertBefore(dragEl, elLastChild.nextSibling);
+          } else {
+            el.appendChild(dragEl);
+          }
+          parentEl = el; // actualization
+
+          changed();
+          return completed(true);
+        }
+      } else if (elLastChild && _ghostIsFirst(evt, vertical, this)) {
+        // Insert to start of list
+        var firstChild = getChild(el, 0, options, true);
+        if (firstChild === dragEl) {
+          return completed(false);
+        }
+        target = firstChild;
+        targetRect = getRect(target);
+        if (_onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, false) !== false) {
+          capture();
+          el.insertBefore(dragEl, firstChild);
+          parentEl = el; // actualization
+
+          changed();
+          return completed(true);
+        }
+      } else if (target.parentNode === el) {
+        targetRect = getRect(target);
+        var direction = 0,
+          targetBeforeFirstSwap,
+          differentLevel = dragEl.parentNode !== el,
+          differentRowCol = !_dragElInRowColumn(dragEl.animated && dragEl.toRect || dragRect, target.animated && target.toRect || targetRect, vertical),
+          side1 = vertical ? 'top' : 'left',
+          scrolledPastTop = isScrolledPast(target, 'top', 'top') || isScrolledPast(dragEl, 'top', 'top'),
+          scrollBefore = scrolledPastTop ? scrolledPastTop.scrollTop : void 0;
+        if (lastTarget !== target) {
+          targetBeforeFirstSwap = targetRect[side1];
+          pastFirstInvertThresh = false;
+          isCircumstantialInvert = !differentRowCol && options.invertSwap || differentLevel;
+        }
+        direction = _getSwapDirection(evt, target, targetRect, vertical, differentRowCol ? 1 : options.swapThreshold, options.invertedSwapThreshold == null ? options.swapThreshold : options.invertedSwapThreshold, isCircumstantialInvert, lastTarget === target);
+        var sibling;
+        if (direction !== 0) {
+          // Check if target is beside dragEl in respective direction (ignoring hidden elements)
+          var dragIndex = index(dragEl);
+          do {
+            dragIndex -= direction;
+            sibling = parentEl.children[dragIndex];
+          } while (sibling && (css(sibling, 'display') === 'none' || sibling === ghostEl));
+        }
+        // If dragEl is already beside target: Do not insert
+        if (direction === 0 || sibling === target) {
+          return completed(false);
+        }
+        lastTarget = target;
+        lastDirection = direction;
+        var nextSibling = target.nextElementSibling,
+          after = false;
+        after = direction === 1;
+        var moveVector = _onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, after);
+        if (moveVector !== false) {
+          if (moveVector === 1 || moveVector === -1) {
+            after = moveVector === 1;
+          }
+          _silent = true;
+          setTimeout(_unsilent, 30);
+          capture();
+          if (after && !nextSibling) {
+            el.appendChild(dragEl);
+          } else {
+            target.parentNode.insertBefore(dragEl, after ? nextSibling : target);
+          }
+
+          // Undo chrome's scroll adjustment (has no effect on other browsers)
+          if (scrolledPastTop) {
+            scrollBy(scrolledPastTop, 0, scrollBefore - scrolledPastTop.scrollTop);
+          }
+          parentEl = dragEl.parentNode; // actualization
+
+          // must be done before animation
+          if (targetBeforeFirstSwap !== undefined && !isCircumstantialInvert) {
+            targetMoveDistance = Math.abs(targetBeforeFirstSwap - getRect(target)[side1]);
+          }
+          changed();
+          return completed(true);
+        }
+      }
+      if (el.contains(dragEl)) {
+        return completed(false);
+      }
+    }
+    return false;
+  },
+  _ignoreWhileAnimating: null,
+  _offMoveEvents: function _offMoveEvents() {
+    off(document, 'mousemove', this._onTouchMove);
+    off(document, 'touchmove', this._onTouchMove);
+    off(document, 'pointermove', this._onTouchMove);
+    off(document, 'dragover', nearestEmptyInsertDetectEvent);
+    off(document, 'mousemove', nearestEmptyInsertDetectEvent);
+    off(document, 'touchmove', nearestEmptyInsertDetectEvent);
+  },
+  _offUpEvents: function _offUpEvents() {
+    var ownerDocument = this.el.ownerDocument;
+    off(ownerDocument, 'mouseup', this._onDrop);
+    off(ownerDocument, 'touchend', this._onDrop);
+    off(ownerDocument, 'pointerup', this._onDrop);
+    off(ownerDocument, 'pointercancel', this._onDrop);
+    off(ownerDocument, 'touchcancel', this._onDrop);
+    off(document, 'selectstart', this);
+  },
+  _onDrop: function _onDrop( /**Event*/evt) {
+    var el = this.el,
+      options = this.options;
+
+    // Get the index of the dragged element within its parent
+    newIndex = index(dragEl);
+    newDraggableIndex = index(dragEl, options.draggable);
+    pluginEvent('drop', this, {
+      evt: evt
+    });
+    parentEl = dragEl && dragEl.parentNode;
+
+    // Get again after plugin event
+    newIndex = index(dragEl);
+    newDraggableIndex = index(dragEl, options.draggable);
+    if (Sortable.eventCanceled) {
+      this._nulling();
+      return;
+    }
+    awaitingDragStarted = false;
+    isCircumstantialInvert = false;
+    pastFirstInvertThresh = false;
+    clearInterval(this._loopId);
+    clearTimeout(this._dragStartTimer);
+    _cancelNextTick(this.cloneId);
+    _cancelNextTick(this._dragStartId);
+
+    // Unbind events
+    if (this.nativeDraggable) {
+      off(document, 'drop', this);
+      off(el, 'dragstart', this._onDragStart);
+    }
+    this._offMoveEvents();
+    this._offUpEvents();
+    if (Safari) {
+      css(document.body, 'user-select', '');
+    }
+    css(dragEl, 'transform', '');
+    if (evt) {
+      if (moved) {
+        evt.cancelable && evt.preventDefault();
+        !options.dropBubble && evt.stopPropagation();
+      }
+      ghostEl && ghostEl.parentNode && ghostEl.parentNode.removeChild(ghostEl);
+      if (rootEl === parentEl || putSortable && putSortable.lastPutMode !== 'clone') {
+        // Remove clone(s)
+        cloneEl && cloneEl.parentNode && cloneEl.parentNode.removeChild(cloneEl);
+      }
+      if (dragEl) {
+        if (this.nativeDraggable) {
+          off(dragEl, 'dragend', this);
+        }
+        _disableDraggable(dragEl);
+        dragEl.style['will-change'] = '';
+
+        // Remove classes
+        // ghostClass is added in dragStarted
+        if (moved && !awaitingDragStarted) {
+          toggleClass(dragEl, putSortable ? putSortable.options.ghostClass : this.options.ghostClass, false);
+        }
+        toggleClass(dragEl, this.options.chosenClass, false);
+
+        // Drag stop event
+        _dispatchEvent({
+          sortable: this,
+          name: 'unchoose',
+          toEl: parentEl,
+          newIndex: null,
+          newDraggableIndex: null,
+          originalEvent: evt
+        });
+        if (rootEl !== parentEl) {
+          if (newIndex >= 0) {
+            // Add event
+            _dispatchEvent({
+              rootEl: parentEl,
+              name: 'add',
+              toEl: parentEl,
+              fromEl: rootEl,
+              originalEvent: evt
+            });
+
+            // Remove event
+            _dispatchEvent({
+              sortable: this,
+              name: 'remove',
+              toEl: parentEl,
+              originalEvent: evt
+            });
+
+            // drag from one list and drop into another
+            _dispatchEvent({
+              rootEl: parentEl,
+              name: 'sort',
+              toEl: parentEl,
+              fromEl: rootEl,
+              originalEvent: evt
+            });
+            _dispatchEvent({
+              sortable: this,
+              name: 'sort',
+              toEl: parentEl,
+              originalEvent: evt
+            });
+          }
+          putSortable && putSortable.save();
+        } else {
+          if (newIndex !== oldIndex) {
+            if (newIndex >= 0) {
+              // drag & drop within the same list
+              _dispatchEvent({
+                sortable: this,
+                name: 'update',
+                toEl: parentEl,
+                originalEvent: evt
+              });
+              _dispatchEvent({
+                sortable: this,
+                name: 'sort',
+                toEl: parentEl,
+                originalEvent: evt
+              });
+            }
+          }
+        }
+        if (Sortable.active) {
+          /* jshint eqnull:true */
+          if (newIndex == null || newIndex === -1) {
+            newIndex = oldIndex;
+            newDraggableIndex = oldDraggableIndex;
+          }
+          _dispatchEvent({
+            sortable: this,
+            name: 'end',
+            toEl: parentEl,
+            originalEvent: evt
+          });
+
+          // Save sorting
+          this.save();
+        }
+      }
+    }
+    this._nulling();
+  },
+  _nulling: function _nulling() {
+    pluginEvent('nulling', this);
+    rootEl = dragEl = parentEl = ghostEl = nextEl = cloneEl = lastDownEl = cloneHidden = tapEvt = touchEvt = moved = newIndex = newDraggableIndex = oldIndex = oldDraggableIndex = lastTarget = lastDirection = putSortable = activeGroup = Sortable.dragged = Sortable.ghost = Sortable.clone = Sortable.active = null;
+    savedInputChecked.forEach(function (el) {
+      el.checked = true;
+    });
+    savedInputChecked.length = lastDx = lastDy = 0;
+  },
+  handleEvent: function handleEvent( /**Event*/evt) {
+    switch (evt.type) {
+      case 'drop':
+      case 'dragend':
+        this._onDrop(evt);
+        break;
+      case 'dragenter':
+      case 'dragover':
+        if (dragEl) {
+          this._onDragOver(evt);
+          _globalDragOver(evt);
+        }
+        break;
+      case 'selectstart':
+        evt.preventDefault();
+        break;
+    }
+  },
+  /**
+   * Serializes the item into an array of string.
+   * @returns {String[]}
+   */
+  toArray: function toArray() {
+    var order = [],
+      el,
+      children = this.el.children,
+      i = 0,
+      n = children.length,
+      options = this.options;
+    for (; i < n; i++) {
+      el = children[i];
+      if (closest(el, options.draggable, this.el, false)) {
+        order.push(el.getAttribute(options.dataIdAttr) || _generateId(el));
+      }
+    }
+    return order;
+  },
+  /**
+   * Sorts the elements according to the array.
+   * @param  {String[]}  order  order of the items
+   */
+  sort: function sort(order, useAnimation) {
+    var items = {},
+      rootEl = this.el;
+    this.toArray().forEach(function (id, i) {
+      var el = rootEl.children[i];
+      if (closest(el, this.options.draggable, rootEl, false)) {
+        items[id] = el;
+      }
+    }, this);
+    useAnimation && this.captureAnimationState();
+    order.forEach(function (id) {
+      if (items[id]) {
+        rootEl.removeChild(items[id]);
+        rootEl.appendChild(items[id]);
+      }
+    });
+    useAnimation && this.animateAll();
+  },
+  /**
+   * Save the current sorting
+   */
+  save: function save() {
+    var store = this.options.store;
+    store && store.set && store.set(this);
+  },
+  /**
+   * For each element in the set, get the first element that matches the selector by testing the element itself and traversing up through its ancestors in the DOM tree.
+   * @param   {HTMLElement}  el
+   * @param   {String}       [selector]  default: `options.draggable`
+   * @returns {HTMLElement|null}
+   */
+  closest: function closest$1(el, selector) {
+    return closest(el, selector || this.options.draggable, this.el, false);
+  },
+  /**
+   * Set/get option
+   * @param   {string} name
+   * @param   {*}      [value]
+   * @returns {*}
+   */
+  option: function option(name, value) {
+    var options = this.options;
+    if (value === void 0) {
+      return options[name];
+    } else {
+      var modifiedValue = PluginManager.modifyOption(this, name, value);
+      if (typeof modifiedValue !== 'undefined') {
+        options[name] = modifiedValue;
+      } else {
+        options[name] = value;
+      }
+      if (name === 'group') {
+        _prepareGroup(options);
+      }
+    }
+  },
+  /**
+   * Destroy
+   */
+  destroy: function destroy() {
+    pluginEvent('destroy', this);
+    var el = this.el;
+    el[expando] = null;
+    off(el, 'mousedown', this._onTapStart);
+    off(el, 'touchstart', this._onTapStart);
+    off(el, 'pointerdown', this._onTapStart);
+    if (this.nativeDraggable) {
+      off(el, 'dragover', this);
+      off(el, 'dragenter', this);
+    }
+    // Remove draggable attributes
+    Array.prototype.forEach.call(el.querySelectorAll('[draggable]'), function (el) {
+      el.removeAttribute('draggable');
+    });
+    this._onDrop();
+    this._disableDelayedDragEvents();
+    sortables.splice(sortables.indexOf(this.el), 1);
+    this.el = el = null;
+  },
+  _hideClone: function _hideClone() {
+    if (!cloneHidden) {
+      pluginEvent('hideClone', this);
+      if (Sortable.eventCanceled) return;
+      css(cloneEl, 'display', 'none');
+      if (this.options.removeCloneOnHide && cloneEl.parentNode) {
+        cloneEl.parentNode.removeChild(cloneEl);
+      }
+      cloneHidden = true;
+    }
+  },
+  _showClone: function _showClone(putSortable) {
+    if (putSortable.lastPutMode !== 'clone') {
+      this._hideClone();
+      return;
+    }
+    if (cloneHidden) {
+      pluginEvent('showClone', this);
+      if (Sortable.eventCanceled) return;
+
+      // show clone at dragEl or original position
+      if (dragEl.parentNode == rootEl && !this.options.group.revertClone) {
+        rootEl.insertBefore(cloneEl, dragEl);
+      } else if (nextEl) {
+        rootEl.insertBefore(cloneEl, nextEl);
+      } else {
+        rootEl.appendChild(cloneEl);
+      }
+      if (this.options.group.revertClone) {
+        this.animate(dragEl, cloneEl);
+      }
+      css(cloneEl, 'display', '');
+      cloneHidden = false;
+    }
+  }
+};
+function _globalDragOver( /**Event*/evt) {
+  if (evt.dataTransfer) {
+    evt.dataTransfer.dropEffect = 'move';
+  }
+  evt.cancelable && evt.preventDefault();
+}
+function _onMove(fromEl, toEl, dragEl, dragRect, targetEl, targetRect, originalEvent, willInsertAfter) {
+  var evt,
+    sortable = fromEl[expando],
+    onMoveFn = sortable.options.onMove,
+    retVal;
+  // Support for new CustomEvent feature
+  if (window.CustomEvent && !IE11OrLess && !Edge) {
+    evt = new CustomEvent('move', {
+      bubbles: true,
+      cancelable: true
+    });
+  } else {
+    evt = document.createEvent('Event');
+    evt.initEvent('move', true, true);
+  }
+  evt.to = toEl;
+  evt.from = fromEl;
+  evt.dragged = dragEl;
+  evt.draggedRect = dragRect;
+  evt.related = targetEl || toEl;
+  evt.relatedRect = targetRect || getRect(toEl);
+  evt.willInsertAfter = willInsertAfter;
+  evt.originalEvent = originalEvent;
+  fromEl.dispatchEvent(evt);
+  if (onMoveFn) {
+    retVal = onMoveFn.call(sortable, evt, originalEvent);
+  }
+  return retVal;
+}
+function _disableDraggable(el) {
+  el.draggable = false;
+}
+function _unsilent() {
+  _silent = false;
+}
+function _ghostIsFirst(evt, vertical, sortable) {
+  var firstElRect = getRect(getChild(sortable.el, 0, sortable.options, true));
+  var childContainingRect = getChildContainingRectFromElement(sortable.el, sortable.options, ghostEl);
+  var spacer = 10;
+  return vertical ? evt.clientX < childContainingRect.left - spacer || evt.clientY < firstElRect.top && evt.clientX < firstElRect.right : evt.clientY < childContainingRect.top - spacer || evt.clientY < firstElRect.bottom && evt.clientX < firstElRect.left;
+}
+function _ghostIsLast(evt, vertical, sortable) {
+  var lastElRect = getRect(lastChild(sortable.el, sortable.options.draggable));
+  var childContainingRect = getChildContainingRectFromElement(sortable.el, sortable.options, ghostEl);
+  var spacer = 10;
+  return vertical ? evt.clientX > childContainingRect.right + spacer || evt.clientY > lastElRect.bottom && evt.clientX > lastElRect.left : evt.clientY > childContainingRect.bottom + spacer || evt.clientX > lastElRect.right && evt.clientY > lastElRect.top;
+}
+function _getSwapDirection(evt, target, targetRect, vertical, swapThreshold, invertedSwapThreshold, invertSwap, isLastTarget) {
+  var mouseOnAxis = vertical ? evt.clientY : evt.clientX,
+    targetLength = vertical ? targetRect.height : targetRect.width,
+    targetS1 = vertical ? targetRect.top : targetRect.left,
+    targetS2 = vertical ? targetRect.bottom : targetRect.right,
+    invert = false;
+  if (!invertSwap) {
+    // Never invert or create dragEl shadow when target movemenet causes mouse to move past the end of regular swapThreshold
+    if (isLastTarget && targetMoveDistance < targetLength * swapThreshold) {
+      // multiplied only by swapThreshold because mouse will already be inside target by (1 - threshold) * targetLength / 2
+      // check if past first invert threshold on side opposite of lastDirection
+      if (!pastFirstInvertThresh && (lastDirection === 1 ? mouseOnAxis > targetS1 + targetLength * invertedSwapThreshold / 2 : mouseOnAxis < targetS2 - targetLength * invertedSwapThreshold / 2)) {
+        // past first invert threshold, do not restrict inverted threshold to dragEl shadow
+        pastFirstInvertThresh = true;
+      }
+      if (!pastFirstInvertThresh) {
+        // dragEl shadow (target move distance shadow)
+        if (lastDirection === 1 ? mouseOnAxis < targetS1 + targetMoveDistance // over dragEl shadow
+        : mouseOnAxis > targetS2 - targetMoveDistance) {
+          return -lastDirection;
+        }
+      } else {
+        invert = true;
+      }
+    } else {
+      // Regular
+      if (mouseOnAxis > targetS1 + targetLength * (1 - swapThreshold) / 2 && mouseOnAxis < targetS2 - targetLength * (1 - swapThreshold) / 2) {
+        return _getInsertDirection(target);
+      }
+    }
+  }
+  invert = invert || invertSwap;
+  if (invert) {
+    // Invert of regular
+    if (mouseOnAxis < targetS1 + targetLength * invertedSwapThreshold / 2 || mouseOnAxis > targetS2 - targetLength * invertedSwapThreshold / 2) {
+      return mouseOnAxis > targetS1 + targetLength / 2 ? 1 : -1;
+    }
+  }
+  return 0;
+}
+
+/**
+ * Gets the direction dragEl must be swapped relative to target in order to make it
+ * seem that dragEl has been "inserted" into that element's position
+ * @param  {HTMLElement} target       The target whose position dragEl is being inserted at
+ * @return {Number}                   Direction dragEl must be swapped
+ */
+function _getInsertDirection(target) {
+  if (index(dragEl) < index(target)) {
+    return 1;
+  } else {
+    return -1;
+  }
+}
+
+/**
+ * Generate id
+ * @param   {HTMLElement} el
+ * @returns {String}
+ * @private
+ */
+function _generateId(el) {
+  var str = el.tagName + el.className + el.src + el.href + el.textContent,
+    i = str.length,
+    sum = 0;
+  while (i--) {
+    sum += str.charCodeAt(i);
+  }
+  return sum.toString(36);
+}
+function _saveInputCheckedState(root) {
+  savedInputChecked.length = 0;
+  var inputs = root.getElementsByTagName('input');
+  var idx = inputs.length;
+  while (idx--) {
+    var el = inputs[idx];
+    el.checked && savedInputChecked.push(el);
+  }
+}
+function _nextTick(fn) {
+  return setTimeout(fn, 0);
+}
+function _cancelNextTick(id) {
+  return clearTimeout(id);
+}
+
+// Fixed #973:
+if (documentExists) {
+  on(document, 'touchmove', function (evt) {
+    if ((Sortable.active || awaitingDragStarted) && evt.cancelable) {
+      evt.preventDefault();
+    }
+  });
+}
+
+// Export utils
+Sortable.utils = {
+  on: on,
+  off: off,
+  css: css,
+  find: find,
+  is: function is(el, selector) {
+    return !!closest(el, selector, el, false);
+  },
+  extend: extend,
+  throttle: throttle,
+  closest: closest,
+  toggleClass: toggleClass,
+  clone: clone,
+  index: index,
+  nextTick: _nextTick,
+  cancelNextTick: _cancelNextTick,
+  detectDirection: _detectDirection,
+  getChild: getChild,
+  expando: expando
+};
+
+/**
+ * Get the Sortable instance of an element
+ * @param  {HTMLElement} element The element
+ * @return {Sortable|undefined}         The instance of Sortable
+ */
+Sortable.get = function (element) {
+  return element[expando];
+};
+
+/**
+ * Mount a plugin to Sortable
+ * @param  {...SortablePlugin|SortablePlugin[]} plugins       Plugins being mounted
+ */
+Sortable.mount = function () {
+  for (var _len = arguments.length, plugins = new Array(_len), _key = 0; _key < _len; _key++) {
+    plugins[_key] = arguments[_key];
+  }
+  if (plugins[0].constructor === Array) plugins = plugins[0];
+  plugins.forEach(function (plugin) {
+    if (!plugin.prototype || !plugin.prototype.constructor) {
+      throw "Sortable: Mounted plugin must be a constructor function, not ".concat({}.toString.call(plugin));
+    }
+    if (plugin.utils) Sortable.utils = _objectSpread2(_objectSpread2({}, Sortable.utils), plugin.utils);
+    PluginManager.mount(plugin);
+  });
+};
+
+/**
+ * Create sortable instance
+ * @param {HTMLElement}  el
+ * @param {Object}      [options]
+ */
+Sortable.create = function (el, options) {
+  return new Sortable(el, options);
+};
+
+// Export
+Sortable.version = version;
+
+var autoScrolls = [],
+  scrollEl,
+  scrollRootEl,
+  scrolling = false,
+  lastAutoScrollX,
+  lastAutoScrollY,
+  touchEvt$1,
+  pointerElemChangedInterval;
+function AutoScrollPlugin() {
+  function AutoScroll() {
+    this.defaults = {
+      scroll: true,
+      forceAutoScrollFallback: false,
+      scrollSensitivity: 30,
+      scrollSpeed: 10,
+      bubbleScroll: true
+    };
+
+    // Bind all private methods
+    for (var fn in this) {
+      if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
+        this[fn] = this[fn].bind(this);
+      }
+    }
+  }
+  AutoScroll.prototype = {
+    dragStarted: function dragStarted(_ref) {
+      var originalEvent = _ref.originalEvent;
+      if (this.sortable.nativeDraggable) {
+        on(document, 'dragover', this._handleAutoScroll);
+      } else {
+        if (this.options.supportPointer) {
+          on(document, 'pointermove', this._handleFallbackAutoScroll);
+        } else if (originalEvent.touches) {
+          on(document, 'touchmove', this._handleFallbackAutoScroll);
+        } else {
+          on(document, 'mousemove', this._handleFallbackAutoScroll);
+        }
+      }
+    },
+    dragOverCompleted: function dragOverCompleted(_ref2) {
+      var originalEvent = _ref2.originalEvent;
+      // For when bubbling is canceled and using fallback (fallback 'touchmove' always reached)
+      if (!this.options.dragOverBubble && !originalEvent.rootEl) {
+        this._handleAutoScroll(originalEvent);
+      }
+    },
+    drop: function drop() {
+      if (this.sortable.nativeDraggable) {
+        off(document, 'dragover', this._handleAutoScroll);
+      } else {
+        off(document, 'pointermove', this._handleFallbackAutoScroll);
+        off(document, 'touchmove', this._handleFallbackAutoScroll);
+        off(document, 'mousemove', this._handleFallbackAutoScroll);
+      }
+      clearPointerElemChangedInterval();
+      clearAutoScrolls();
+      cancelThrottle();
+    },
+    nulling: function nulling() {
+      touchEvt$1 = scrollRootEl = scrollEl = scrolling = pointerElemChangedInterval = lastAutoScrollX = lastAutoScrollY = null;
+      autoScrolls.length = 0;
+    },
+    _handleFallbackAutoScroll: function _handleFallbackAutoScroll(evt) {
+      this._handleAutoScroll(evt, true);
+    },
+    _handleAutoScroll: function _handleAutoScroll(evt, fallback) {
+      var _this = this;
+      var x = (evt.touches ? evt.touches[0] : evt).clientX,
+        y = (evt.touches ? evt.touches[0] : evt).clientY,
+        elem = document.elementFromPoint(x, y);
+      touchEvt$1 = evt;
+
+      // IE does not seem to have native autoscroll,
+      // Edge's autoscroll seems too conditional,
+      // MACOS Safari does not have autoscroll,
+      // Firefox and Chrome are good
+      if (fallback || this.options.forceAutoScrollFallback || Edge || IE11OrLess || Safari) {
+        autoScroll(evt, this.options, elem, fallback);
+
+        // Listener for pointer element change
+        var ogElemScroller = getParentAutoScrollElement(elem, true);
+        if (scrolling && (!pointerElemChangedInterval || x !== lastAutoScrollX || y !== lastAutoScrollY)) {
+          pointerElemChangedInterval && clearPointerElemChangedInterval();
+          // Detect for pointer elem change, emulating native DnD behaviour
+          pointerElemChangedInterval = setInterval(function () {
+            var newElem = getParentAutoScrollElement(document.elementFromPoint(x, y), true);
+            if (newElem !== ogElemScroller) {
+              ogElemScroller = newElem;
+              clearAutoScrolls();
+            }
+            autoScroll(evt, _this.options, newElem, fallback);
+          }, 10);
+          lastAutoScrollX = x;
+          lastAutoScrollY = y;
+        }
+      } else {
+        // if DnD is enabled (and browser has good autoscrolling), first autoscroll will already scroll, so get parent autoscroll of first autoscroll
+        if (!this.options.bubbleScroll || getParentAutoScrollElement(elem, true) === getWindowScrollingElement()) {
+          clearAutoScrolls();
+          return;
+        }
+        autoScroll(evt, this.options, getParentAutoScrollElement(elem, false), false);
+      }
+    }
+  };
+  return _extends(AutoScroll, {
+    pluginName: 'scroll',
+    initializeByDefault: true
+  });
+}
+function clearAutoScrolls() {
+  autoScrolls.forEach(function (autoScroll) {
+    clearInterval(autoScroll.pid);
+  });
+  autoScrolls = [];
+}
+function clearPointerElemChangedInterval() {
+  clearInterval(pointerElemChangedInterval);
+}
+var autoScroll = throttle(function (evt, options, rootEl, isFallback) {
+  // Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=505521
+  if (!options.scroll) return;
+  var x = (evt.touches ? evt.touches[0] : evt).clientX,
+    y = (evt.touches ? evt.touches[0] : evt).clientY,
+    sens = options.scrollSensitivity,
+    speed = options.scrollSpeed,
+    winScroller = getWindowScrollingElement();
+  var scrollThisInstance = false,
+    scrollCustomFn;
+
+  // New scroll root, set scrollEl
+  if (scrollRootEl !== rootEl) {
+    scrollRootEl = rootEl;
+    clearAutoScrolls();
+    scrollEl = options.scroll;
+    scrollCustomFn = options.scrollFn;
+    if (scrollEl === true) {
+      scrollEl = getParentAutoScrollElement(rootEl, true);
+    }
+  }
+  var layersOut = 0;
+  var currentParent = scrollEl;
+  do {
+    var el = currentParent,
+      rect = getRect(el),
+      top = rect.top,
+      bottom = rect.bottom,
+      left = rect.left,
+      right = rect.right,
+      width = rect.width,
+      height = rect.height,
+      canScrollX = void 0,
+      canScrollY = void 0,
+      scrollWidth = el.scrollWidth,
+      scrollHeight = el.scrollHeight,
+      elCSS = css(el),
+      scrollPosX = el.scrollLeft,
+      scrollPosY = el.scrollTop;
+    if (el === winScroller) {
+      canScrollX = width < scrollWidth && (elCSS.overflowX === 'auto' || elCSS.overflowX === 'scroll' || elCSS.overflowX === 'visible');
+      canScrollY = height < scrollHeight && (elCSS.overflowY === 'auto' || elCSS.overflowY === 'scroll' || elCSS.overflowY === 'visible');
+    } else {
+      canScrollX = width < scrollWidth && (elCSS.overflowX === 'auto' || elCSS.overflowX === 'scroll');
+      canScrollY = height < scrollHeight && (elCSS.overflowY === 'auto' || elCSS.overflowY === 'scroll');
+    }
+    var vx = canScrollX && (Math.abs(right - x) <= sens && scrollPosX + width < scrollWidth) - (Math.abs(left - x) <= sens && !!scrollPosX);
+    var vy = canScrollY && (Math.abs(bottom - y) <= sens && scrollPosY + height < scrollHeight) - (Math.abs(top - y) <= sens && !!scrollPosY);
+    if (!autoScrolls[layersOut]) {
+      for (var i = 0; i <= layersOut; i++) {
+        if (!autoScrolls[i]) {
+          autoScrolls[i] = {};
+        }
+      }
+    }
+    if (autoScrolls[layersOut].vx != vx || autoScrolls[layersOut].vy != vy || autoScrolls[layersOut].el !== el) {
+      autoScrolls[layersOut].el = el;
+      autoScrolls[layersOut].vx = vx;
+      autoScrolls[layersOut].vy = vy;
+      clearInterval(autoScrolls[layersOut].pid);
+      if (vx != 0 || vy != 0) {
+        scrollThisInstance = true;
+        /* jshint loopfunc:true */
+        autoScrolls[layersOut].pid = setInterval(function () {
+          // emulate drag over during autoscroll (fallback), emulating native DnD behaviour
+          if (isFallback && this.layer === 0) {
+            Sortable.active._onTouchMove(touchEvt$1); // To move ghost if it is positioned absolutely
+          }
+          var scrollOffsetY = autoScrolls[this.layer].vy ? autoScrolls[this.layer].vy * speed : 0;
+          var scrollOffsetX = autoScrolls[this.layer].vx ? autoScrolls[this.layer].vx * speed : 0;
+          if (typeof scrollCustomFn === 'function') {
+            if (scrollCustomFn.call(Sortable.dragged.parentNode[expando], scrollOffsetX, scrollOffsetY, evt, touchEvt$1, autoScrolls[this.layer].el) !== 'continue') {
+              return;
+            }
+          }
+          scrollBy(autoScrolls[this.layer].el, scrollOffsetX, scrollOffsetY);
+        }.bind({
+          layer: layersOut
+        }), 24);
+      }
+    }
+    layersOut++;
+  } while (options.bubbleScroll && currentParent !== winScroller && (currentParent = getParentAutoScrollElement(currentParent, false)));
+  scrolling = scrollThisInstance; // in case another function catches scrolling as false in between when it is not
+}, 30);
+
+var drop = function drop(_ref) {
+  var originalEvent = _ref.originalEvent,
+    putSortable = _ref.putSortable,
+    dragEl = _ref.dragEl,
+    activeSortable = _ref.activeSortable,
+    dispatchSortableEvent = _ref.dispatchSortableEvent,
+    hideGhostForTarget = _ref.hideGhostForTarget,
+    unhideGhostForTarget = _ref.unhideGhostForTarget;
+  if (!originalEvent) return;
+  var toSortable = putSortable || activeSortable;
+  hideGhostForTarget();
+  var touch = originalEvent.changedTouches && originalEvent.changedTouches.length ? originalEvent.changedTouches[0] : originalEvent;
+  var target = document.elementFromPoint(touch.clientX, touch.clientY);
+  unhideGhostForTarget();
+  if (toSortable && !toSortable.el.contains(target)) {
+    dispatchSortableEvent('spill');
+    this.onSpill({
+      dragEl: dragEl,
+      putSortable: putSortable
+    });
+  }
+};
+function Revert() {}
+Revert.prototype = {
+  startIndex: null,
+  dragStart: function dragStart(_ref2) {
+    var oldDraggableIndex = _ref2.oldDraggableIndex;
+    this.startIndex = oldDraggableIndex;
+  },
+  onSpill: function onSpill(_ref3) {
+    var dragEl = _ref3.dragEl,
+      putSortable = _ref3.putSortable;
+    this.sortable.captureAnimationState();
+    if (putSortable) {
+      putSortable.captureAnimationState();
+    }
+    var nextSibling = getChild(this.sortable.el, this.startIndex, this.options);
+    if (nextSibling) {
+      this.sortable.el.insertBefore(dragEl, nextSibling);
+    } else {
+      this.sortable.el.appendChild(dragEl);
+    }
+    this.sortable.animateAll();
+    if (putSortable) {
+      putSortable.animateAll();
+    }
+  },
+  drop: drop
+};
+_extends(Revert, {
+  pluginName: 'revertOnSpill'
+});
+function Remove() {}
+Remove.prototype = {
+  onSpill: function onSpill(_ref4) {
+    var dragEl = _ref4.dragEl,
+      putSortable = _ref4.putSortable;
+    var parentSortable = putSortable || this.sortable;
+    parentSortable.captureAnimationState();
+    dragEl.parentNode && dragEl.parentNode.removeChild(dragEl);
+    parentSortable.animateAll();
+  },
+  drop: drop
+};
+_extends(Remove, {
+  pluginName: 'removeOnSpill'
+});
+
+var lastSwapEl;
+function SwapPlugin() {
+  function Swap() {
+    this.defaults = {
+      swapClass: 'sortable-swap-highlight'
+    };
+  }
+  Swap.prototype = {
+    dragStart: function dragStart(_ref) {
+      var dragEl = _ref.dragEl;
+      lastSwapEl = dragEl;
+    },
+    dragOverValid: function dragOverValid(_ref2) {
+      var completed = _ref2.completed,
+        target = _ref2.target,
+        onMove = _ref2.onMove,
+        activeSortable = _ref2.activeSortable,
+        changed = _ref2.changed,
+        cancel = _ref2.cancel;
+      if (!activeSortable.options.swap) return;
+      var el = this.sortable.el,
+        options = this.options;
+      if (target && target !== el) {
+        var prevSwapEl = lastSwapEl;
+        if (onMove(target) !== false) {
+          toggleClass(target, options.swapClass, true);
+          lastSwapEl = target;
+        } else {
+          lastSwapEl = null;
+        }
+        if (prevSwapEl && prevSwapEl !== lastSwapEl) {
+          toggleClass(prevSwapEl, options.swapClass, false);
+        }
+      }
+      changed();
+      completed(true);
+      cancel();
+    },
+    drop: function drop(_ref3) {
+      var activeSortable = _ref3.activeSortable,
+        putSortable = _ref3.putSortable,
+        dragEl = _ref3.dragEl;
+      var toSortable = putSortable || this.sortable;
+      var options = this.options;
+      lastSwapEl && toggleClass(lastSwapEl, options.swapClass, false);
+      if (lastSwapEl && (options.swap || putSortable && putSortable.options.swap)) {
+        if (dragEl !== lastSwapEl) {
+          toSortable.captureAnimationState();
+          if (toSortable !== activeSortable) activeSortable.captureAnimationState();
+          swapNodes(dragEl, lastSwapEl);
+          toSortable.animateAll();
+          if (toSortable !== activeSortable) activeSortable.animateAll();
+        }
+      }
+    },
+    nulling: function nulling() {
+      lastSwapEl = null;
+    }
+  };
+  return _extends(Swap, {
+    pluginName: 'swap',
+    eventProperties: function eventProperties() {
+      return {
+        swapItem: lastSwapEl
+      };
+    }
+  });
+}
+function swapNodes(n1, n2) {
+  var p1 = n1.parentNode,
+    p2 = n2.parentNode,
+    i1,
+    i2;
+  if (!p1 || !p2 || p1.isEqualNode(n2) || p2.isEqualNode(n1)) return;
+  i1 = index(n1);
+  i2 = index(n2);
+  if (p1.isEqualNode(p2) && i1 < i2) {
+    i2++;
+  }
+  p1.insertBefore(n2, p1.children[i1]);
+  p2.insertBefore(n1, p2.children[i2]);
+}
+
+var multiDragElements = [],
+  multiDragClones = [],
+  lastMultiDragSelect,
+  // for selection with modifier key down (SHIFT)
+  multiDragSortable,
+  initialFolding = false,
+  // Initial multi-drag fold when drag started
+  folding = false,
+  // Folding any other time
+  dragStarted = false,
+  dragEl$1,
+  clonesFromRect,
+  clonesHidden;
+function MultiDragPlugin() {
+  function MultiDrag(sortable) {
+    // Bind all private methods
+    for (var fn in this) {
+      if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
+        this[fn] = this[fn].bind(this);
+      }
+    }
+    if (!sortable.options.avoidImplicitDeselect) {
+      if (sortable.options.supportPointer) {
+        on(document, 'pointerup', this._deselectMultiDrag);
+      } else {
+        on(document, 'mouseup', this._deselectMultiDrag);
+        on(document, 'touchend', this._deselectMultiDrag);
+      }
+    }
+    on(document, 'keydown', this._checkKeyDown);
+    on(document, 'keyup', this._checkKeyUp);
+    this.defaults = {
+      selectedClass: 'sortable-selected',
+      multiDragKey: null,
+      avoidImplicitDeselect: false,
+      setData: function setData(dataTransfer, dragEl) {
+        var data = '';
+        if (multiDragElements.length && multiDragSortable === sortable) {
+          multiDragElements.forEach(function (multiDragElement, i) {
+            data += (!i ? '' : ', ') + multiDragElement.textContent;
+          });
+        } else {
+          data = dragEl.textContent;
+        }
+        dataTransfer.setData('Text', data);
+      }
+    };
+  }
+  MultiDrag.prototype = {
+    multiDragKeyDown: false,
+    isMultiDrag: false,
+    delayStartGlobal: function delayStartGlobal(_ref) {
+      var dragged = _ref.dragEl;
+      dragEl$1 = dragged;
+    },
+    delayEnded: function delayEnded() {
+      this.isMultiDrag = ~multiDragElements.indexOf(dragEl$1);
+    },
+    setupClone: function setupClone(_ref2) {
+      var sortable = _ref2.sortable,
+        cancel = _ref2.cancel;
+      if (!this.isMultiDrag) return;
+      for (var i = 0; i < multiDragElements.length; i++) {
+        multiDragClones.push(clone(multiDragElements[i]));
+        multiDragClones[i].sortableIndex = multiDragElements[i].sortableIndex;
+        multiDragClones[i].draggable = false;
+        multiDragClones[i].style['will-change'] = '';
+        toggleClass(multiDragClones[i], this.options.selectedClass, false);
+        multiDragElements[i] === dragEl$1 && toggleClass(multiDragClones[i], this.options.chosenClass, false);
+      }
+      sortable._hideClone();
+      cancel();
+    },
+    clone: function clone(_ref3) {
+      var sortable = _ref3.sortable,
+        rootEl = _ref3.rootEl,
+        dispatchSortableEvent = _ref3.dispatchSortableEvent,
+        cancel = _ref3.cancel;
+      if (!this.isMultiDrag) return;
+      if (!this.options.removeCloneOnHide) {
+        if (multiDragElements.length && multiDragSortable === sortable) {
+          insertMultiDragClones(true, rootEl);
+          dispatchSortableEvent('clone');
+          cancel();
+        }
+      }
+    },
+    showClone: function showClone(_ref4) {
+      var cloneNowShown = _ref4.cloneNowShown,
+        rootEl = _ref4.rootEl,
+        cancel = _ref4.cancel;
+      if (!this.isMultiDrag) return;
+      insertMultiDragClones(false, rootEl);
+      multiDragClones.forEach(function (clone) {
+        css(clone, 'display', '');
+      });
+      cloneNowShown();
+      clonesHidden = false;
+      cancel();
+    },
+    hideClone: function hideClone(_ref5) {
+      var _this = this;
+      var sortable = _ref5.sortable,
+        cloneNowHidden = _ref5.cloneNowHidden,
+        cancel = _ref5.cancel;
+      if (!this.isMultiDrag) return;
+      multiDragClones.forEach(function (clone) {
+        css(clone, 'display', 'none');
+        if (_this.options.removeCloneOnHide && clone.parentNode) {
+          clone.parentNode.removeChild(clone);
+        }
+      });
+      cloneNowHidden();
+      clonesHidden = true;
+      cancel();
+    },
+    dragStartGlobal: function dragStartGlobal(_ref6) {
+      var sortable = _ref6.sortable;
+      if (!this.isMultiDrag && multiDragSortable) {
+        multiDragSortable.multiDrag._deselectMultiDrag();
+      }
+      multiDragElements.forEach(function (multiDragElement) {
+        multiDragElement.sortableIndex = index(multiDragElement);
+      });
+
+      // Sort multi-drag elements
+      multiDragElements = multiDragElements.sort(function (a, b) {
+        return a.sortableIndex - b.sortableIndex;
+      });
+      dragStarted = true;
+    },
+    dragStarted: function dragStarted(_ref7) {
+      var _this2 = this;
+      var sortable = _ref7.sortable;
+      if (!this.isMultiDrag) return;
+      if (this.options.sort) {
+        // Capture rects,
+        // hide multi drag elements (by positioning them absolute),
+        // set multi drag elements rects to dragRect,
+        // show multi drag elements,
+        // animate to rects,
+        // unset rects & remove from DOM
+
+        sortable.captureAnimationState();
+        if (this.options.animation) {
+          multiDragElements.forEach(function (multiDragElement) {
+            if (multiDragElement === dragEl$1) return;
+            css(multiDragElement, 'position', 'absolute');
+          });
+          var dragRect = getRect(dragEl$1, false, true, true);
+          multiDragElements.forEach(function (multiDragElement) {
+            if (multiDragElement === dragEl$1) return;
+            setRect(multiDragElement, dragRect);
+          });
+          folding = true;
+          initialFolding = true;
+        }
+      }
+      sortable.animateAll(function () {
+        folding = false;
+        initialFolding = false;
+        if (_this2.options.animation) {
+          multiDragElements.forEach(function (multiDragElement) {
+            unsetRect(multiDragElement);
+          });
+        }
+
+        // Remove all auxiliary multidrag items from el, if sorting enabled
+        if (_this2.options.sort) {
+          removeMultiDragElements();
+        }
+      });
+    },
+    dragOver: function dragOver(_ref8) {
+      var target = _ref8.target,
+        completed = _ref8.completed,
+        cancel = _ref8.cancel;
+      if (folding && ~multiDragElements.indexOf(target)) {
+        completed(false);
+        cancel();
+      }
+    },
+    revert: function revert(_ref9) {
+      var fromSortable = _ref9.fromSortable,
+        rootEl = _ref9.rootEl,
+        sortable = _ref9.sortable,
+        dragRect = _ref9.dragRect;
+      if (multiDragElements.length > 1) {
+        // Setup unfold animation
+        multiDragElements.forEach(function (multiDragElement) {
+          sortable.addAnimationState({
+            target: multiDragElement,
+            rect: folding ? getRect(multiDragElement) : dragRect
+          });
+          unsetRect(multiDragElement);
+          multiDragElement.fromRect = dragRect;
+          fromSortable.removeAnimationState(multiDragElement);
+        });
+        folding = false;
+        insertMultiDragElements(!this.options.removeCloneOnHide, rootEl);
+      }
+    },
+    dragOverCompleted: function dragOverCompleted(_ref10) {
+      var sortable = _ref10.sortable,
+        isOwner = _ref10.isOwner,
+        insertion = _ref10.insertion,
+        activeSortable = _ref10.activeSortable,
+        parentEl = _ref10.parentEl,
+        putSortable = _ref10.putSortable;
+      var options = this.options;
+      if (insertion) {
+        // Clones must be hidden before folding animation to capture dragRectAbsolute properly
+        if (isOwner) {
+          activeSortable._hideClone();
+        }
+        initialFolding = false;
+        // If leaving sort:false root, or already folding - Fold to new location
+        if (options.animation && multiDragElements.length > 1 && (folding || !isOwner && !activeSortable.options.sort && !putSortable)) {
+          // Fold: Set all multi drag elements's rects to dragEl's rect when multi-drag elements are invisible
+          var dragRectAbsolute = getRect(dragEl$1, false, true, true);
+          multiDragElements.forEach(function (multiDragElement) {
+            if (multiDragElement === dragEl$1) return;
+            setRect(multiDragElement, dragRectAbsolute);
+
+            // Move element(s) to end of parentEl so that it does not interfere with multi-drag clones insertion if they are inserted
+            // while folding, and so that we can capture them again because old sortable will no longer be fromSortable
+            parentEl.appendChild(multiDragElement);
+          });
+          folding = true;
+        }
+
+        // Clones must be shown (and check to remove multi drags) after folding when interfering multiDragElements are moved out
+        if (!isOwner) {
+          // Only remove if not folding (folding will remove them anyways)
+          if (!folding) {
+            removeMultiDragElements();
+          }
+          if (multiDragElements.length > 1) {
+            var clonesHiddenBefore = clonesHidden;
+            activeSortable._showClone(sortable);
+
+            // Unfold animation for clones if showing from hidden
+            if (activeSortable.options.animation && !clonesHidden && clonesHiddenBefore) {
+              multiDragClones.forEach(function (clone) {
+                activeSortable.addAnimationState({
+                  target: clone,
+                  rect: clonesFromRect
+                });
+                clone.fromRect = clonesFromRect;
+                clone.thisAnimationDuration = null;
+              });
+            }
+          } else {
+            activeSortable._showClone(sortable);
+          }
+        }
+      }
+    },
+    dragOverAnimationCapture: function dragOverAnimationCapture(_ref11) {
+      var dragRect = _ref11.dragRect,
+        isOwner = _ref11.isOwner,
+        activeSortable = _ref11.activeSortable;
+      multiDragElements.forEach(function (multiDragElement) {
+        multiDragElement.thisAnimationDuration = null;
+      });
+      if (activeSortable.options.animation && !isOwner && activeSortable.multiDrag.isMultiDrag) {
+        clonesFromRect = _extends({}, dragRect);
+        var dragMatrix = matrix(dragEl$1, true);
+        clonesFromRect.top -= dragMatrix.f;
+        clonesFromRect.left -= dragMatrix.e;
+      }
+    },
+    dragOverAnimationComplete: function dragOverAnimationComplete() {
+      if (folding) {
+        folding = false;
+        removeMultiDragElements();
+      }
+    },
+    drop: function drop(_ref12) {
+      var evt = _ref12.originalEvent,
+        rootEl = _ref12.rootEl,
+        parentEl = _ref12.parentEl,
+        sortable = _ref12.sortable,
+        dispatchSortableEvent = _ref12.dispatchSortableEvent,
+        oldIndex = _ref12.oldIndex,
+        putSortable = _ref12.putSortable;
+      var toSortable = putSortable || this.sortable;
+      if (!evt) return;
+      var options = this.options,
+        children = parentEl.children;
+
+      // Multi-drag selection
+      if (!dragStarted) {
+        if (options.multiDragKey && !this.multiDragKeyDown) {
+          this._deselectMultiDrag();
+        }
+        toggleClass(dragEl$1, options.selectedClass, !~multiDragElements.indexOf(dragEl$1));
+        if (!~multiDragElements.indexOf(dragEl$1)) {
+          multiDragElements.push(dragEl$1);
+          dispatchEvent({
+            sortable: sortable,
+            rootEl: rootEl,
+            name: 'select',
+            targetEl: dragEl$1,
+            originalEvent: evt
+          });
+
+          // Modifier activated, select from last to dragEl
+          if (evt.shiftKey && lastMultiDragSelect && sortable.el.contains(lastMultiDragSelect)) {
+            var lastIndex = index(lastMultiDragSelect),
+              currentIndex = index(dragEl$1);
+            if (~lastIndex && ~currentIndex && lastIndex !== currentIndex) {
+              (function () {
+                // Must include lastMultiDragSelect (select it), in case modified selection from no selection
+                // (but previous selection existed)
+                var n, i;
+                if (currentIndex > lastIndex) {
+                  i = lastIndex;
+                  n = currentIndex;
+                } else {
+                  i = currentIndex;
+                  n = lastIndex + 1;
+                }
+                var filter = options.filter;
+                for (; i < n; i++) {
+                  if (~multiDragElements.indexOf(children[i])) continue;
+                  // Check if element is draggable
+                  if (!closest(children[i], options.draggable, parentEl, false)) continue;
+                  // Check if element is filtered
+                  var filtered = filter && (typeof filter === 'function' ? filter.call(sortable, evt, children[i], sortable) : filter.split(',').some(function (criteria) {
+                    return closest(children[i], criteria.trim(), parentEl, false);
+                  }));
+                  if (filtered) continue;
+                  toggleClass(children[i], options.selectedClass, true);
+                  multiDragElements.push(children[i]);
+                  dispatchEvent({
+                    sortable: sortable,
+                    rootEl: rootEl,
+                    name: 'select',
+                    targetEl: children[i],
+                    originalEvent: evt
+                  });
+                }
+              })();
+            }
+          } else {
+            lastMultiDragSelect = dragEl$1;
+          }
+          multiDragSortable = toSortable;
+        } else {
+          multiDragElements.splice(multiDragElements.indexOf(dragEl$1), 1);
+          lastMultiDragSelect = null;
+          dispatchEvent({
+            sortable: sortable,
+            rootEl: rootEl,
+            name: 'deselect',
+            targetEl: dragEl$1,
+            originalEvent: evt
+          });
+        }
+      }
+
+      // Multi-drag drop
+      if (dragStarted && this.isMultiDrag) {
+        folding = false;
+        // Do not "unfold" after around dragEl if reverted
+        if ((parentEl[expando].options.sort || parentEl !== rootEl) && multiDragElements.length > 1) {
+          var dragRect = getRect(dragEl$1),
+            multiDragIndex = index(dragEl$1, ':not(.' + this.options.selectedClass + ')');
+          if (!initialFolding && options.animation) dragEl$1.thisAnimationDuration = null;
+          toSortable.captureAnimationState();
+          if (!initialFolding) {
+            if (options.animation) {
+              dragEl$1.fromRect = dragRect;
+              multiDragElements.forEach(function (multiDragElement) {
+                multiDragElement.thisAnimationDuration = null;
+                if (multiDragElement !== dragEl$1) {
+                  var rect = folding ? getRect(multiDragElement) : dragRect;
+                  multiDragElement.fromRect = rect;
+
+                  // Prepare unfold animation
+                  toSortable.addAnimationState({
+                    target: multiDragElement,
+                    rect: rect
+                  });
+                }
+              });
+            }
+
+            // Multi drag elements are not necessarily removed from the DOM on drop, so to reinsert
+            // properly they must all be removed
+            removeMultiDragElements();
+            multiDragElements.forEach(function (multiDragElement) {
+              if (children[multiDragIndex]) {
+                parentEl.insertBefore(multiDragElement, children[multiDragIndex]);
+              } else {
+                parentEl.appendChild(multiDragElement);
+              }
+              multiDragIndex++;
+            });
+
+            // If initial folding is done, the elements may have changed position because they are now
+            // unfolding around dragEl, even though dragEl may not have his index changed, so update event
+            // must be fired here as Sortable will not.
+            if (oldIndex === index(dragEl$1)) {
+              var update = false;
+              multiDragElements.forEach(function (multiDragElement) {
+                if (multiDragElement.sortableIndex !== index(multiDragElement)) {
+                  update = true;
+                  return;
+                }
+              });
+              if (update) {
+                dispatchSortableEvent('update');
+                dispatchSortableEvent('sort');
+              }
+            }
+          }
+
+          // Must be done after capturing individual rects (scroll bar)
+          multiDragElements.forEach(function (multiDragElement) {
+            unsetRect(multiDragElement);
+          });
+          toSortable.animateAll();
+        }
+        multiDragSortable = toSortable;
+      }
+
+      // Remove clones if necessary
+      if (rootEl === parentEl || putSortable && putSortable.lastPutMode !== 'clone') {
+        multiDragClones.forEach(function (clone) {
+          clone.parentNode && clone.parentNode.removeChild(clone);
+        });
+      }
+    },
+    nullingGlobal: function nullingGlobal() {
+      this.isMultiDrag = dragStarted = false;
+      multiDragClones.length = 0;
+    },
+    destroyGlobal: function destroyGlobal() {
+      this._deselectMultiDrag();
+      off(document, 'pointerup', this._deselectMultiDrag);
+      off(document, 'mouseup', this._deselectMultiDrag);
+      off(document, 'touchend', this._deselectMultiDrag);
+      off(document, 'keydown', this._checkKeyDown);
+      off(document, 'keyup', this._checkKeyUp);
+    },
+    _deselectMultiDrag: function _deselectMultiDrag(evt) {
+      if (typeof dragStarted !== "undefined" && dragStarted) return;
+
+      // Only deselect if selection is in this sortable
+      if (multiDragSortable !== this.sortable) return;
+
+      // Only deselect if target is not item in this sortable
+      if (evt && closest(evt.target, this.options.draggable, this.sortable.el, false)) return;
+
+      // Only deselect if left click
+      if (evt && evt.button !== 0) return;
+      while (multiDragElements.length) {
+        var el = multiDragElements[0];
+        toggleClass(el, this.options.selectedClass, false);
+        multiDragElements.shift();
+        dispatchEvent({
+          sortable: this.sortable,
+          rootEl: this.sortable.el,
+          name: 'deselect',
+          targetEl: el,
+          originalEvent: evt
+        });
+      }
+    },
+    _checkKeyDown: function _checkKeyDown(evt) {
+      if (evt.key === this.options.multiDragKey) {
+        this.multiDragKeyDown = true;
+      }
+    },
+    _checkKeyUp: function _checkKeyUp(evt) {
+      if (evt.key === this.options.multiDragKey) {
+        this.multiDragKeyDown = false;
+      }
+    }
+  };
+  return _extends(MultiDrag, {
+    // Static methods & properties
+    pluginName: 'multiDrag',
+    utils: {
+      /**
+       * Selects the provided multi-drag item
+       * @param  {HTMLElement} el    The element to be selected
+       */
+      select: function select(el) {
+        var sortable = el.parentNode[expando];
+        if (!sortable || !sortable.options.multiDrag || ~multiDragElements.indexOf(el)) return;
+        if (multiDragSortable && multiDragSortable !== sortable) {
+          multiDragSortable.multiDrag._deselectMultiDrag();
+          multiDragSortable = sortable;
+        }
+        toggleClass(el, sortable.options.selectedClass, true);
+        multiDragElements.push(el);
+      },
+      /**
+       * Deselects the provided multi-drag item
+       * @param  {HTMLElement} el    The element to be deselected
+       */
+      deselect: function deselect(el) {
+        var sortable = el.parentNode[expando],
+          index = multiDragElements.indexOf(el);
+        if (!sortable || !sortable.options.multiDrag || !~index) return;
+        toggleClass(el, sortable.options.selectedClass, false);
+        multiDragElements.splice(index, 1);
+      }
+    },
+    eventProperties: function eventProperties() {
+      var _this3 = this;
+      var oldIndicies = [],
+        newIndicies = [];
+      multiDragElements.forEach(function (multiDragElement) {
+        oldIndicies.push({
+          multiDragElement: multiDragElement,
+          index: multiDragElement.sortableIndex
+        });
+
+        // multiDragElements will already be sorted if folding
+        var newIndex;
+        if (folding && multiDragElement !== dragEl$1) {
+          newIndex = -1;
+        } else if (folding) {
+          newIndex = index(multiDragElement, ':not(.' + _this3.options.selectedClass + ')');
+        } else {
+          newIndex = index(multiDragElement);
+        }
+        newIndicies.push({
+          multiDragElement: multiDragElement,
+          index: newIndex
+        });
+      });
+      return {
+        items: _toConsumableArray(multiDragElements),
+        clones: [].concat(multiDragClones),
+        oldIndicies: oldIndicies,
+        newIndicies: newIndicies
+      };
+    },
+    optionListeners: {
+      multiDragKey: function multiDragKey(key) {
+        key = key.toLowerCase();
+        if (key === 'ctrl') {
+          key = 'Control';
+        } else if (key.length > 1) {
+          key = key.charAt(0).toUpperCase() + key.substr(1);
+        }
+        return key;
+      }
+    }
+  });
+}
+function insertMultiDragElements(clonesInserted, rootEl) {
+  multiDragElements.forEach(function (multiDragElement, i) {
+    var target = rootEl.children[multiDragElement.sortableIndex + (clonesInserted ? Number(i) : 0)];
+    if (target) {
+      rootEl.insertBefore(multiDragElement, target);
+    } else {
+      rootEl.appendChild(multiDragElement);
+    }
+  });
+}
+
+/**
+ * Insert multi-drag clones
+ * @param  {[Boolean]} elementsInserted  Whether the multi-drag elements are inserted
+ * @param  {HTMLElement} rootEl
+ */
+function insertMultiDragClones(elementsInserted, rootEl) {
+  multiDragClones.forEach(function (clone, i) {
+    var target = rootEl.children[clone.sortableIndex + (elementsInserted ? Number(i) : 0)];
+    if (target) {
+      rootEl.insertBefore(clone, target);
+    } else {
+      rootEl.appendChild(clone);
+    }
+  });
+}
+function removeMultiDragElements() {
+  multiDragElements.forEach(function (multiDragElement) {
+    if (multiDragElement === dragEl$1) return;
+    multiDragElement.parentNode && multiDragElement.parentNode.removeChild(multiDragElement);
+  });
+}
+
+Sortable.mount(new AutoScrollPlugin());
+Sortable.mount(Remove, Revert);
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Sortable);
+
+
+
+/***/ }),
+
+/***/ "../../../../../script.js":
+/*!*******************************************!*\
+  !*** external "../../../../../script.js" ***!
+  \*******************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__script_js_588e7203__;
+
+/***/ }),
+
+/***/ "../../../../authors-note.js":
+/*!**********************************************!*\
+  !*** external "../../../../authors-note.js" ***!
+  \**********************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__authors_note_js_59167e8d__;
+
+/***/ }),
+
+/***/ "../../../../chats.js":
+/*!***************************************!*\
+  !*** external "../../../../chats.js" ***!
+  \***************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__chats_js_c244506c__;
+
+/***/ }),
+
+/***/ "../../../../group-chats.js":
+/*!*********************************************!*\
+  !*** external "../../../../group-chats.js" ***!
+  \*********************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__group_chats_js_678c16bd__;
+
+/***/ }),
+
+/***/ "../../../../instruct-mode.js":
+/*!***********************************************!*\
+  !*** external "../../../../instruct-mode.js" ***!
+  \***********************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__instruct_mode_js_e7f3531a__;
+
+/***/ }),
+
+/***/ "../../../../openai.js":
+/*!****************************************!*\
+  !*** external "../../../../openai.js" ***!
+  \****************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__openai_js_bf183548__;
+
+/***/ }),
+
+/***/ "../../../../power-user.js":
+/*!********************************************!*\
+  !*** external "../../../../power-user.js" ***!
+  \********************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__power_user_js_3c7cfb8b__;
+
+/***/ }),
+
+/***/ "../../../../slash-commands/SlashCommandCommonEnumsProvider.js":
+/*!********************************************************************************!*\
+  !*** external "../../../../slash-commands/SlashCommandCommonEnumsProvider.js" ***!
+  \********************************************************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__slash_commands_SlashCommandCommonEnumsProvider_js_4453b111__;
+
+/***/ }),
+
+/***/ "../../../../utils.js":
+/*!***************************************!*\
+  !*** external "../../../../utils.js" ***!
+  \***************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__utils_js_d605cabe__;
+
+/***/ }),
+
+/***/ "../../../../world-info.js":
+/*!********************************************!*\
+  !*** external "../../../../world-info.js" ***!
+  \********************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__world_info_js_83198f57__;
+
+/***/ }),
+
+/***/ "../../../regex/engine.js":
+/*!*******************************************!*\
+  !*** external "../../../regex/engine.js" ***!
+  \*******************************************/
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__regex_engine_js_683beba0__;
+
+/***/ }),
+
+/***/ "./node_modules/fuse.js/dist/fuse.mjs":
+/*!********************************************!*\
+  !*** ./node_modules/fuse.js/dist/fuse.mjs ***!
+  \********************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Fuse)
+/* harmony export */ });
+/**
+ * Fuse.js v7.1.0 - Lightweight fuzzy-search (http://fusejs.io)
+ *
+ * Copyright (c) 2025 Kiro Risk (http://kiro.me)
+ * All Rights Reserved. Apache Software License 2.0
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
+function isArray(value) {
+  return !Array.isArray
+    ? getTag(value) === '[object Array]'
+    : Array.isArray(value)
+}
+
+// Adapted from: https://github.com/lodash/lodash/blob/master/.internal/baseToString.js
+const INFINITY = 1 / 0;
+function baseToString(value) {
+  // Exit early for strings to avoid a performance hit in some environments.
+  if (typeof value == 'string') {
+    return value
+  }
+  let result = value + '';
+  return result == '0' && 1 / value == -INFINITY ? '-0' : result
+}
+
+function toString(value) {
+  return value == null ? '' : baseToString(value)
+}
+
+function isString(value) {
+  return typeof value === 'string'
+}
+
+function isNumber(value) {
+  return typeof value === 'number'
+}
+
+// Adapted from: https://github.com/lodash/lodash/blob/master/isBoolean.js
+function isBoolean(value) {
+  return (
+    value === true ||
+    value === false ||
+    (isObjectLike(value) && getTag(value) == '[object Boolean]')
+  )
+}
+
+function isObject(value) {
+  return typeof value === 'object'
+}
+
+// Checks if `value` is object-like.
+function isObjectLike(value) {
+  return isObject(value) && value !== null
+}
+
+function isDefined(value) {
+  return value !== undefined && value !== null
+}
+
+function isBlank(value) {
+  return !value.trim().length
+}
+
+// Gets the `toStringTag` of `value`.
+// Adapted from: https://github.com/lodash/lodash/blob/master/.internal/getTag.js
+function getTag(value) {
+  return value == null
+    ? value === undefined
+      ? '[object Undefined]'
+      : '[object Null]'
+    : Object.prototype.toString.call(value)
+}
+
+const EXTENDED_SEARCH_UNAVAILABLE = 'Extended search is not available';
+
+const INCORRECT_INDEX_TYPE = "Incorrect 'index' type";
+
+const LOGICAL_SEARCH_INVALID_QUERY_FOR_KEY = (key) =>
+  `Invalid value for key ${key}`;
+
+const PATTERN_LENGTH_TOO_LARGE = (max) =>
+  `Pattern length exceeds max of ${max}.`;
+
+const MISSING_KEY_PROPERTY = (name) => `Missing ${name} property in key`;
+
+const INVALID_KEY_WEIGHT_VALUE = (key) =>
+  `Property 'weight' in key '${key}' must be a positive integer`;
+
+const hasOwn = Object.prototype.hasOwnProperty;
+
+class KeyStore {
+  constructor(keys) {
+    this._keys = [];
+    this._keyMap = {};
+
+    let totalWeight = 0;
+
+    keys.forEach((key) => {
+      let obj = createKey(key);
+
+      this._keys.push(obj);
+      this._keyMap[obj.id] = obj;
+
+      totalWeight += obj.weight;
+    });
+
+    // Normalize weights so that their sum is equal to 1
+    this._keys.forEach((key) => {
+      key.weight /= totalWeight;
+    });
+  }
+  get(keyId) {
+    return this._keyMap[keyId]
+  }
+  keys() {
+    return this._keys
+  }
+  toJSON() {
+    return JSON.stringify(this._keys)
+  }
+}
+
+function createKey(key) {
+  let path = null;
+  let id = null;
+  let src = null;
+  let weight = 1;
+  let getFn = null;
+
+  if (isString(key) || isArray(key)) {
+    src = key;
+    path = createKeyPath(key);
+    id = createKeyId(key);
+  } else {
+    if (!hasOwn.call(key, 'name')) {
+      throw new Error(MISSING_KEY_PROPERTY('name'))
+    }
+
+    const name = key.name;
+    src = name;
+
+    if (hasOwn.call(key, 'weight')) {
+      weight = key.weight;
+
+      if (weight <= 0) {
+        throw new Error(INVALID_KEY_WEIGHT_VALUE(name))
+      }
+    }
+
+    path = createKeyPath(name);
+    id = createKeyId(name);
+    getFn = key.getFn;
+  }
+
+  return { path, id, weight, src, getFn }
+}
+
+function createKeyPath(key) {
+  return isArray(key) ? key : key.split('.')
+}
+
+function createKeyId(key) {
+  return isArray(key) ? key.join('.') : key
+}
+
+function get(obj, path) {
+  let list = [];
+  let arr = false;
+
+  const deepGet = (obj, path, index) => {
+    if (!isDefined(obj)) {
+      return
+    }
+    if (!path[index]) {
+      // If there's no path left, we've arrived at the object we care about.
+      list.push(obj);
+    } else {
+      let key = path[index];
+
+      const value = obj[key];
+
+      if (!isDefined(value)) {
+        return
+      }
+
+      // If we're at the last value in the path, and if it's a string/number/bool,
+      // add it to the list
+      if (
+        index === path.length - 1 &&
+        (isString(value) || isNumber(value) || isBoolean(value))
+      ) {
+        list.push(toString(value));
+      } else if (isArray(value)) {
+        arr = true;
+        // Search each item in the array.
+        for (let i = 0, len = value.length; i < len; i += 1) {
+          deepGet(value[i], path, index + 1);
+        }
+      } else if (path.length) {
+        // An object. Recurse further.
+        deepGet(value, path, index + 1);
+      }
+    }
+  };
+
+  // Backwards compatibility (since path used to be a string)
+  deepGet(obj, isString(path) ? path.split('.') : path, 0);
+
+  return arr ? list : list[0]
+}
+
+const MatchOptions = {
+  // Whether the matches should be included in the result set. When `true`, each record in the result
+  // set will include the indices of the matched characters.
+  // These can consequently be used for highlighting purposes.
+  includeMatches: false,
+  // When `true`, the matching function will continue to the end of a search pattern even if
+  // a perfect match has already been located in the string.
+  findAllMatches: false,
+  // Minimum number of characters that must be matched before a result is considered a match
+  minMatchCharLength: 1
+};
+
+const BasicOptions = {
+  // When `true`, the algorithm continues searching to the end of the input even if a perfect
+  // match is found before the end of the same input.
+  isCaseSensitive: false,
+  // When `true`, the algorithm will ignore diacritics (accents) in comparisons
+  ignoreDiacritics: false,
+  // When true, the matching function will continue to the end of a search pattern even if
+  includeScore: false,
+  // List of properties that will be searched. This also supports nested properties.
+  keys: [],
+  // Whether to sort the result list, by score
+  shouldSort: true,
+  // Default sort function: sort by ascending score, ascending index
+  sortFn: (a, b) =>
+    a.score === b.score ? (a.idx < b.idx ? -1 : 1) : a.score < b.score ? -1 : 1
+};
+
+const FuzzyOptions = {
+  // Approximately where in the text is the pattern expected to be found?
+  location: 0,
+  // At what point does the match algorithm give up. A threshold of '0.0' requires a perfect match
+  // (of both letters and location), a threshold of '1.0' would match anything.
+  threshold: 0.6,
+  // Determines how close the match must be to the fuzzy location (specified above).
+  // An exact letter match which is 'distance' characters away from the fuzzy location
+  // would score as a complete mismatch. A distance of '0' requires the match be at
+  // the exact location specified, a threshold of '1000' would require a perfect match
+  // to be within 800 characters of the fuzzy location to be found using a 0.8 threshold.
+  distance: 100
+};
+
+const AdvancedOptions = {
+  // When `true`, it enables the use of unix-like search commands
+  useExtendedSearch: false,
+  // The get function to use when fetching an object's properties.
+  // The default will search nested paths *ie foo.bar.baz*
+  getFn: get,
+  // When `true`, search will ignore `location` and `distance`, so it won't matter
+  // where in the string the pattern appears.
+  // More info: https://fusejs.io/concepts/scoring-theory.html#fuzziness-score
+  ignoreLocation: false,
+  // When `true`, the calculation for the relevance score (used for sorting) will
+  // ignore the field-length norm.
+  // More info: https://fusejs.io/concepts/scoring-theory.html#field-length-norm
+  ignoreFieldNorm: false,
+  // The weight to determine how much field length norm effects scoring.
+  fieldNormWeight: 1
+};
+
+var Config = {
+  ...BasicOptions,
+  ...MatchOptions,
+  ...FuzzyOptions,
+  ...AdvancedOptions
+};
+
+const SPACE = /[^ ]+/g;
+
+// Field-length norm: the shorter the field, the higher the weight.
+// Set to 3 decimals to reduce index size.
+function norm(weight = 1, mantissa = 3) {
+  const cache = new Map();
+  const m = Math.pow(10, mantissa);
+
+  return {
+    get(value) {
+      const numTokens = value.match(SPACE).length;
+
+      if (cache.has(numTokens)) {
+        return cache.get(numTokens)
+      }
+
+      // Default function is 1/sqrt(x), weight makes that variable
+      const norm = 1 / Math.pow(numTokens, 0.5 * weight);
+
+      // In place of `toFixed(mantissa)`, for faster computation
+      const n = parseFloat(Math.round(norm * m) / m);
+
+      cache.set(numTokens, n);
+
+      return n
+    },
+    clear() {
+      cache.clear();
+    }
+  }
+}
+
+class FuseIndex {
+  constructor({
+    getFn = Config.getFn,
+    fieldNormWeight = Config.fieldNormWeight
+  } = {}) {
+    this.norm = norm(fieldNormWeight, 3);
+    this.getFn = getFn;
+    this.isCreated = false;
+
+    this.setIndexRecords();
+  }
+  setSources(docs = []) {
+    this.docs = docs;
+  }
+  setIndexRecords(records = []) {
+    this.records = records;
+  }
+  setKeys(keys = []) {
+    this.keys = keys;
+    this._keysMap = {};
+    keys.forEach((key, idx) => {
+      this._keysMap[key.id] = idx;
+    });
+  }
+  create() {
+    if (this.isCreated || !this.docs.length) {
+      return
+    }
+
+    this.isCreated = true;
+
+    // List is Array<String>
+    if (isString(this.docs[0])) {
+      this.docs.forEach((doc, docIndex) => {
+        this._addString(doc, docIndex);
+      });
+    } else {
+      // List is Array<Object>
+      this.docs.forEach((doc, docIndex) => {
+        this._addObject(doc, docIndex);
+      });
+    }
+
+    this.norm.clear();
+  }
+  // Adds a doc to the end of the index
+  add(doc) {
+    const idx = this.size();
+
+    if (isString(doc)) {
+      this._addString(doc, idx);
+    } else {
+      this._addObject(doc, idx);
+    }
+  }
+  // Removes the doc at the specified index of the index
+  removeAt(idx) {
+    this.records.splice(idx, 1);
+
+    // Change ref index of every subsquent doc
+    for (let i = idx, len = this.size(); i < len; i += 1) {
+      this.records[i].i -= 1;
+    }
+  }
+  getValueForItemAtKeyId(item, keyId) {
+    return item[this._keysMap[keyId]]
+  }
+  size() {
+    return this.records.length
+  }
+  _addString(doc, docIndex) {
+    if (!isDefined(doc) || isBlank(doc)) {
+      return
+    }
+
+    let record = {
+      v: doc,
+      i: docIndex,
+      n: this.norm.get(doc)
+    };
+
+    this.records.push(record);
+  }
+  _addObject(doc, docIndex) {
+    let record = { i: docIndex, $: {} };
+
+    // Iterate over every key (i.e, path), and fetch the value at that key
+    this.keys.forEach((key, keyIndex) => {
+      let value = key.getFn ? key.getFn(doc) : this.getFn(doc, key.path);
+
+      if (!isDefined(value)) {
+        return
+      }
+
+      if (isArray(value)) {
+        let subRecords = [];
+        const stack = [{ nestedArrIndex: -1, value }];
+
+        while (stack.length) {
+          const { nestedArrIndex, value } = stack.pop();
+
+          if (!isDefined(value)) {
+            continue
+          }
+
+          if (isString(value) && !isBlank(value)) {
+            let subRecord = {
+              v: value,
+              i: nestedArrIndex,
+              n: this.norm.get(value)
+            };
+
+            subRecords.push(subRecord);
+          } else if (isArray(value)) {
+            value.forEach((item, k) => {
+              stack.push({
+                nestedArrIndex: k,
+                value: item
+              });
+            });
+          } else ;
+        }
+        record.$[keyIndex] = subRecords;
+      } else if (isString(value) && !isBlank(value)) {
+        let subRecord = {
+          v: value,
+          n: this.norm.get(value)
+        };
+
+        record.$[keyIndex] = subRecord;
+      }
+    });
+
+    this.records.push(record);
+  }
+  toJSON() {
+    return {
+      keys: this.keys,
+      records: this.records
+    }
+  }
+}
+
+function createIndex(
+  keys,
+  docs,
+  { getFn = Config.getFn, fieldNormWeight = Config.fieldNormWeight } = {}
+) {
+  const myIndex = new FuseIndex({ getFn, fieldNormWeight });
+  myIndex.setKeys(keys.map(createKey));
+  myIndex.setSources(docs);
+  myIndex.create();
+  return myIndex
+}
+
+function parseIndex(
+  data,
+  { getFn = Config.getFn, fieldNormWeight = Config.fieldNormWeight } = {}
+) {
+  const { keys, records } = data;
+  const myIndex = new FuseIndex({ getFn, fieldNormWeight });
+  myIndex.setKeys(keys);
+  myIndex.setIndexRecords(records);
+  return myIndex
+}
+
+function computeScore$1(
+  pattern,
+  {
+    errors = 0,
+    currentLocation = 0,
+    expectedLocation = 0,
+    distance = Config.distance,
+    ignoreLocation = Config.ignoreLocation
+  } = {}
+) {
+  const accuracy = errors / pattern.length;
+
+  if (ignoreLocation) {
+    return accuracy
+  }
+
+  const proximity = Math.abs(expectedLocation - currentLocation);
+
+  if (!distance) {
+    // Dodge divide by zero error.
+    return proximity ? 1.0 : accuracy
+  }
+
+  return accuracy + proximity / distance
+}
+
+function convertMaskToIndices(
+  matchmask = [],
+  minMatchCharLength = Config.minMatchCharLength
+) {
+  let indices = [];
+  let start = -1;
+  let end = -1;
+  let i = 0;
+
+  for (let len = matchmask.length; i < len; i += 1) {
+    let match = matchmask[i];
+    if (match && start === -1) {
+      start = i;
+    } else if (!match && start !== -1) {
+      end = i - 1;
+      if (end - start + 1 >= minMatchCharLength) {
+        indices.push([start, end]);
+      }
+      start = -1;
+    }
+  }
+
+  // (i-1 - start) + 1 => i - start
+  if (matchmask[i - 1] && i - start >= minMatchCharLength) {
+    indices.push([start, i - 1]);
+  }
+
+  return indices
+}
+
+// Machine word size
+const MAX_BITS = 32;
+
+function search(
+  text,
+  pattern,
+  patternAlphabet,
+  {
+    location = Config.location,
+    distance = Config.distance,
+    threshold = Config.threshold,
+    findAllMatches = Config.findAllMatches,
+    minMatchCharLength = Config.minMatchCharLength,
+    includeMatches = Config.includeMatches,
+    ignoreLocation = Config.ignoreLocation
+  } = {}
+) {
+  if (pattern.length > MAX_BITS) {
+    throw new Error(PATTERN_LENGTH_TOO_LARGE(MAX_BITS))
+  }
+
+  const patternLen = pattern.length;
+  // Set starting location at beginning text and initialize the alphabet.
+  const textLen = text.length;
+  // Handle the case when location > text.length
+  const expectedLocation = Math.max(0, Math.min(location, textLen));
+  // Highest score beyond which we give up.
+  let currentThreshold = threshold;
+  // Is there a nearby exact match? (speedup)
+  let bestLocation = expectedLocation;
+
+  // Performance: only computer matches when the minMatchCharLength > 1
+  // OR if `includeMatches` is true.
+  const computeMatches = minMatchCharLength > 1 || includeMatches;
+  // A mask of the matches, used for building the indices
+  const matchMask = computeMatches ? Array(textLen) : [];
+
+  let index;
+
+  // Get all exact matches, here for speed up
+  while ((index = text.indexOf(pattern, bestLocation)) > -1) {
+    let score = computeScore$1(pattern, {
+      currentLocation: index,
+      expectedLocation,
+      distance,
+      ignoreLocation
+    });
+
+    currentThreshold = Math.min(score, currentThreshold);
+    bestLocation = index + patternLen;
+
+    if (computeMatches) {
+      let i = 0;
+      while (i < patternLen) {
+        matchMask[index + i] = 1;
+        i += 1;
+      }
+    }
+  }
+
+  // Reset the best location
+  bestLocation = -1;
+
+  let lastBitArr = [];
+  let finalScore = 1;
+  let binMax = patternLen + textLen;
+
+  const mask = 1 << (patternLen - 1);
+
+  for (let i = 0; i < patternLen; i += 1) {
+    // Scan for the best match; each iteration allows for one more error.
+    // Run a binary search to determine how far from the match location we can stray
+    // at this error level.
+    let binMin = 0;
+    let binMid = binMax;
+
+    while (binMin < binMid) {
+      const score = computeScore$1(pattern, {
+        errors: i,
+        currentLocation: expectedLocation + binMid,
+        expectedLocation,
+        distance,
+        ignoreLocation
+      });
+
+      if (score <= currentThreshold) {
+        binMin = binMid;
+      } else {
+        binMax = binMid;
+      }
+
+      binMid = Math.floor((binMax - binMin) / 2 + binMin);
+    }
+
+    // Use the result from this iteration as the maximum for the next.
+    binMax = binMid;
+
+    let start = Math.max(1, expectedLocation - binMid + 1);
+    let finish = findAllMatches
+      ? textLen
+      : Math.min(expectedLocation + binMid, textLen) + patternLen;
+
+    // Initialize the bit array
+    let bitArr = Array(finish + 2);
+
+    bitArr[finish + 1] = (1 << i) - 1;
+
+    for (let j = finish; j >= start; j -= 1) {
+      let currentLocation = j - 1;
+      let charMatch = patternAlphabet[text.charAt(currentLocation)];
+
+      if (computeMatches) {
+        // Speed up: quick bool to int conversion (i.e, `charMatch ? 1 : 0`)
+        matchMask[currentLocation] = +!!charMatch;
+      }
+
+      // First pass: exact match
+      bitArr[j] = ((bitArr[j + 1] << 1) | 1) & charMatch;
+
+      // Subsequent passes: fuzzy match
+      if (i) {
+        bitArr[j] |=
+          ((lastBitArr[j + 1] | lastBitArr[j]) << 1) | 1 | lastBitArr[j + 1];
+      }
+
+      if (bitArr[j] & mask) {
+        finalScore = computeScore$1(pattern, {
+          errors: i,
+          currentLocation,
+          expectedLocation,
+          distance,
+          ignoreLocation
+        });
+
+        // This match will almost certainly be better than any existing match.
+        // But check anyway.
+        if (finalScore <= currentThreshold) {
+          // Indeed it is
+          currentThreshold = finalScore;
+          bestLocation = currentLocation;
+
+          // Already passed `loc`, downhill from here on in.
+          if (bestLocation <= expectedLocation) {
+            break
+          }
+
+          // When passing `bestLocation`, don't exceed our current distance from `expectedLocation`.
+          start = Math.max(1, 2 * expectedLocation - bestLocation);
+        }
+      }
+    }
+
+    // No hope for a (better) match at greater error levels.
+    const score = computeScore$1(pattern, {
+      errors: i + 1,
+      currentLocation: expectedLocation,
+      expectedLocation,
+      distance,
+      ignoreLocation
+    });
+
+    if (score > currentThreshold) {
+      break
+    }
+
+    lastBitArr = bitArr;
+  }
+
+  const result = {
+    isMatch: bestLocation >= 0,
+    // Count exact matches (those with a score of 0) to be "almost" exact
+    score: Math.max(0.001, finalScore)
+  };
+
+  if (computeMatches) {
+    const indices = convertMaskToIndices(matchMask, minMatchCharLength);
+    if (!indices.length) {
+      result.isMatch = false;
+    } else if (includeMatches) {
+      result.indices = indices;
+    }
+  }
+
+  return result
+}
+
+function createPatternAlphabet(pattern) {
+  let mask = {};
+
+  for (let i = 0, len = pattern.length; i < len; i += 1) {
+    const char = pattern.charAt(i);
+    mask[char] = (mask[char] || 0) | (1 << (len - i - 1));
+  }
+
+  return mask
+}
+
+const stripDiacritics = String.prototype.normalize
+    ? ((str) => str.normalize('NFD').replace(/[\u0300-\u036F\u0483-\u0489\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0711\u0730-\u074A\u07A6-\u07B0\u07EB-\u07F3\u07FD\u0816-\u0819\u081B-\u0823\u0825-\u0827\u0829-\u082D\u0859-\u085B\u08D3-\u08E1\u08E3-\u0903\u093A-\u093C\u093E-\u094F\u0951-\u0957\u0962\u0963\u0981-\u0983\u09BC\u09BE-\u09C4\u09C7\u09C8\u09CB-\u09CD\u09D7\u09E2\u09E3\u09FE\u0A01-\u0A03\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A70\u0A71\u0A75\u0A81-\u0A83\u0ABC\u0ABE-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AE2\u0AE3\u0AFA-\u0AFF\u0B01-\u0B03\u0B3C\u0B3E-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B62\u0B63\u0B82\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD7\u0C00-\u0C04\u0C3E-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C62\u0C63\u0C81-\u0C83\u0CBC\u0CBE-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CE2\u0CE3\u0D00-\u0D03\u0D3B\u0D3C\u0D3E-\u0D44\u0D46-\u0D48\u0D4A-\u0D4D\u0D57\u0D62\u0D63\u0D82\u0D83\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DF2\u0DF3\u0E31\u0E34-\u0E3A\u0E47-\u0E4E\u0EB1\u0EB4-\u0EB9\u0EBB\u0EBC\u0EC8-\u0ECD\u0F18\u0F19\u0F35\u0F37\u0F39\u0F3E\u0F3F\u0F71-\u0F84\u0F86\u0F87\u0F8D-\u0F97\u0F99-\u0FBC\u0FC6\u102B-\u103E\u1056-\u1059\u105E-\u1060\u1062-\u1064\u1067-\u106D\u1071-\u1074\u1082-\u108D\u108F\u109A-\u109D\u135D-\u135F\u1712-\u1714\u1732-\u1734\u1752\u1753\u1772\u1773\u17B4-\u17D3\u17DD\u180B-\u180D\u1885\u1886\u18A9\u1920-\u192B\u1930-\u193B\u1A17-\u1A1B\u1A55-\u1A5E\u1A60-\u1A7C\u1A7F\u1AB0-\u1ABE\u1B00-\u1B04\u1B34-\u1B44\u1B6B-\u1B73\u1B80-\u1B82\u1BA1-\u1BAD\u1BE6-\u1BF3\u1C24-\u1C37\u1CD0-\u1CD2\u1CD4-\u1CE8\u1CED\u1CF2-\u1CF4\u1CF7-\u1CF9\u1DC0-\u1DF9\u1DFB-\u1DFF\u20D0-\u20F0\u2CEF-\u2CF1\u2D7F\u2DE0-\u2DFF\u302A-\u302F\u3099\u309A\uA66F-\uA672\uA674-\uA67D\uA69E\uA69F\uA6F0\uA6F1\uA802\uA806\uA80B\uA823-\uA827\uA880\uA881\uA8B4-\uA8C5\uA8E0-\uA8F1\uA8FF\uA926-\uA92D\uA947-\uA953\uA980-\uA983\uA9B3-\uA9C0\uA9E5\uAA29-\uAA36\uAA43\uAA4C\uAA4D\uAA7B-\uAA7D\uAAB0\uAAB2-\uAAB4\uAAB7\uAAB8\uAABE\uAABF\uAAC1\uAAEB-\uAAEF\uAAF5\uAAF6\uABE3-\uABEA\uABEC\uABED\uFB1E\uFE00-\uFE0F\uFE20-\uFE2F]/g, ''))
+    : ((str) => str);
+
+class BitapSearch {
+  constructor(
+    pattern,
+    {
+      location = Config.location,
+      threshold = Config.threshold,
+      distance = Config.distance,
+      includeMatches = Config.includeMatches,
+      findAllMatches = Config.findAllMatches,
+      minMatchCharLength = Config.minMatchCharLength,
+      isCaseSensitive = Config.isCaseSensitive,
+      ignoreDiacritics = Config.ignoreDiacritics,
+      ignoreLocation = Config.ignoreLocation
+    } = {}
+  ) {
+    this.options = {
+      location,
+      threshold,
+      distance,
+      includeMatches,
+      findAllMatches,
+      minMatchCharLength,
+      isCaseSensitive,
+      ignoreDiacritics,
+      ignoreLocation
+    };
+
+    pattern = isCaseSensitive ? pattern : pattern.toLowerCase();
+    pattern = ignoreDiacritics ? stripDiacritics(pattern) : pattern;
+    this.pattern = pattern;
+
+    this.chunks = [];
+
+    if (!this.pattern.length) {
+      return
+    }
+
+    const addChunk = (pattern, startIndex) => {
+      this.chunks.push({
+        pattern,
+        alphabet: createPatternAlphabet(pattern),
+        startIndex
+      });
+    };
+
+    const len = this.pattern.length;
+
+    if (len > MAX_BITS) {
+      let i = 0;
+      const remainder = len % MAX_BITS;
+      const end = len - remainder;
+
+      while (i < end) {
+        addChunk(this.pattern.substr(i, MAX_BITS), i);
+        i += MAX_BITS;
+      }
+
+      if (remainder) {
+        const startIndex = len - MAX_BITS;
+        addChunk(this.pattern.substr(startIndex), startIndex);
+      }
+    } else {
+      addChunk(this.pattern, 0);
+    }
+  }
+
+  searchIn(text) {
+    const { isCaseSensitive, ignoreDiacritics, includeMatches } = this.options;
+
+    text = isCaseSensitive ? text : text.toLowerCase();
+    text = ignoreDiacritics ? stripDiacritics(text) : text;
+
+    // Exact match
+    if (this.pattern === text) {
+      let result = {
+        isMatch: true,
+        score: 0
+      };
+
+      if (includeMatches) {
+        result.indices = [[0, text.length - 1]];
+      }
+
+      return result
+    }
+
+    // Otherwise, use Bitap algorithm
+    const {
+      location,
+      distance,
+      threshold,
+      findAllMatches,
+      minMatchCharLength,
+      ignoreLocation
+    } = this.options;
+
+    let allIndices = [];
+    let totalScore = 0;
+    let hasMatches = false;
+
+    this.chunks.forEach(({ pattern, alphabet, startIndex }) => {
+      const { isMatch, score, indices } = search(text, pattern, alphabet, {
+        location: location + startIndex,
+        distance,
+        threshold,
+        findAllMatches,
+        minMatchCharLength,
+        includeMatches,
+        ignoreLocation
+      });
+
+      if (isMatch) {
+        hasMatches = true;
+      }
+
+      totalScore += score;
+
+      if (isMatch && indices) {
+        allIndices = [...allIndices, ...indices];
+      }
+    });
+
+    let result = {
+      isMatch: hasMatches,
+      score: hasMatches ? totalScore / this.chunks.length : 1
+    };
+
+    if (hasMatches && includeMatches) {
+      result.indices = allIndices;
+    }
+
+    return result
+  }
+}
+
+class BaseMatch {
+  constructor(pattern) {
+    this.pattern = pattern;
+  }
+  static isMultiMatch(pattern) {
+    return getMatch(pattern, this.multiRegex)
+  }
+  static isSingleMatch(pattern) {
+    return getMatch(pattern, this.singleRegex)
+  }
+  search(/*text*/) {}
+}
+
+function getMatch(pattern, exp) {
+  const matches = pattern.match(exp);
+  return matches ? matches[1] : null
+}
+
+// Token: 'file
+
+class ExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+  static get type() {
+    return 'exact'
+  }
+  static get multiRegex() {
+    return /^="(.*)"$/
+  }
+  static get singleRegex() {
+    return /^=(.*)$/
+  }
+  search(text) {
+    const isMatch = text === this.pattern;
+
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, this.pattern.length - 1]
+    }
+  }
+}
+
+// Token: !fire
+
+class InverseExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+  static get type() {
+    return 'inverse-exact'
+  }
+  static get multiRegex() {
+    return /^!"(.*)"$/
+  }
+  static get singleRegex() {
+    return /^!(.*)$/
+  }
+  search(text) {
+    const index = text.indexOf(this.pattern);
+    const isMatch = index === -1;
+
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, text.length - 1]
+    }
+  }
+}
+
+// Token: ^file
+
+class PrefixExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+  static get type() {
+    return 'prefix-exact'
+  }
+  static get multiRegex() {
+    return /^\^"(.*)"$/
+  }
+  static get singleRegex() {
+    return /^\^(.*)$/
+  }
+  search(text) {
+    const isMatch = text.startsWith(this.pattern);
+
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, this.pattern.length - 1]
+    }
+  }
+}
+
+// Token: !^fire
+
+class InversePrefixExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+  static get type() {
+    return 'inverse-prefix-exact'
+  }
+  static get multiRegex() {
+    return /^!\^"(.*)"$/
+  }
+  static get singleRegex() {
+    return /^!\^(.*)$/
+  }
+  search(text) {
+    const isMatch = !text.startsWith(this.pattern);
+
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, text.length - 1]
+    }
+  }
+}
+
+// Token: .file$
+
+class SuffixExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+  static get type() {
+    return 'suffix-exact'
+  }
+  static get multiRegex() {
+    return /^"(.*)"\$$/
+  }
+  static get singleRegex() {
+    return /^(.*)\$$/
+  }
+  search(text) {
+    const isMatch = text.endsWith(this.pattern);
+
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [text.length - this.pattern.length, text.length - 1]
+    }
+  }
+}
+
+// Token: !.file$
+
+class InverseSuffixExactMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+  static get type() {
+    return 'inverse-suffix-exact'
+  }
+  static get multiRegex() {
+    return /^!"(.*)"\$$/
+  }
+  static get singleRegex() {
+    return /^!(.*)\$$/
+  }
+  search(text) {
+    const isMatch = !text.endsWith(this.pattern);
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices: [0, text.length - 1]
+    }
+  }
+}
+
+class FuzzyMatch extends BaseMatch {
+  constructor(
+    pattern,
+    {
+      location = Config.location,
+      threshold = Config.threshold,
+      distance = Config.distance,
+      includeMatches = Config.includeMatches,
+      findAllMatches = Config.findAllMatches,
+      minMatchCharLength = Config.minMatchCharLength,
+      isCaseSensitive = Config.isCaseSensitive,
+      ignoreDiacritics = Config.ignoreDiacritics,
+      ignoreLocation = Config.ignoreLocation
+    } = {}
+  ) {
+    super(pattern);
+    this._bitapSearch = new BitapSearch(pattern, {
+      location,
+      threshold,
+      distance,
+      includeMatches,
+      findAllMatches,
+      minMatchCharLength,
+      isCaseSensitive,
+      ignoreDiacritics,
+      ignoreLocation
+    });
+  }
+  static get type() {
+    return 'fuzzy'
+  }
+  static get multiRegex() {
+    return /^"(.*)"$/
+  }
+  static get singleRegex() {
+    return /^(.*)$/
+  }
+  search(text) {
+    return this._bitapSearch.searchIn(text)
+  }
+}
+
+// Token: 'file
+
+class IncludeMatch extends BaseMatch {
+  constructor(pattern) {
+    super(pattern);
+  }
+  static get type() {
+    return 'include'
+  }
+  static get multiRegex() {
+    return /^'"(.*)"$/
+  }
+  static get singleRegex() {
+    return /^'(.*)$/
+  }
+  search(text) {
+    let location = 0;
+    let index;
+
+    const indices = [];
+    const patternLen = this.pattern.length;
+
+    // Get all exact matches
+    while ((index = text.indexOf(this.pattern, location)) > -1) {
+      location = index + patternLen;
+      indices.push([index, location - 1]);
+    }
+
+    const isMatch = !!indices.length;
+
+    return {
+      isMatch,
+      score: isMatch ? 0 : 1,
+      indices
+    }
+  }
+}
+
+// ❗Order is important. DO NOT CHANGE.
+const searchers = [
+  ExactMatch,
+  IncludeMatch,
+  PrefixExactMatch,
+  InversePrefixExactMatch,
+  InverseSuffixExactMatch,
+  SuffixExactMatch,
+  InverseExactMatch,
+  FuzzyMatch
+];
+
+const searchersLen = searchers.length;
+
+// Regex to split by spaces, but keep anything in quotes together
+const SPACE_RE = / +(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/;
+const OR_TOKEN = '|';
+
+// Return a 2D array representation of the query, for simpler parsing.
+// Example:
+// "^core go$ | rb$ | py$ xy$" => [["^core", "go$"], ["rb$"], ["py$", "xy$"]]
+function parseQuery(pattern, options = {}) {
+  return pattern.split(OR_TOKEN).map((item) => {
+    let query = item
+      .trim()
+      .split(SPACE_RE)
+      .filter((item) => item && !!item.trim());
+
+    let results = [];
+    for (let i = 0, len = query.length; i < len; i += 1) {
+      const queryItem = query[i];
+
+      // 1. Handle multiple query match (i.e, once that are quoted, like `"hello world"`)
+      let found = false;
+      let idx = -1;
+      while (!found && ++idx < searchersLen) {
+        const searcher = searchers[idx];
+        let token = searcher.isMultiMatch(queryItem);
+        if (token) {
+          results.push(new searcher(token, options));
+          found = true;
+        }
+      }
+
+      if (found) {
+        continue
+      }
+
+      // 2. Handle single query matches (i.e, once that are *not* quoted)
+      idx = -1;
+      while (++idx < searchersLen) {
+        const searcher = searchers[idx];
+        let token = searcher.isSingleMatch(queryItem);
+        if (token) {
+          results.push(new searcher(token, options));
+          break
+        }
+      }
+    }
+
+    return results
+  })
+}
+
+// These extended matchers can return an array of matches, as opposed
+// to a singl match
+const MultiMatchSet = new Set([FuzzyMatch.type, IncludeMatch.type]);
+
+/**
+ * Command-like searching
+ * ======================
+ *
+ * Given multiple search terms delimited by spaces.e.g. `^jscript .python$ ruby !java`,
+ * search in a given text.
+ *
+ * Search syntax:
+ *
+ * | Token       | Match type                 | Description                            |
+ * | ----------- | -------------------------- | -------------------------------------- |
+ * | `jscript`   | fuzzy-match                | Items that fuzzy match `jscript`       |
+ * | `=scheme`   | exact-match                | Items that are `scheme`                |
+ * | `'python`   | include-match              | Items that include `python`            |
+ * | `!ruby`     | inverse-exact-match        | Items that do not include `ruby`       |
+ * | `^java`     | prefix-exact-match         | Items that start with `java`           |
+ * | `!^earlang` | inverse-prefix-exact-match | Items that do not start with `earlang` |
+ * | `.js$`      | suffix-exact-match         | Items that end with `.js`              |
+ * | `!.go$`     | inverse-suffix-exact-match | Items that do not end with `.go`       |
+ *
+ * A single pipe character acts as an OR operator. For example, the following
+ * query matches entries that start with `core` and end with either`go`, `rb`,
+ * or`py`.
+ *
+ * ```
+ * ^core go$ | rb$ | py$
+ * ```
+ */
+class ExtendedSearch {
+  constructor(
+    pattern,
+    {
+      isCaseSensitive = Config.isCaseSensitive,
+      ignoreDiacritics = Config.ignoreDiacritics,
+      includeMatches = Config.includeMatches,
+      minMatchCharLength = Config.minMatchCharLength,
+      ignoreLocation = Config.ignoreLocation,
+      findAllMatches = Config.findAllMatches,
+      location = Config.location,
+      threshold = Config.threshold,
+      distance = Config.distance
+    } = {}
+  ) {
+    this.query = null;
+    this.options = {
+      isCaseSensitive,
+      ignoreDiacritics,
+      includeMatches,
+      minMatchCharLength,
+      findAllMatches,
+      ignoreLocation,
+      location,
+      threshold,
+      distance
+    };
+
+    pattern = isCaseSensitive ? pattern : pattern.toLowerCase();
+    pattern = ignoreDiacritics ? stripDiacritics(pattern) : pattern;
+    this.pattern = pattern;
+    this.query = parseQuery(this.pattern, this.options);
+  }
+
+  static condition(_, options) {
+    return options.useExtendedSearch
+  }
+
+  searchIn(text) {
+    const query = this.query;
+
+    if (!query) {
+      return {
+        isMatch: false,
+        score: 1
+      }
+    }
+
+    const { includeMatches, isCaseSensitive, ignoreDiacritics } = this.options;
+
+    text = isCaseSensitive ? text : text.toLowerCase();
+    text = ignoreDiacritics ? stripDiacritics(text) : text;
+
+    let numMatches = 0;
+    let allIndices = [];
+    let totalScore = 0;
+
+    // ORs
+    for (let i = 0, qLen = query.length; i < qLen; i += 1) {
+      const searchers = query[i];
+
+      // Reset indices
+      allIndices.length = 0;
+      numMatches = 0;
+
+      // ANDs
+      for (let j = 0, pLen = searchers.length; j < pLen; j += 1) {
+        const searcher = searchers[j];
+        const { isMatch, indices, score } = searcher.search(text);
+
+        if (isMatch) {
+          numMatches += 1;
+          totalScore += score;
+          if (includeMatches) {
+            const type = searcher.constructor.type;
+            if (MultiMatchSet.has(type)) {
+              allIndices = [...allIndices, ...indices];
+            } else {
+              allIndices.push(indices);
+            }
+          }
+        } else {
+          totalScore = 0;
+          numMatches = 0;
+          allIndices.length = 0;
+          break
+        }
+      }
+
+      // OR condition, so if TRUE, return
+      if (numMatches) {
+        let result = {
+          isMatch: true,
+          score: totalScore / numMatches
+        };
+
+        if (includeMatches) {
+          result.indices = allIndices;
+        }
+
+        return result
+      }
+    }
+
+    // Nothing was matched
+    return {
+      isMatch: false,
+      score: 1
+    }
+  }
+}
+
+const registeredSearchers = [];
+
+function register(...args) {
+  registeredSearchers.push(...args);
+}
+
+function createSearcher(pattern, options) {
+  for (let i = 0, len = registeredSearchers.length; i < len; i += 1) {
+    let searcherClass = registeredSearchers[i];
+    if (searcherClass.condition(pattern, options)) {
+      return new searcherClass(pattern, options)
+    }
+  }
+
+  return new BitapSearch(pattern, options)
+}
+
+const LogicalOperator = {
+  AND: '$and',
+  OR: '$or'
+};
+
+const KeyType = {
+  PATH: '$path',
+  PATTERN: '$val'
+};
+
+const isExpression = (query) =>
+  !!(query[LogicalOperator.AND] || query[LogicalOperator.OR]);
+
+const isPath = (query) => !!query[KeyType.PATH];
+
+const isLeaf = (query) =>
+  !isArray(query) && isObject(query) && !isExpression(query);
+
+const convertToExplicit = (query) => ({
+  [LogicalOperator.AND]: Object.keys(query).map((key) => ({
+    [key]: query[key]
+  }))
+});
+
+// When `auto` is `true`, the parse function will infer and initialize and add
+// the appropriate `Searcher` instance
+function parse(query, options, { auto = true } = {}) {
+  const next = (query) => {
+    let keys = Object.keys(query);
+
+    const isQueryPath = isPath(query);
+
+    if (!isQueryPath && keys.length > 1 && !isExpression(query)) {
+      return next(convertToExplicit(query))
+    }
+
+    if (isLeaf(query)) {
+      const key = isQueryPath ? query[KeyType.PATH] : keys[0];
+
+      const pattern = isQueryPath ? query[KeyType.PATTERN] : query[key];
+
+      if (!isString(pattern)) {
+        throw new Error(LOGICAL_SEARCH_INVALID_QUERY_FOR_KEY(key))
+      }
+
+      const obj = {
+        keyId: createKeyId(key),
+        pattern
+      };
+
+      if (auto) {
+        obj.searcher = createSearcher(pattern, options);
+      }
+
+      return obj
+    }
+
+    let node = {
+      children: [],
+      operator: keys[0]
+    };
+
+    keys.forEach((key) => {
+      const value = query[key];
+
+      if (isArray(value)) {
+        value.forEach((item) => {
+          node.children.push(next(item));
+        });
+      }
+    });
+
+    return node
+  };
+
+  if (!isExpression(query)) {
+    query = convertToExplicit(query);
+  }
+
+  return next(query)
+}
+
+// Practical scoring function
+function computeScore(
+  results,
+  { ignoreFieldNorm = Config.ignoreFieldNorm }
+) {
+  results.forEach((result) => {
+    let totalScore = 1;
+
+    result.matches.forEach(({ key, norm, score }) => {
+      const weight = key ? key.weight : null;
+
+      totalScore *= Math.pow(
+        score === 0 && weight ? Number.EPSILON : score,
+        (weight || 1) * (ignoreFieldNorm ? 1 : norm)
+      );
+    });
+
+    result.score = totalScore;
+  });
+}
+
+function transformMatches(result, data) {
+  const matches = result.matches;
+  data.matches = [];
+
+  if (!isDefined(matches)) {
+    return
+  }
+
+  matches.forEach((match) => {
+    if (!isDefined(match.indices) || !match.indices.length) {
+      return
+    }
+
+    const { indices, value } = match;
+
+    let obj = {
+      indices,
+      value
+    };
+
+    if (match.key) {
+      obj.key = match.key.src;
+    }
+
+    if (match.idx > -1) {
+      obj.refIndex = match.idx;
+    }
+
+    data.matches.push(obj);
+  });
+}
+
+function transformScore(result, data) {
+  data.score = result.score;
+}
+
+function format(
+  results,
+  docs,
+  {
+    includeMatches = Config.includeMatches,
+    includeScore = Config.includeScore
+  } = {}
+) {
+  const transformers = [];
+
+  if (includeMatches) transformers.push(transformMatches);
+  if (includeScore) transformers.push(transformScore);
+
+  return results.map((result) => {
+    const { idx } = result;
+
+    const data = {
+      item: docs[idx],
+      refIndex: idx
+    };
+
+    if (transformers.length) {
+      transformers.forEach((transformer) => {
+        transformer(result, data);
+      });
+    }
+
+    return data
+  })
+}
+
+class Fuse {
+  constructor(docs, options = {}, index) {
+    this.options = { ...Config, ...options };
+
+    if (
+      this.options.useExtendedSearch &&
+      !true
+    ) {}
+
+    this._keyStore = new KeyStore(this.options.keys);
+
+    this.setCollection(docs, index);
+  }
+
+  setCollection(docs, index) {
+    this._docs = docs;
+
+    if (index && !(index instanceof FuseIndex)) {
+      throw new Error(INCORRECT_INDEX_TYPE)
+    }
+
+    this._myIndex =
+      index ||
+      createIndex(this.options.keys, this._docs, {
+        getFn: this.options.getFn,
+        fieldNormWeight: this.options.fieldNormWeight
+      });
+  }
+
+  add(doc) {
+    if (!isDefined(doc)) {
+      return
+    }
+
+    this._docs.push(doc);
+    this._myIndex.add(doc);
+  }
+
+  remove(predicate = (/* doc, idx */) => false) {
+    const results = [];
+
+    for (let i = 0, len = this._docs.length; i < len; i += 1) {
+      const doc = this._docs[i];
+      if (predicate(doc, i)) {
+        this.removeAt(i);
+        i -= 1;
+        len -= 1;
+
+        results.push(doc);
+      }
+    }
+
+    return results
+  }
+
+  removeAt(idx) {
+    this._docs.splice(idx, 1);
+    this._myIndex.removeAt(idx);
+  }
+
+  getIndex() {
+    return this._myIndex
+  }
+
+  search(query, { limit = -1 } = {}) {
+    const {
+      includeMatches,
+      includeScore,
+      shouldSort,
+      sortFn,
+      ignoreFieldNorm
+    } = this.options;
+
+    let results = isString(query)
+      ? isString(this._docs[0])
+        ? this._searchStringList(query)
+        : this._searchObjectList(query)
+      : this._searchLogical(query);
+
+    computeScore(results, { ignoreFieldNorm });
+
+    if (shouldSort) {
+      results.sort(sortFn);
+    }
+
+    if (isNumber(limit) && limit > -1) {
+      results = results.slice(0, limit);
+    }
+
+    return format(results, this._docs, {
+      includeMatches,
+      includeScore
+    })
+  }
+
+  _searchStringList(query) {
+    const searcher = createSearcher(query, this.options);
+    const { records } = this._myIndex;
+    const results = [];
+
+    // Iterate over every string in the index
+    records.forEach(({ v: text, i: idx, n: norm }) => {
+      if (!isDefined(text)) {
+        return
+      }
+
+      const { isMatch, score, indices } = searcher.searchIn(text);
+
+      if (isMatch) {
+        results.push({
+          item: text,
+          idx,
+          matches: [{ score, value: text, norm, indices }]
+        });
+      }
+    });
+
+    return results
+  }
+
+  _searchLogical(query) {
+
+    const expression = parse(query, this.options);
+
+    const evaluate = (node, item, idx) => {
+      if (!node.children) {
+        const { keyId, searcher } = node;
+
+        const matches = this._findMatches({
+          key: this._keyStore.get(keyId),
+          value: this._myIndex.getValueForItemAtKeyId(item, keyId),
+          searcher
+        });
+
+        if (matches && matches.length) {
+          return [
+            {
+              idx,
+              item,
+              matches
+            }
+          ]
+        }
+
+        return []
+      }
+
+      const res = [];
+      for (let i = 0, len = node.children.length; i < len; i += 1) {
+        const child = node.children[i];
+        const result = evaluate(child, item, idx);
+        if (result.length) {
+          res.push(...result);
+        } else if (node.operator === LogicalOperator.AND) {
+          return []
+        }
+      }
+      return res
+    };
+
+    const records = this._myIndex.records;
+    const resultMap = {};
+    const results = [];
+
+    records.forEach(({ $: item, i: idx }) => {
+      if (isDefined(item)) {
+        let expResults = evaluate(expression, item, idx);
+
+        if (expResults.length) {
+          // Dedupe when adding
+          if (!resultMap[idx]) {
+            resultMap[idx] = { idx, item, matches: [] };
+            results.push(resultMap[idx]);
+          }
+          expResults.forEach(({ matches }) => {
+            resultMap[idx].matches.push(...matches);
+          });
+        }
+      }
+    });
+
+    return results
+  }
+
+  _searchObjectList(query) {
+    const searcher = createSearcher(query, this.options);
+    const { keys, records } = this._myIndex;
+    const results = [];
+
+    // List is Array<Object>
+    records.forEach(({ $: item, i: idx }) => {
+      if (!isDefined(item)) {
+        return
+      }
+
+      let matches = [];
+
+      // Iterate over every key (i.e, path), and fetch the value at that key
+      keys.forEach((key, keyIndex) => {
+        matches.push(
+          ...this._findMatches({
+            key,
+            value: item[keyIndex],
+            searcher
+          })
+        );
+      });
+
+      if (matches.length) {
+        results.push({
+          idx,
+          item,
+          matches
+        });
+      }
+    });
+
+    return results
+  }
+  _findMatches({ key, value, searcher }) {
+    if (!isDefined(value)) {
+      return []
+    }
+
+    let matches = [];
+
+    if (isArray(value)) {
+      value.forEach(({ v: text, i: idx, n: norm }) => {
+        if (!isDefined(text)) {
+          return
+        }
+
+        const { isMatch, score, indices } = searcher.searchIn(text);
+
+        if (isMatch) {
+          matches.push({
+            score,
+            key,
+            value: text,
+            idx,
+            norm,
+            indices
+          });
+        }
+      });
+    } else {
+      const { v: text, n: norm } = value;
+
+      const { isMatch, score, indices } = searcher.searchIn(text);
+
+      if (isMatch) {
+        matches.push({ score, key, value: text, norm, indices });
+      }
+    }
+
+    return matches
+  }
+}
+
+Fuse.version = '7.1.0';
+Fuse.createIndex = createIndex;
+Fuse.parseIndex = parseIndex;
+Fuse.config = Config;
+
+{
+  Fuse.parseQuery = parse;
+}
+
+{
+  register(ExtendedSearch);
+}
+
+
+
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/character-utils.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/character-utils.js ***!
+  \********************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CustomError: () => (/* binding */ CustomError),
+/* harmony export */   createCharacter: () => (/* binding */ createCharacter),
+/* harmony export */   saveCharacter: () => (/* binding */ saveCharacter)
+/* harmony export */ });
+class CustomError extends Error {
+    data;
+    constructor(message, data) {
+        super(message);
+        this.data = data;
+    }
+    toString() {
+        return this.message;
+    }
+}
+/**
+ * @throws {CustomError<Response>}
+ */
+async function createCharacter(data, updateUI) {
+    const context = SillyTavern.getContext();
+    const formData = new FormData();
+    formData.append('avatar', new Blob([JSON.stringify(data)], { type: 'application/json' }), 'character.json');
+    formData.append('file_type', 'json');
+    const headers = context.getRequestHeaders();
+    // @ts-ignore
+    delete headers['Content-Type'];
+    const response = await fetch('/api/characters/import', {
+        method: 'POST',
+        headers,
+        body: formData,
+        cache: 'no-cache',
+    });
+    if (!response.ok) {
+        throw new CustomError(response.statusText, response);
+    }
+    if (updateUI) {
+        await context.getCharacters();
+    }
+}
+/**
+ * @throws {CustomError<Response>}
+ */
+async function saveCharacter(data, updateUI) {
+    const context = SillyTavern.getContext();
+    const formData = new FormData();
+    formData.append('ch_name', data.name);
+    formData.append('avatar_url', data.avatar ?? '');
+    formData.append('description', data.description ?? '');
+    formData.append('first_mes', data.first_mes ?? '');
+    formData.append('scenario', data.scenario ?? '');
+    formData.append('personality', data.personality ?? '');
+    formData.append('mes_example', data.mes_example ?? '');
+    formData.append('creatorcomment', data.creatorcomment ?? '');
+    formData.append('tags', (data.tags ?? []).join(','));
+    const avatarUrl = context.getThumbnailUrl('avatar', data.avatar);
+    const avatarBlob = await fetch(avatarUrl).then((res) => res.blob());
+    const avatarFile = new File([avatarBlob], 'avatar.png', { type: 'image/png' });
+    formData.append('avatar', avatarFile);
+    const charInnerData = data.data || {};
+    formData.append('creator', charInnerData.creator ?? '');
+    formData.append('character_version', charInnerData.character_version ?? '');
+    formData.append('creator_notes', charInnerData.creator_notes ?? '');
+    formData.append('system_prompt', charInnerData.system_prompt ?? '');
+    formData.append('post_history_instructions', charInnerData.post_history_instructions ?? '');
+    const extensions = charInnerData.extensions || {};
+    formData.append('chat', data.chat ?? '');
+    formData.append('create_date', data.create_date ?? '');
+    formData.append('last_mes', data.last_mes ?? '');
+    formData.append('talkativeness', extensions.talkativeness ?? '');
+    formData.append('fav', String(extensions.fav ?? false));
+    formData.append('world', extensions.world ?? '');
+    const depthPrompt = extensions.depth_prompt || {};
+    formData.append('depth_prompt_prompt', depthPrompt.prompt ?? '');
+    formData.append('depth_prompt_depth', String(depthPrompt.depth ?? 0));
+    formData.append('depth_prompt_role', depthPrompt.role ?? '');
+    if (Array.isArray(charInnerData.alternate_greetings)) {
+        for (const value of charInnerData.alternate_greetings) {
+            formData.append('alternate_greetings', value);
+        }
+    }
+    formData.append('json_data', JSON.stringify(data));
+    const headers = context.getRequestHeaders();
+    // @ts-ignore
+    delete headers['Content-Type'];
+    const response = await fetch('/api/characters/edit', {
+        method: 'POST',
+        headers,
+        body: formData,
+        cache: 'no-cache',
+    });
+    if (!response.ok) {
+        throw new CustomError(response.statusText, response);
+    }
+    if (updateUI) {
+        await context.getCharacters();
+    }
+}
+//# sourceMappingURL=character-utils.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/config.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/config.js ***!
+  \***********************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   WI_METADATA_KEY: () => (/* reexport safe */ _world_info_js__WEBPACK_IMPORTED_MODULE_2__.METADATA_KEY),
+/* harmony export */   characters: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.characters),
+/* harmony export */   commonEnumProviders: () => (/* reexport safe */ _slash_commands_SlashCommandCommonEnumsProvider_js__WEBPACK_IMPORTED_MODULE_10__.commonEnumProviders),
+/* harmony export */   depth_prompt_depth_default: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.depth_prompt_depth_default),
+/* harmony export */   depth_prompt_role_default: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.depth_prompt_role_default),
+/* harmony export */   extension_prompt_types: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.extension_prompt_types),
+/* harmony export */   groups: () => (/* reexport safe */ _group_chats_js__WEBPACK_IMPORTED_MODULE_7__.groups),
+/* harmony export */   is_group_generating: () => (/* reexport safe */ _group_chats_js__WEBPACK_IMPORTED_MODULE_7__.is_group_generating),
+/* harmony export */   main_api: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.main_api),
+/* harmony export */   name1: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.name1),
+/* harmony export */   name2: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.name2),
+/* harmony export */   persona_description_positions: () => (/* reexport safe */ _power_user_js__WEBPACK_IMPORTED_MODULE_0__.persona_description_positions),
+/* harmony export */   regex_placement: () => (/* reexport safe */ _regex_engine_js__WEBPACK_IMPORTED_MODULE_8__.regex_placement),
+/* harmony export */   selected_group: () => (/* reexport safe */ _group_chats_js__WEBPACK_IMPORTED_MODULE_7__.selected_group),
+/* harmony export */   selected_world_info: () => (/* reexport safe */ _world_info_js__WEBPACK_IMPORTED_MODULE_2__.selected_world_info),
+/* harmony export */   st_appendFileContent: () => (/* binding */ st_appendFileContent),
+/* harmony export */   st_baseChatReplace: () => (/* binding */ st_baseChatReplace),
+/* harmony export */   st_createWorldInfoEntry: () => (/* binding */ st_createWorldInfoEntry),
+/* harmony export */   st_echo: () => (/* binding */ st_echo),
+/* harmony export */   st_formatInstructModeExamples: () => (/* binding */ st_formatInstructModeExamples),
+/* harmony export */   st_formatInstructModeSystemPrompt: () => (/* binding */ st_formatInstructModeSystemPrompt),
+/* harmony export */   st_formatWorldInfo: () => (/* binding */ st_formatWorldInfo),
+/* harmony export */   st_getAuthorNote: () => (/* binding */ st_getAuthorNote),
+/* harmony export */   st_getCharaFilename: () => (/* binding */ st_getCharaFilename),
+/* harmony export */   st_getGroupDepthPrompts: () => (/* binding */ st_getGroupDepthPrompts),
+/* harmony export */   st_getMaxContextSize: () => (/* binding */ st_getMaxContextSize),
+/* harmony export */   st_getPromptPosition: () => (/* binding */ st_getPromptPosition),
+/* harmony export */   st_getPromptRole: () => (/* binding */ st_getPromptRole),
+/* harmony export */   st_getRegexedString: () => (/* binding */ st_getRegexedString),
+/* harmony export */   st_parseMesExamples: () => (/* binding */ st_parseMesExamples),
+/* harmony export */   st_prepareOpenAIMessages: () => (/* binding */ st_prepareOpenAIMessages),
+/* harmony export */   st_renderStoryString: () => (/* binding */ st_renderStoryString),
+/* harmony export */   st_runCommandCallback: () => (/* binding */ st_runCommandCallback),
+/* harmony export */   st_runRegexScript: () => (/* binding */ st_runRegexScript),
+/* harmony export */   st_setOpenAIMessageExamples: () => (/* binding */ st_setOpenAIMessageExamples),
+/* harmony export */   st_setOpenAIMessages: () => (/* binding */ st_setOpenAIMessages),
+/* harmony export */   systemUserName: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.systemUserName),
+/* harmony export */   system_avatar: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.system_avatar),
+/* harmony export */   this_chid: () => (/* reexport safe */ _script_js__WEBPACK_IMPORTED_MODULE_1__.this_chid),
+/* harmony export */   wi_anchor_position: () => (/* reexport safe */ _world_info_js__WEBPACK_IMPORTED_MODULE_2__.wi_anchor_position),
+/* harmony export */   world_info: () => (/* reexport safe */ _world_info_js__WEBPACK_IMPORTED_MODULE_2__.world_info),
+/* harmony export */   world_info_include_names: () => (/* reexport safe */ _world_info_js__WEBPACK_IMPORTED_MODULE_2__.world_info_include_names),
+/* harmony export */   world_names: () => (/* reexport safe */ _world_info_js__WEBPACK_IMPORTED_MODULE_2__.world_names)
+/* harmony export */ });
+/* harmony import */ var _power_user_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../power-user.js */ "../../../../power-user.js");
+/* harmony import */ var _script_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../../script.js */ "../../../../../script.js");
+/* harmony import */ var _world_info_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../../world-info.js */ "../../../../world-info.js");
+/* harmony import */ var _instruct_mode_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../../instruct-mode.js */ "../../../../instruct-mode.js");
+/* harmony import */ var _chats_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../../chats.js */ "../../../../chats.js");
+/* harmony import */ var _openai_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../../openai.js */ "../../../../openai.js");
+/* harmony import */ var _authors_note_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../../authors-note.js */ "../../../../authors-note.js");
+/* harmony import */ var _group_chats_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../../group-chats.js */ "../../../../group-chats.js");
+/* harmony import */ var _regex_engine_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../regex/engine.js */ "../../../regex/engine.js");
+/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../../../utils.js */ "../../../../utils.js");
+/* harmony import */ var _slash_commands_SlashCommandCommonEnumsProvider_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../../../slash-commands/SlashCommandCommonEnumsProvider.js */ "../../../../slash-commands/SlashCommandCommonEnumsProvider.js");
+// @ts-ignore
+
+
+
+// @ts-ignore
+
+// @ts-ignore
+
+
+// @ts-ignore
+
+// @ts-ignore
+
+// @ts-ignore
+
+// @ts-ignore
+
+// @ts-ignore
+
+async function st_runCommandCallback(command, ...args) {
+    // @ts-ignore
+    await SillyTavern.getContext().SlashCommandParser.commands[command].callback(...args);
+}
+/**
+ * Sends an echo message using the SlashCommandParser's echo command.
+ */
+async function st_echo(severity, message, { escapeHtml = true } = {}) {
+    await st_runCommandCallback('echo', { severity: severity, escapeHtml: Boolean(escapeHtml).toString() }, message);
+}
+function st_getMaxContextSize(overrideResponseLength) {
+    return (0,_script_js__WEBPACK_IMPORTED_MODULE_1__.getMaxContextSize)(overrideResponseLength);
+}
+function st_parseMesExamples(examplesStr, isInstruct) {
+    return (0,_script_js__WEBPACK_IMPORTED_MODULE_1__.parseMesExamples)(examplesStr, isInstruct);
+}
+function st_baseChatReplace(value, name1, name2) {
+    return (0,_script_js__WEBPACK_IMPORTED_MODULE_1__.baseChatReplace)(value, name1, name2);
+}
+function st_formatInstructModeExamples(mesExamplesArray, name1, name2) {
+    return (0,_instruct_mode_js__WEBPACK_IMPORTED_MODULE_3__.formatInstructModeExamples)(mesExamplesArray, name1, name2);
+}
+function st_formatInstructModeSystemPrompt(systemPrompt, customInstruct) {
+    return (0,_instruct_mode_js__WEBPACK_IMPORTED_MODULE_3__.formatInstructModeSystemPrompt)(systemPrompt, customInstruct);
+}
+function st_renderStoryString(params, { customStoryString, customInstructSettings, } = {}) {
+    return (0,_power_user_js__WEBPACK_IMPORTED_MODULE_0__.renderStoryString)(params, { customStoryString, customInstructSettings });
+}
+function st_getPromptRole(role) {
+    return (0,_openai_js__WEBPACK_IMPORTED_MODULE_5__.getPromptRole)(role);
+}
+function st_getAuthorNote() {
+    return {
+        prompt: _script_js__WEBPACK_IMPORTED_MODULE_1__.chat_metadata[_authors_note_js__WEBPACK_IMPORTED_MODULE_6__.metadata_keys.prompt],
+        interval: _script_js__WEBPACK_IMPORTED_MODULE_1__.chat_metadata[_authors_note_js__WEBPACK_IMPORTED_MODULE_6__.metadata_keys.interval],
+        position: _script_js__WEBPACK_IMPORTED_MODULE_1__.chat_metadata[_authors_note_js__WEBPACK_IMPORTED_MODULE_6__.metadata_keys.position],
+        depth: _script_js__WEBPACK_IMPORTED_MODULE_1__.chat_metadata[_authors_note_js__WEBPACK_IMPORTED_MODULE_6__.metadata_keys.depth],
+        role: _script_js__WEBPACK_IMPORTED_MODULE_1__.chat_metadata[_authors_note_js__WEBPACK_IMPORTED_MODULE_6__.metadata_keys.role],
+    };
+}
+function st_getGroupDepthPrompts(groupId, characterId) {
+    return (0,_group_chats_js__WEBPACK_IMPORTED_MODULE_7__.getGroupDepthPrompts)(groupId, characterId);
+}
+function st_prepareOpenAIMessages({ name2, charDescription, charPersonality, Scenario, worldInfoBefore, worldInfoAfter, bias, type, quietPrompt, quietImage, extensionPrompts, cyclePrompt, systemPromptOverride, jailbreakPromptOverride, personaDescription, messages, messageExamples, }, dryRun) {
+    return (0,_openai_js__WEBPACK_IMPORTED_MODULE_5__.prepareOpenAIMessages)({
+        name2,
+        charDescription,
+        charPersonality,
+        Scenario,
+        worldInfoBefore,
+        worldInfoAfter,
+        bias,
+        type,
+        quietPrompt,
+        quietImage,
+        cyclePrompt,
+        systemPromptOverride,
+        jailbreakPromptOverride,
+        personaDescription,
+        extensionPrompts,
+        messages,
+        messageExamples,
+    }, dryRun);
+}
+function st_setOpenAIMessages(chat) {
+    return (0,_openai_js__WEBPACK_IMPORTED_MODULE_5__.setOpenAIMessages)(chat);
+}
+function st_setOpenAIMessageExamples(mesExamplesArray) {
+    return (0,_openai_js__WEBPACK_IMPORTED_MODULE_5__.setOpenAIMessageExamples)(mesExamplesArray);
+}
+function st_getRegexedString(rawString, placement, { characterOverride, isMarkdown, isPrompt, isEdit, depth, }) {
+    return (0,_regex_engine_js__WEBPACK_IMPORTED_MODULE_8__.getRegexedString)(rawString, placement, { characterOverride, isMarkdown, isPrompt, isEdit, depth });
+}
+function st_runRegexScript(regexScript, rawString, { characterOverride = null } = {}) {
+    return (0,_regex_engine_js__WEBPACK_IMPORTED_MODULE_8__.runRegexScript)(regexScript, rawString, { characterOverride });
+}
+async function st_appendFileContent(message, messageText) {
+    return await (0,_chats_js__WEBPACK_IMPORTED_MODULE_4__.appendFileContent)(message, messageText);
+}
+function st_formatWorldInfo(value, { wiFormat, } = {}) {
+    return (0,_openai_js__WEBPACK_IMPORTED_MODULE_5__.formatWorldInfo)(value, { wiFormat });
+}
+function st_getPromptPosition(position) {
+    return (0,_openai_js__WEBPACK_IMPORTED_MODULE_5__.getPromptPosition)(position);
+}
+function st_getCharaFilename(chid, { manualAvatarKey, } = {}) {
+    return (0,_utils_js__WEBPACK_IMPORTED_MODULE_9__.getCharaFilename)(chid, { manualAvatarKey });
+}
+function st_createWorldInfoEntry(_name, data) {
+    return (0,_world_info_js__WEBPACK_IMPORTED_MODULE_2__.createWorldInfoEntry)(_name, data);
+}
+
+//# sourceMappingURL=config.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/extension-settings-manager.js":
+/*!*******************************************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/extension-settings-manager.js ***!
+  \*******************************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ExtensionSettingsManager: () => (/* binding */ ExtensionSettingsManager)
+/* harmony export */ });
+class ExtensionSettingsManager {
+    settingsKey;
+    defaultSettings;
+    constructor(key, defaultSettings) {
+        this.settingsKey = key;
+        this.defaultSettings = defaultSettings;
+    }
+    /**
+     * If defaultSettings has "version" and "formatVersion" properties, they will be used to track version and format version changes.
+     *
+     * For example, if you want to show a notification when a new version is released, you can check "result.version.changed".
+     *
+     * @param [options={}]
+     * @param [options.strategy='recursive'] - 'recursive' will migrate old settings with the default settings.
+     *
+     * For complex settings, you can specify a custom migration strategy. For example, if you change the field name from "old" to "new", you can use:
+     * @example
+     * [
+     *   {
+     *     from: 'FORMAT-0.1.0',
+     *     to: 'FORMAT-0.1.1',
+     *     action: (previous) => {
+     *       const data = {
+     *         ...previous,
+     *         new: previous.old,
+     *       };
+     *       delete data.old;
+     *       return data;
+     *     },
+     *   },
+     * ]
+     */
+    async initializeSettings(options = {}) {
+        const { strategy = 'recursive' } = options;
+        const version = this.defaultSettings.version;
+        const formatVersion = this.defaultSettings.formatVersion;
+        const settings = SillyTavern.getContext().extensionSettings[this.settingsKey];
+        const defaultResult = {
+            version: {
+                changed: false,
+                new: version ?? '',
+            },
+            formatVersion: {
+                changed: false,
+                new: formatVersion ?? '',
+            },
+            oldSettings: null,
+            newSettings: this.defaultSettings,
+        };
+        if (!settings) {
+            SillyTavern.getContext().extensionSettings[this.settingsKey] = this.defaultSettings;
+            this.saveSettings();
+            return defaultResult;
+        }
+        const result = {
+            ...defaultResult,
+            oldSettings: structuredClone(settings),
+            version: {
+                changed: false,
+                old: settings.version,
+                new: settings.version,
+            },
+            formatVersion: {
+                changed: false,
+                old: settings.formatVersion,
+                new: settings.formatVersion,
+            },
+        };
+        if (strategy === 'recursive') {
+            if (version && settings.version !== version) {
+                result.version.changed = true;
+                result.version.new = version;
+                settings.version = version;
+            }
+            if (formatVersion && formatVersion !== '*' && settings.formatVersion !== formatVersion) {
+                result.formatVersion.changed = true;
+                result.formatVersion.new = formatVersion;
+                settings.formatVersion = formatVersion;
+            }
+            function initializeRecursively(target, defaults) {
+                let anyChange = false;
+                // Initialize undefined values from defaults and handle nested objects
+                for (const key of Object.keys(defaults)) {
+                    if (target[key] === undefined) {
+                        target[key] = defaults[key];
+                        anyChange = true;
+                    }
+                    else if (typeof defaults[key] === 'object' && defaults[key] !== null) {
+                        target[key] = target[key] || {};
+                        if (initializeRecursively(target[key], defaults[key])) {
+                            anyChange = true;
+                        }
+                    }
+                }
+                return anyChange;
+            }
+            if (initializeRecursively(settings, this.defaultSettings) ||
+                result.version.changed ||
+                result.formatVersion.changed) {
+                this.saveSettings();
+            }
+        }
+        else if (Array.isArray(strategy)) {
+            if (version && !settings.version) {
+                settings.version = version;
+                result.version.changed = true;
+                result.version.new = version;
+            }
+            if (formatVersion && !settings.formatVersion) {
+                settings.formatVersion = formatVersion;
+                result.formatVersion.changed = true;
+                result.formatVersion.new = formatVersion;
+            }
+            let currentSettings = structuredClone(settings);
+            let currentFormatVersion = settings.formatVersion;
+            try {
+                let upgraded;
+                do {
+                    upgraded = false;
+                    // First try to find an exact version match
+                    let exactMatch = strategy.find((change) => change.from === currentFormatVersion);
+                    if (exactMatch && exactMatch.to > currentFormatVersion) {
+                        currentSettings = await exactMatch.action(currentSettings);
+                        currentFormatVersion = exactMatch.to;
+                        // @ts-ignore
+                        currentSettings.formatVersion = exactMatch.to;
+                        upgraded = true;
+                    }
+                    else {
+                        // If no exact match found, try wildcard
+                        for (const change of strategy) {
+                            if (change.from === '*' && change.to > currentFormatVersion && currentFormatVersion !== change.to) {
+                                currentSettings = await change.action(currentSettings);
+                                currentFormatVersion = change.to;
+                                // @ts-ignore
+                                currentSettings.formatVersion = change.to;
+                                upgraded = true;
+                                break; // Only take the first wildcard match per iteration
+                            }
+                        }
+                    }
+                } while (upgraded); // Continue upgrading while changes are being made
+                // Only mark as changed if any upgrades occurred
+                if (currentFormatVersion !== settings.formatVersion) {
+                    result.formatVersion.changed = true;
+                    result.formatVersion.new = currentFormatVersion;
+                    const defaultVersion = this.defaultSettings.version;
+                    if (defaultVersion) {
+                        // @ts-ignore
+                        currentSettings.version = defaultVersion;
+                    }
+                }
+                if (result.formatVersion.changed) {
+                    for (const key of Object.keys(settings)) {
+                        delete settings[key];
+                    }
+                    Object.assign(settings, currentSettings);
+                    this.saveSettings();
+                }
+            }
+            catch (error) {
+                console.error(`Failed to apply version changes:`, error);
+                throw new Error(`Version migration failed: ${error instanceof Error ? error.message : error}`, {
+                    cause: error,
+                });
+            }
+        }
+        result.newSettings = settings;
+        return result;
+    }
+    getSettings() {
+        return SillyTavern.getContext().extensionSettings[this.settingsKey];
+    }
+    updateSetting(key, value) {
+        SillyTavern.getContext().extensionSettings[this.settingsKey][key] = value;
+        this.saveSettings();
+    }
+    saveSettings() {
+        SillyTavern.getContext().saveSettingsDebounced();
+    }
+    resetSettings() {
+        SillyTavern.getContext().extensionSettings[this.settingsKey] = this.defaultSettings;
+        this.saveSettings();
+    }
+}
+//# sourceMappingURL=extension-settings-manager.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/fancy-dropdown.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/fancy-dropdown.js ***!
+  \*******************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   buildFancyDropdown: () => (/* binding */ buildFancyDropdown)
+/* harmony export */ });
+/* harmony import */ var fuse_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! fuse.js */ "./node_modules/fuse.js/dist/fuse.mjs");
+
+/**
+ * Builds a collapsing dropdown menu that allows multiple selections with checkmarks and optional fuzzy search.
+ */
+function buildFancyDropdown(selector, options = {}) {
+    const container = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    if (!container) {
+        throw new Error(`Could not find container: ${selector}`);
+    }
+    // --- Options & Defaults ---
+    const placeholder = options.placeholderText || 'Select items...';
+    const closeOnSelect = options.closeOnSelect ?? false;
+    const enableSearch = options.enableSearch ?? false;
+    const multiple = options.multiple ?? true;
+    const searchPlaceholder = options.searchPlaceholderText || 'Search...';
+    const searchNoResults = options.searchNoResultsText || 'No results found';
+    const searchDebounceMs = options.searchDebounceMs ?? 200;
+    let internalInitialList = [...(options.initialList || [])]; // Modifiable internal copy
+    // Clear container and apply base styles
+    container.innerHTML = ''; // Clear existing content
+    container.classList.add('fancy-dropdown-container');
+    Object.assign(container.style, {
+        position: 'relative',
+        userSelect: 'none', // Note: 'user-select' becomes 'userSelect'
+    });
+    // --- Create Dropdown Trigger ---
+    const dropdownTrigger = document.createElement('div');
+    dropdownTrigger.className = 'fancy-dropdown-trigger';
+    Object.assign(dropdownTrigger.style, {
+        padding: '8px 12px',
+        border: '1px solid var(--border-color)',
+        backgroundColor: 'var(--bg-color)',
+        color: 'var(--text-color)',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    });
+    const triggerText = document.createElement('span');
+    triggerText.className = 'fancy-dropdown-trigger-text';
+    triggerText.textContent = placeholder;
+    const triggerIcon = document.createElement('i');
+    triggerIcon.className = 'fas fa-chevron-down'; // Assuming FontAwesome 5/6 setup
+    triggerIcon.style.marginLeft = '8px';
+    dropdownTrigger.append(triggerText, triggerIcon);
+    container.append(dropdownTrigger);
+    // --- Create Dropdown List (Options Panel) ---
+    const dropdownList = document.createElement('div');
+    dropdownList.className = 'fancy-dropdown-list';
+    Object.assign(dropdownList.style, {
+        position: 'absolute',
+        top: '100%',
+        left: '0',
+        right: '0',
+        maxHeight: '300px',
+        display: 'none', // Hidden by default
+        zIndex: '1050',
+        border: '1px solid var(--border-color)',
+        borderTop: 'none',
+        backgroundColor: 'var(--bg-color-popup, var(--bg-color-secondary, var(--greyCAIbg, var(--grey30))))',
+        color: 'var(--text-color)',
+        borderRadius: '0 0 4px 4px',
+        boxShadow: '0 4px 8px var(--black50a)',
+        overflowY: 'auto',
+    });
+    container.append(dropdownList);
+    // --- Create Search Input (if enabled) ---
+    let searchInput = null;
+    let searchContainer = null;
+    let noResultsMessage = null;
+    let searchDebounceTimeout = null;
+    if (enableSearch) {
+        searchContainer = document.createElement('div');
+        searchContainer.className = 'fancy-dropdown-search-wrapper';
+        Object.assign(searchContainer.style, {
+            padding: '8px',
+            borderBottom: '1px solid var(--border-color)', // Separator
+            position: 'sticky', // Keep search bar visible while scrolling options
+            top: '0', // Stick to the top of the list container
+            backgroundColor: 'inherit', // Inherit background from list
+        });
+        searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'fancy-dropdown-search-input';
+        searchInput.placeholder = searchPlaceholder;
+        Object.assign(searchInput.style, {
+            width: '100%',
+            padding: '6px 10px',
+            border: '1px solid var(--border-color)',
+            borderRadius: '3px',
+            boxSizing: 'border-box', // Include padding/border in width
+            backgroundColor: 'var(--bg-color)', // Use main bg for input
+            color: 'var(--text-color)',
+        });
+        // Prevent closing dropdown when clicking inside search input
+        searchInput.addEventListener('click', (e) => e.stopPropagation());
+        searchContainer.append(searchInput);
+        dropdownList.append(searchContainer); // Add search bar to the top of the list
+        // Message for no results
+        noResultsMessage = document.createElement('div');
+        noResultsMessage.className = 'fancy-dropdown-no-results';
+        noResultsMessage.textContent = searchNoResults;
+        Object.assign(noResultsMessage.style, {
+            padding: '8px 12px',
+            textAlign: 'center',
+            color: 'var(--text-color-secondary, var(--grey50))', // Dimmer text color
+            display: 'none', // Hidden initially
+        });
+        dropdownList.append(noResultsMessage);
+    }
+    // --- State and Helper Functions ---
+    let isOpen = false;
+    let fuse = null;
+    // Helper to get the display label for an item
+    const getItemLabel = (item) => (typeof item === 'string' ? item : item.label);
+    // Helper to get the value for an item
+    const getItemValue = (item) => (typeof item === 'string' ? item : item.value);
+    // Filter initial values to only include those that exist in the list
+    let selectedValues = (options.initialValues || []).filter((v) => internalInitialList.some((item) => getItemValue(item) === v));
+    // Helper to create the Fuse.js index
+    const initializeFuse = () => {
+        if (!enableSearch)
+            return;
+        const fuseOptions = {
+            // Default Fuse.js options - allow overriding
+            includeScore: false,
+            threshold: 0.4,
+            isCaseSensitive: false,
+            findAllMatches: true,
+            ...(options.searchFuseOptions || {}),
+            // Ensure keys handle both string and object types if not overridden
+            keys: options.searchFuseOptions?.keys || [
+                { name: 'label', weight: 0.7 },
+                { name: 'value', weight: 0.3 },
+            ],
+        };
+        const listForFuse = internalInitialList.map((item) => typeof item === 'string' ? { value: item, label: item } : item);
+        if (!options.searchFuseOptions?.keys && internalInitialList.every((item) => typeof item === 'string')) {
+            fuseOptions.keys = ['label'];
+        }
+        // Type assertion needed as Fuse constructor expects a consistent type,
+        // but our transformation makes it technically mixed.
+        fuse = new fuse_js__WEBPACK_IMPORTED_MODULE_0__["default"](listForFuse, fuseOptions);
+    };
+    const updateTriggerText = () => {
+        if (selectedValues.length === 0) {
+            triggerText.textContent = placeholder;
+        }
+        else if (selectedValues.length === 1) {
+            const selectedValue = selectedValues[0];
+            const selectedItem = internalInitialList.find((item) => getItemValue(item) === selectedValue);
+            const displayText = selectedItem ? getItemLabel(selectedItem) : selectedValue;
+            triggerText.textContent = displayText;
+        }
+        else {
+            triggerText.textContent = `${selectedValues.length} items selected`;
+        }
+    };
+    const updateUI = (filteredValues) => {
+        let hasVisibleItems = false;
+        const items = dropdownList.querySelectorAll('.fancy-dropdown-item');
+        items.forEach((itemElement) => {
+            const value = itemElement.dataset.value;
+            const isSelected = selectedValues.includes(value);
+            const checkmark = itemElement.querySelector('.checkmark');
+            // Update selection state
+            if (isSelected) {
+                itemElement.classList.add('selected');
+                if (checkmark)
+                    checkmark.style.display = 'inline-block';
+            }
+            else {
+                itemElement.classList.remove('selected');
+                if (checkmark)
+                    checkmark.style.display = 'none';
+            }
+            // Update visibility based on search filter (if provided)
+            if (filteredValues !== undefined) {
+                if (filteredValues.includes(value)) {
+                    itemElement.style.display = 'flex'; // Assuming items use flex
+                    hasVisibleItems = true;
+                }
+                else {
+                    itemElement.style.display = 'none';
+                }
+            }
+            else {
+                // If no filter, ensure item is visible
+                itemElement.style.display = 'flex'; // Assuming items use flex
+                hasVisibleItems = true; // Assume items exist if no filter
+            }
+        });
+        // Show/hide "No results" message based on search
+        if (enableSearch && noResultsMessage) {
+            if (filteredValues !== undefined && !hasVisibleItems) {
+                noResultsMessage.style.display = 'block';
+            }
+            else {
+                noResultsMessage.style.display = 'none';
+            }
+        }
+        updateTriggerText();
+    };
+    // Function to perform search and update list visibility
+    const performSearch = (searchTerm) => {
+        if (!enableSearch || !fuse) {
+            updateUI(); // No search, just ensure UI is correct
+            return;
+        }
+        const trimmedSearchTerm = searchTerm.trim();
+        if (trimmedSearchTerm === '') {
+            updateUI(undefined); // Empty search, show all
+            return;
+        }
+        const results = fuse.search(trimmedSearchTerm);
+        // Extract the 'value' from the original item structure Fuse returns
+        const matchedValues = results.map((result) => {
+            // Fuse returns the item it was initialized with in result.item
+            const originalItem = result.item; // Cast based on how we initialize fuse
+            return originalItem.value;
+        });
+        updateUI(matchedValues);
+    };
+    // Debounced search handler
+    const handleSearchInput = () => {
+        if (!searchInput)
+            return;
+        if (searchDebounceTimeout) {
+            clearTimeout(searchDebounceTimeout);
+        }
+        searchDebounceTimeout = window.setTimeout(() => {
+            if (searchInput) {
+                // Check again inside timeout
+                performSearch(searchInput.value);
+            }
+        }, searchDebounceMs);
+    };
+    const openDropdown = () => {
+        if (isOpen)
+            return;
+        isOpen = true;
+        // Replace slideDown with simple display change
+        dropdownList.style.display = 'block'; // Or 'flex' if list itself is a flex container
+        triggerIcon.classList.remove('fa-chevron-down');
+        triggerIcon.classList.add('fa-chevron-up');
+        // Focus search input if enabled and visible
+        if (enableSearch && searchInput) {
+            // Small delay might still be needed depending on browser rendering
+            setTimeout(() => searchInput?.focus(), 50); // Reduced delay
+        }
+    };
+    const closeDropdown = () => {
+        if (!isOpen)
+            return;
+        isOpen = false;
+        // Replace slideUp with simple display change
+        dropdownList.style.display = 'none';
+        // Reset search after closing (immediately, as no animation)
+        if (enableSearch && searchInput) {
+            searchInput.value = ''; // Clear search input
+            performSearch(''); // Reset list visibility
+        }
+        triggerIcon.classList.remove('fa-chevron-up');
+        triggerIcon.classList.add('fa-chevron-down');
+        if (searchDebounceTimeout) {
+            clearTimeout(searchDebounceTimeout); // Clear any pending debounce on close
+        }
+    };
+    // --- Event Handlers ---
+    dropdownTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isOpen ? closeDropdown() : openDropdown();
+    });
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (isOpen && container && !container.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+    // Attach search handler if enabled
+    if (enableSearch && searchInput) {
+        searchInput.addEventListener('input', handleSearchInput);
+    }
+    // --- Option Item Creation ---
+    const addOptionItem = (item, initiallySelected) => {
+        const value = getItemValue(item);
+        const label = getItemLabel(item);
+        const itemElement = document.createElement('div');
+        itemElement.className = 'fancy-dropdown-item';
+        itemElement.dataset.value = value; // Use dataset for data attributes
+        Object.assign(itemElement.style, {
+            padding: '8px 12px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+        });
+        // Hover effect using mouseenter/mouseleave
+        itemElement.addEventListener('mouseenter', () => {
+            itemElement.style.backgroundColor = 'var(--hover-color, var(--white20a))';
+        });
+        itemElement.addEventListener('mouseleave', () => {
+            itemElement.style.backgroundColor = ''; // Reset to default
+        });
+        const itemLabelSpan = document.createElement('span');
+        itemLabelSpan.textContent = label;
+        itemElement.append(itemLabelSpan);
+        const checkmark = document.createElement('i');
+        checkmark.className = 'checkmark fa-solid fa-check'; // FontAwesome 6 solid check
+        Object.assign(checkmark.style, {
+            marginLeft: '8px',
+            display: initiallySelected ? 'inline-block' : 'none',
+        });
+        itemElement.append(checkmark);
+        itemElement.addEventListener('click', function (e) {
+            e.stopPropagation();
+            // Use currentTarget to ensure we get the element the listener was attached to
+            const clickedValue = e.currentTarget.dataset.value;
+            const previousValues = [...selectedValues];
+            let newValues;
+            if (!multiple) {
+                // Single selection mode
+                if (selectedValues.includes(clickedValue)) {
+                    newValues = []; // Deselecting
+                }
+                else {
+                    newValues = [clickedValue];
+                }
+            }
+            else {
+                // Multiple selection mode
+                if (selectedValues.includes(clickedValue)) {
+                    newValues = selectedValues.filter((v) => v !== clickedValue);
+                }
+                else {
+                    newValues = [...selectedValues, clickedValue];
+                }
+            }
+            // If onBeforeSelection is defined, check if we can proceed with the change
+            const proceedWithChange = async () => {
+                if (options.onBeforeSelection) {
+                    try {
+                        const canProceed = await Promise.resolve(options.onBeforeSelection(previousValues, newValues));
+                        if (!canProceed) {
+                            return false;
+                        }
+                    }
+                    catch (err) {
+                        console.error('onBeforeSelection callback failed:', err);
+                        return false;
+                    }
+                }
+                return true;
+            };
+            proceedWithChange().then((canProceed) => {
+                if (!canProceed)
+                    return;
+                selectedValues = newValues;
+                // Re-render checkmarks while preserving search state
+                if (enableSearch && searchInput && searchInput.value.trim() !== '') {
+                    performSearch(searchInput.value);
+                }
+                else {
+                    updateUI(undefined);
+                }
+                if (options.onSelectChange) {
+                    Promise.resolve(options.onSelectChange(previousValues, selectedValues)).catch((err) => console.error('onSelectChange callback failed:', err));
+                }
+                if (closeOnSelect) {
+                    closeDropdown();
+                }
+            });
+        });
+        // Append before the 'no results' message if it exists
+        if (noResultsMessage) {
+            dropdownList.insertBefore(itemElement, noResultsMessage);
+        }
+        else {
+            dropdownList.append(itemElement);
+        }
+        return itemElement; // Return the created element if needed later
+    };
+    // --- Initialization ---
+    if (internalInitialList.length > 0) {
+        internalInitialList.forEach((item) => {
+            const value = getItemValue(item);
+            addOptionItem(item, selectedValues.includes(value));
+        });
+    }
+    initializeFuse(); // Initialize Fuse.js after initial items are added
+    updateUI(); // Initial UI state
+    // --- Public API ---
+    const api = {
+        container, // Expose the main container element
+        dropdownTrigger, // Expose trigger element
+        dropdownList, // Expose list element
+        getValues: () => [...selectedValues],
+        setValues: (values) => {
+            const previousValues = [...selectedValues];
+            // Ensure values exist in the list
+            const validValues = values.filter((v) => internalInitialList.some((item) => getItemValue(item) === v));
+            selectedValues = [...validValues];
+            // Reset search when setting values externally
+            if (enableSearch && searchInput && searchInput.value !== '') {
+                searchInput.value = '';
+                performSearch(''); // Show all items after setting
+            }
+            else {
+                updateUI(); // Just update checkmarks and trigger
+            }
+            // Avoid triggering callback if values didn't actually change
+            const changed = JSON.stringify(previousValues.sort()) !== JSON.stringify(selectedValues.sort());
+            if (changed && options.onSelectChange) {
+                Promise.resolve(options.onSelectChange(previousValues, selectedValues)).catch((err) => console.error('onSelectChange callback failed:', err));
+            }
+        },
+        getOptions: () => internalInitialList.map((item) => (typeof item === 'string' ? { value: item, label: item } : item)),
+        addOption: (value, select = false) => {
+            const itemValue = getItemValue(value);
+            // Check for duplicates
+            if (internalInitialList.some((item) => getItemValue(item) === itemValue))
+                return;
+            internalInitialList.push(value);
+            addOptionItem(value, select); // Add to DOM
+            initializeFuse(); // Re-initialize Fuse
+            let changed = false;
+            const previousValues = [...selectedValues];
+            if (select && !selectedValues.includes(itemValue)) {
+                if (multiple) {
+                    selectedValues.push(itemValue);
+                }
+                else {
+                    selectedValues = [itemValue]; // Replace in single select mode
+                }
+                changed = true;
+            }
+            else if (select && !multiple && selectedValues.length > 0 && selectedValues[0] !== itemValue) {
+                // If single select mode and trying to select a different item
+                selectedValues = [itemValue];
+                changed = true;
+            }
+            // Refresh UI potentially filtering if search is active
+            if (enableSearch && searchInput && searchInput.value !== '') {
+                performSearch(searchInput.value);
+            }
+            else {
+                updateUI();
+            }
+            if (changed && options.onSelectChange) {
+                Promise.resolve(options.onSelectChange(previousValues, selectedValues)).catch((err) => console.error('onSelectChange callback failed:', err));
+            }
+        },
+        removeOption: (valueToRemove) => {
+            const initialLength = internalInitialList.length;
+            internalInitialList = internalInitialList.filter((item) => getItemValue(item) !== valueToRemove);
+            if (internalInitialList.length === initialLength)
+                return; // Nothing removed
+            let selectionChanged = false;
+            const previousValues = [...selectedValues];
+            const indexToRemove = selectedValues.indexOf(valueToRemove);
+            if (indexToRemove > -1) {
+                selectedValues.splice(indexToRemove, 1);
+                selectionChanged = true;
+            }
+            // Remove from DOM
+            const itemToRemove = dropdownList.querySelector(`.fancy-dropdown-item[data-value="${valueToRemove}"]`);
+            itemToRemove?.remove();
+            initializeFuse(); // Re-initialize Fuse
+            if (enableSearch && searchInput && searchInput.value !== '') {
+                performSearch(searchInput.value);
+            }
+            else {
+                updateUI();
+            }
+            if (selectionChanged && options.onSelectChange) {
+                Promise.resolve(options.onSelectChange(previousValues, selectedValues)).catch((err) => console.error('onSelectChange callback failed:', err));
+            }
+        },
+        selectAll: () => {
+            if (!multiple)
+                return; // Select all only makes sense for multiple mode
+            const previousValues = [...selectedValues];
+            const allValues = internalInitialList.map(getItemValue);
+            selectedValues = [...new Set([...selectedValues, ...allValues])]; // Use Set to avoid duplicates if some were already selected
+            const changed = JSON.stringify(previousValues.sort()) !== JSON.stringify(selectedValues.sort());
+            if (enableSearch && searchInput && searchInput.value !== '') {
+                performSearch(searchInput.value); // Re-apply filter, but update checks
+            }
+            else {
+                updateUI();
+            }
+            if (changed && options.onSelectChange) {
+                Promise.resolve(options.onSelectChange(previousValues, selectedValues)).catch((err) => console.error('onSelectChange callback failed:', err));
+            }
+        },
+        deselectAll: () => {
+            const previousValues = [...selectedValues];
+            if (selectedValues.length > 0) {
+                selectedValues = [];
+                if (enableSearch && searchInput && searchInput.value !== '') {
+                    performSearch(searchInput.value); // Re-apply filter, update checks
+                }
+                else {
+                    updateUI();
+                }
+                if (options.onSelectChange) {
+                    Promise.resolve(options.onSelectChange(previousValues, selectedValues)).catch((err) => console.error('onSelectChange callback failed:', err));
+                }
+            }
+        },
+        disable: () => {
+            container.style.pointerEvents = 'none';
+            container.style.opacity = '0.6';
+            if (isOpen)
+                closeDropdown(); // Ensure it's closed when disabled
+        },
+        enable: () => {
+            container.style.pointerEvents = 'auto';
+            container.style.opacity = '1';
+        },
+        open: openDropdown,
+        close: closeDropdown,
+        toggle: () => (isOpen ? closeDropdown() : openDropdown()),
+    };
+    return api;
+}
+//# sourceMappingURL=fancy-dropdown.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/generate.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/generate.js ***!
+  \*************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Generator: () => (/* binding */ Generator)
+/* harmony export */ });
+class Generator {
+    requestMap;
+    constructor() {
+        this.requestMap = new Map();
+    }
+    abortRequest(requestId) {
+        const state = this.requestMap.get(requestId);
+        if (!state)
+            return;
+        if (state.abortController) {
+            try {
+                state.abortController.abort();
+            }
+            catch (error) { }
+        }
+        if (state.options?.onFinish) {
+            state.options.onFinish();
+        }
+        this.requestMap.delete(requestId);
+    }
+    /**
+     * @returns return value is not important because request would be finished anyway. So use "options".
+     */
+    async generateRequest(requestParams, options) {
+        const context = SillyTavern.getContext();
+        const requestId = context.uuidv4();
+        const isStream = requestParams?.custom?.stream ?? false;
+        this.requestMap.set(requestId, {
+            abortController: options?.abortController,
+            isStream,
+            options,
+        });
+        if (!isStream) {
+            try {
+                if (options?.onStart) {
+                    options.onStart(requestId);
+                }
+                const response = await context.ConnectionManagerRequestService.sendRequest(requestParams.profileId, requestParams.prompt, requestParams.maxTokens, requestParams.custom);
+                if (this.requestMap.get(requestId)) {
+                    if (options?.onEntry) {
+                        options.onEntry(response);
+                    }
+                    if (options?.onFinish) {
+                        options.onFinish(response);
+                    }
+                }
+            }
+            catch (error) {
+                if (options?.onFinish) {
+                    options.onFinish(undefined, error);
+                }
+            }
+            finally {
+                this.requestMap.delete(requestId);
+            }
+        }
+        else {
+            try {
+                const responseGen = await context.ConnectionManagerRequestService.sendRequest(requestParams.profileId, requestParams.prompt, requestParams.maxTokens, requestParams.custom);
+                if (options?.onStart) {
+                    options.onStart(requestId);
+                }
+                let lastChunk;
+                for await (const chunk of responseGen()) {
+                    lastChunk = chunk;
+                    if (options?.onEntry) {
+                        options.onEntry(chunk);
+                    }
+                }
+                if (options?.onFinish) {
+                    options.onFinish(lastChunk);
+                }
+            }
+            catch (error) {
+                if (options?.onFinish) {
+                    options.onFinish(undefined, error);
+                }
+            }
+            finally {
+                this.requestMap.delete(requestId);
+            }
+        }
+        return requestId;
+    }
+    getActiveRequest(requestId) {
+        return this.requestMap.get(requestId)?.abortController;
+    }
+    getAllActiveRequests() {
+        const activeRequests = new Map();
+        for (const [id, state] of this.requestMap) {
+            activeRequests.set(id, state.abortController);
+        }
+        return activeRequests;
+    }
+}
+//# sourceMappingURL=generate.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/index.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/index.js ***!
+  \**********************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ExtensionSettingsManager: () => (/* reexport safe */ _extension_settings_manager_js__WEBPACK_IMPORTED_MODULE_1__.ExtensionSettingsManager),
+/* harmony export */   Generator: () => (/* reexport safe */ _generate_js__WEBPACK_IMPORTED_MODULE_3__.Generator),
+/* harmony export */   applyWorldInfoEntry: () => (/* reexport safe */ _world_info_utils_js__WEBPACK_IMPORTED_MODULE_7__.applyWorldInfoEntry),
+/* harmony export */   buildFancyDropdown: () => (/* reexport safe */ _fancy_dropdown_js__WEBPACK_IMPORTED_MODULE_2__.buildFancyDropdown),
+/* harmony export */   buildPresetSelect: () => (/* reexport safe */ _preset_select_js__WEBPACK_IMPORTED_MODULE_4__.buildPresetSelect),
+/* harmony export */   buildPrompt: () => (/* reexport safe */ _prompt_builder_js__WEBPACK_IMPORTED_MODULE_5__.buildPrompt),
+/* harmony export */   buildSortableList: () => (/* reexport safe */ _sortable_list_js__WEBPACK_IMPORTED_MODULE_6__.buildSortableList),
+/* harmony export */   createCharacter: () => (/* reexport safe */ _character_utils_js__WEBPACK_IMPORTED_MODULE_0__.createCharacter),
+/* harmony export */   getActiveWorldInfo: () => (/* reexport safe */ _world_info_utils_js__WEBPACK_IMPORTED_MODULE_7__.getActiveWorldInfo),
+/* harmony export */   saveCharacter: () => (/* reexport safe */ _character_utils_js__WEBPACK_IMPORTED_MODULE_0__.saveCharacter)
+/* harmony export */ });
+/* harmony import */ var _character_utils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./character-utils.js */ "./node_modules/sillytavern-utils-lib/dist/character-utils.js");
+/* harmony import */ var _extension_settings_manager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./extension-settings-manager.js */ "./node_modules/sillytavern-utils-lib/dist/extension-settings-manager.js");
+/* harmony import */ var _fancy_dropdown_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./fancy-dropdown.js */ "./node_modules/sillytavern-utils-lib/dist/fancy-dropdown.js");
+/* harmony import */ var _generate_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./generate.js */ "./node_modules/sillytavern-utils-lib/dist/generate.js");
+/* harmony import */ var _preset_select_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./preset-select.js */ "./node_modules/sillytavern-utils-lib/dist/preset-select.js");
+/* harmony import */ var _prompt_builder_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./prompt-builder.js */ "./node_modules/sillytavern-utils-lib/dist/prompt-builder.js");
+/* harmony import */ var _sortable_list_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./sortable-list.js */ "./node_modules/sillytavern-utils-lib/dist/sortable-list.js");
+/* harmony import */ var _world_info_utils_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./world-info-utils.js */ "./node_modules/sillytavern-utils-lib/dist/world-info-utils.js");
+
+
+
+
+
+
+
+
+
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/preset-select.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/preset-select.js ***!
+  \******************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   buildPresetSelect: () => (/* binding */ buildPresetSelect)
+/* harmony export */ });
+/* harmony import */ var _config_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config.js */ "./node_modules/sillytavern-utils-lib/dist/config.js");
+
+function buildPresetSelect(selector, options = {}) {
+    const context = SillyTavern.getContext();
+    const readOnlyValues = options.readOnlyValues || [];
+    const select = document.querySelector(selector);
+    if (!select) {
+        throw new Error(`Could not find preset select: ${selector}`);
+    }
+    const getLabel = (value) => (options.label ? options.label(value) : value);
+    const container = document.createElement('div');
+    container.className = 'preset-select-container';
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    const isReadOnly = (value) => {
+        return readOnlyValues.includes(value);
+    };
+    // Wrap the select in the container
+    select.parentNode?.insertBefore(container, select);
+    container.appendChild(select);
+    // Add initial options if provided
+    if (options.initialList && options.initialList.length > 0) {
+        // Clear existing options first
+        select.innerHTML = '';
+        const getItemValue = (item) => (typeof item === 'string' ? item : item.value);
+        // Add new options from the list
+        for (const item of options.initialList) {
+            const option = document.createElement('option');
+            const value = getItemValue(item);
+            option.value = value;
+            option.textContent = getLabel(value);
+            if (isReadOnly(value)) {
+                option.dataset.readonly = 'true';
+            }
+            select.appendChild(option);
+        }
+    }
+    // Set initial value if provided
+    if (options.initialValue) {
+        // Find option with matching value
+        const option = Array.from(select.options).find((opt) => opt.value === options.initialValue);
+        if (option) {
+            select.value = option.value;
+        }
+    }
+    // Track previous value for onSelectChange
+    let previousValue = select.value;
+    // Set up change event handler for the select
+    select.addEventListener('change', async () => {
+        const newValue = select.value;
+        if (options.onSelectChange && previousValue !== newValue) {
+            await options.onSelectChange(previousValue, newValue);
+        }
+        previousValue = newValue;
+    });
+    // Add Create button if enabled
+    if (options.create) {
+        const createButton = document.createElement('i');
+        createButton.className = 'menu_button fa-solid fa-file-circle-plus';
+        const createLabel = getLabel('');
+        createButton.title = `Create a new ${createLabel}`;
+        createButton.setAttribute('data-i18n', `[title]Create a new ${createLabel}`);
+        createButton.addEventListener('click', async () => {
+            if (options.create?.onPopupOpen) {
+                await options.create.onPopupOpen();
+            }
+            const popupLabel = getLabel('');
+            const newValue = await context.Popup.show.input(`Create a new ${popupLabel}`, `Please enter a name for the new ${popupLabel}:`, '');
+            if (newValue === null || newValue.trim() === '')
+                return;
+            let trimmedValue = newValue.trim();
+            // Check if a preset with this name already exists
+            const exists = Array.from(select.options).some((option) => option.value === trimmedValue);
+            if (exists) {
+                await (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_echo)('warning', `A ${getLabel(trimmedValue)} with this name already exists.`);
+                return;
+            }
+            // Run before create hook
+            if (options.create?.onBeforeCreate) {
+                const shouldProceed = await options.create.onBeforeCreate(trimmedValue);
+                if (!shouldProceed)
+                    return;
+            }
+            // Run after create hook and potentially update the value
+            if (options.create?.onAfterCreate) {
+                const result = await options.create.onAfterCreate(trimmedValue);
+                if (typeof result === 'string') {
+                    trimmedValue = result;
+                }
+            }
+            // Create new option
+            const newOption = document.createElement('option');
+            newOption.value = trimmedValue;
+            newOption.textContent = getLabel(trimmedValue);
+            select.appendChild(newOption);
+            // Store previous value before changing
+            const prevValue = select.value;
+            // Select the new option
+            select.value = trimmedValue;
+            // Trigger onSelectChange if the value actually changed
+            if (options.onSelectChange && prevValue !== trimmedValue) {
+                await options.onSelectChange(prevValue, trimmedValue);
+            }
+            previousValue = trimmedValue;
+        });
+        container.appendChild(createButton);
+    }
+    // Add Rename button if enabled
+    if (options.rename) {
+        const renameButton = document.createElement('i');
+        renameButton.className = 'menu_button fa-solid fa-pencil';
+        const renameLabel = getLabel('');
+        renameButton.title = `Rename a ${renameLabel}`;
+        renameButton.setAttribute('data-i18n', `[title]Rename a ${renameLabel}`);
+        renameButton.addEventListener('click', async () => {
+            if (select.selectedIndex === -1) {
+                await (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_echo)('warning', `Please select a ${getLabel('')} to rename.`);
+                return;
+            }
+            const selectedOption = select.options[select.selectedIndex];
+            let selectedValue = selectedOption.value;
+            // Check if the selected value is read-only
+            if (isReadOnly(selectedValue)) {
+                await (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_echo)('warning', `This ${getLabel(selectedValue)} cannot be renamed as it is read-only.`);
+                return;
+            }
+            if (options.rename?.onPopupOpen) {
+                await options.rename.onPopupOpen();
+            }
+            const newValue = await context.Popup.show.input(`Rename ${getLabel(selectedValue)}`, `Please enter a new name for "${selectedValue}":`, selectedValue);
+            if (newValue === null || newValue.trim() === '' || newValue === selectedValue)
+                return;
+            let trimmedValue = newValue.trim();
+            // Check if a preset with this name already exists
+            const exists = Array.from(select.options).some((option) => option.value === trimmedValue && option !== selectedOption);
+            if (exists) {
+                await (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_echo)('warning', `A ${getLabel(trimmedValue)} with this name already exists.`);
+                return;
+            }
+            // Run before rename hook
+            if (options.rename?.onBeforeRename) {
+                const shouldProceed = await options.rename.onBeforeRename(selectedValue, trimmedValue);
+                if (!shouldProceed)
+                    return;
+            }
+            // Run after rename hook and potentially update the value
+            if (options.rename?.onAfterRename) {
+                const result = await options.rename.onAfterRename(selectedValue, trimmedValue);
+                if (typeof result === 'string') {
+                    trimmedValue = result;
+                }
+            }
+            // Rename the option
+            selectedOption.value = trimmedValue;
+            selectedOption.textContent = getLabel(trimmedValue);
+            // Update the previous value tracker
+            if (selectedValue === previousValue) {
+                previousValue = trimmedValue;
+            }
+            // Trigger onSelectChange since the currently selected option changed its value
+            if (options.onSelectChange && select.value === trimmedValue) {
+                await options.onSelectChange(selectedValue, trimmedValue);
+            }
+        });
+        container.appendChild(renameButton);
+    }
+    // Add Delete button if enabled
+    if (options.delete) {
+        const deleteButton = document.createElement('i');
+        deleteButton.className = 'menu_button fa-solid fa-trash-can';
+        const deleteLabel = getLabel('');
+        deleteButton.title = `Delete a ${deleteLabel}`;
+        deleteButton.setAttribute('data-i18n', `[title]Delete a ${deleteLabel}`);
+        deleteButton.addEventListener('click', async () => {
+            if (select.selectedIndex === -1) {
+                await (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_echo)('warning', `Please select a ${getLabel('')} to delete.`);
+                return;
+            }
+            const selectedOption = select.options[select.selectedIndex];
+            const valueToDelete = selectedOption.value;
+            const selectedIndex = select.selectedIndex;
+            // Check if the selected value is read-only
+            if (isReadOnly(valueToDelete)) {
+                await (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_echo)('warning', `This ${getLabel(valueToDelete)} cannot be deleted as it is read-only.`);
+                return;
+            }
+            if (options.delete?.onPopupOpen) {
+                await options.delete.onPopupOpen();
+            }
+            const confirmed = await context.Popup.show.confirm(`Delete ${getLabel(valueToDelete)}`, `Are you sure you want to delete "${valueToDelete}"?`);
+            if (!confirmed)
+                return;
+            // Run before delete hook
+            if (options.delete?.onBeforeDelete) {
+                const shouldProceed = await options.delete.onBeforeDelete(valueToDelete);
+                if (!shouldProceed)
+                    return;
+            }
+            // Store the value to delete for later reference
+            const deletedValue = valueToDelete;
+            // Determine the next option to select after deletion
+            let nextSelectedIndex = -1;
+            let nextValue = undefined;
+            if (select.options.length > 1) {
+                // Try to select the next option, or the previous if we're at the end
+                nextSelectedIndex = selectedIndex < select.options.length - 1 ? selectedIndex : selectedIndex - 1;
+                nextValue = select.options[nextSelectedIndex].value;
+            }
+            // Remove the option
+            select.removeChild(selectedOption);
+            // Select the next available option if there is one
+            if (nextSelectedIndex >= 0) {
+                select.selectedIndex = nextSelectedIndex;
+                previousValue = nextValue;
+                // Trigger onSelectChange
+                if (options.onSelectChange) {
+                    await options.onSelectChange(deletedValue, nextValue);
+                }
+            }
+            else {
+                // No options left, trigger onSelectChange with undefined as new value
+                if (options.onSelectChange) {
+                    await options.onSelectChange(deletedValue, undefined);
+                }
+                previousValue = undefined;
+            }
+            // Run after delete hook
+            if (options.delete?.onAfterDelete) {
+                await options.delete.onAfterDelete(deletedValue);
+            }
+        });
+        container.appendChild(deleteButton);
+    }
+    return {
+        select,
+        container,
+    };
+}
+//# sourceMappingURL=preset-select.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/prompt-builder.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/prompt-builder.js ***!
+  \*******************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   buildPrompt: () => (/* binding */ buildPrompt)
+/* harmony export */ });
+/* harmony import */ var _config_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config.js */ "./node_modules/sillytavern-utils-lib/dist/config.js");
+
+/**
+ * Builds chat prompt. Don't expect a perfect chat prompt like ST. But I would give guarantee that it will cover 98% of the cases.
+ *
+ * Token calculation is crippled. We only calculating tokens for the chat history. For example, If your max context is 16k, total token will be 16k + world info, author note, extensionPrompts, etc. Better than nothing.
+ * @param targetMessageIndex - Last message index to include in prompt
+ * @param [param1={}] - Options
+ */
+async function buildPrompt(api, { targetCharacterId, presetName, instructName, contextName, syspromptName, maxContext, includeNames, ignoreCharacterFields, ignoreAuthorNote, ignoreWorldInfo, messageIndexesBetween, } = {}) {
+    if (!['textgenerationwebui', 'openai'].includes(api)) {
+        throw new Error('Unsupported API');
+    }
+    const context = SillyTavern.getContext();
+    let messages = [];
+    let { description, personality, persona, scenario, mesExamples, system, jailbreak } = !ignoreCharacterFields
+        ? context.getCharacterCardFields({
+            chid: targetCharacterId,
+        })
+        : {
+            description: '',
+            personality: '',
+            persona: '',
+            scenario: '',
+            mesExamples: '',
+            system: '',
+            jailbreak: '',
+        };
+    const instructPreset = api === 'textgenerationwebui'
+        ? context.getPresetManager('instruct')?.getCompletionPresetByName(instructName)
+        : undefined;
+    const isInstruct = !!instructPreset?.enabled;
+    let mesExamplesArray = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_parseMesExamples)(mesExamples, isInstruct);
+    function getMaxContext() {
+        if (typeof maxContext === 'number') {
+            return maxContext;
+        }
+        if (!maxContext) {
+            return (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getMaxContextSize)();
+        }
+        if (maxContext === 'active' || !presetName) {
+            return (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getMaxContextSize)();
+        }
+        if (typeof maxContext === 'number') {
+            return maxContext;
+        }
+        let response;
+        if (api === 'textgenerationwebui') {
+            const preset = context.getPresetManager('textgenerationwebui')?.getCompletionPresetByName(presetName);
+            response = preset?.max_length;
+        }
+        else {
+            const preset = context.getPresetManager('openai')?.getCompletionPresetByName(presetName);
+            response = preset?.openai_max_context;
+        }
+        return typeof response === 'number' ? response : (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getMaxContextSize)();
+    }
+    let warnings = [];
+    const currentMaxContext = getMaxContext();
+    if (currentMaxContext <= 0) {
+        return { result: [], warnings };
+    }
+    const canUseTools = context.ToolManager.isToolCallingSupported();
+    const startIndex = messageIndexesBetween?.start ?? 0;
+    const endIndex = messageIndexesBetween?.end ? messageIndexesBetween.end + 1 : undefined;
+    let coreChat = startIndex === -1 && endIndex === 0
+        ? []
+        : context.chat
+            .slice(startIndex, endIndex)
+            .filter((x) => !x.is_system || (canUseTools && Array.isArray(x.extra?.tool_invocations)));
+    coreChat = await Promise.all(coreChat.map(async (chatItem, index) => {
+        let message = chatItem.mes;
+        let regexType = chatItem.is_user ? _config_js__WEBPACK_IMPORTED_MODULE_0__.regex_placement.USER_INPUT : _config_js__WEBPACK_IMPORTED_MODULE_0__.regex_placement.AI_OUTPUT;
+        const isContinue = false;
+        let options = { isPrompt: true, depth: coreChat.length - index - (isContinue ? 2 : 1) };
+        let regexedMessage = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getRegexedString)(message, regexType, options);
+        regexedMessage = await (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_appendFileContent)(chatItem, regexedMessage);
+        if (chatItem?.extra?.append_title && chatItem?.extra?.title) {
+            regexedMessage = `${regexedMessage}\n\n${chatItem.extra.title}`;
+        }
+        return {
+            ...chatItem,
+            mes: regexedMessage,
+            index,
+        };
+    }));
+    const chatForWI = coreChat.map((x) => (_config_js__WEBPACK_IMPORTED_MODULE_0__.world_info_include_names ? `${x.name}: ${x.mes}` : x.mes)).reverse();
+    const { worldInfoString, worldInfoBefore, worldInfoAfter, worldInfoExamples, worldInfoDepth, anBefore, anAfter } = !ignoreWorldInfo
+        ? await context.getWorldInfoPrompt(chatForWI, currentMaxContext, false)
+        : {
+            worldInfoString: '',
+            worldInfoBefore: '',
+            worldInfoAfter: '',
+            worldInfoExamples: [],
+            worldInfoDepth: [],
+            anBefore: [],
+            anAfter: [],
+        };
+    // Add message example WI
+    for (const example of worldInfoExamples) {
+        const exampleMessage = example.content;
+        if (exampleMessage.length === 0) {
+            continue;
+        }
+        const formattedExample = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_baseChatReplace)(exampleMessage, _config_js__WEBPACK_IMPORTED_MODULE_0__.name1, _config_js__WEBPACK_IMPORTED_MODULE_0__.name2);
+        const cleanedExample = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_parseMesExamples)(formattedExample, isInstruct);
+        // Insert depending on before or after position
+        if (example.position === _config_js__WEBPACK_IMPORTED_MODULE_0__.wi_anchor_position.before) {
+            mesExamplesArray.unshift(...cleanedExample);
+        }
+        else {
+            mesExamplesArray.push(...cleanedExample);
+        }
+    }
+    function addChatToMessages() {
+        // Add messages starting from most recent to respect context limits
+        let currentTokenCount = 0;
+        const chatMessages = [];
+        for (let i = coreChat.length - 1; i >= 0; i--) {
+            const message = coreChat[i];
+            // Skip if adding this message would exceed context
+            if (message.extra?.token_count && currentTokenCount + message.extra.token_count > currentMaxContext) {
+                break;
+            }
+            currentTokenCount += message.extra?.token_count || 0;
+            chatMessages.unshift({
+                role: message.is_user ? 'user' : 'assistant',
+                content: includeNames ? `${message.name}: ${message.mes}` : message.mes,
+            });
+        }
+        messages.push(...chatMessages);
+    }
+    const textCompletion = api === 'textgenerationwebui';
+    if (textCompletion) {
+        // At this point, the raw message examples can be created
+        const mesExamplesRawArray = [...mesExamplesArray];
+        if (mesExamplesArray) {
+            mesExamplesArray = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_formatInstructModeExamples)(mesExamplesArray, _config_js__WEBPACK_IMPORTED_MODULE_0__.name1, _config_js__WEBPACK_IMPORTED_MODULE_0__.name2);
+        }
+        const syspromptPreset = context.getPresetManager('sysprompt')?.getCompletionPresetByName(syspromptName);
+        if (syspromptPreset) {
+            system =
+                context.powerUserSettings.prefer_character_prompt && system
+                    ? system
+                    : (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_baseChatReplace)(syspromptPreset.content, _config_js__WEBPACK_IMPORTED_MODULE_0__.name1, _config_js__WEBPACK_IMPORTED_MODULE_0__.name2);
+            system = isInstruct
+                ? (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_formatInstructModeSystemPrompt)(context.substituteParams(system, _config_js__WEBPACK_IMPORTED_MODULE_0__.name1, _config_js__WEBPACK_IMPORTED_MODULE_0__.name2, syspromptPreset.content), instructPreset)
+                : system;
+        }
+        // Build story string
+        const storyStringParams = {
+            description: description,
+            personality: personality,
+            persona: context.powerUserSettings.persona_description_position == _config_js__WEBPACK_IMPORTED_MODULE_0__.persona_description_positions.IN_PROMPT
+                ? persona
+                : '',
+            scenario: scenario,
+            system: system,
+            char: _config_js__WEBPACK_IMPORTED_MODULE_0__.name2,
+            user: _config_js__WEBPACK_IMPORTED_MODULE_0__.name1,
+            wiBefore: worldInfoBefore,
+            wiAfter: worldInfoAfter,
+            loreBefore: worldInfoBefore,
+            loreAfter: worldInfoAfter,
+            mesExamples: mesExamplesArray.join(''),
+            mesExamplesRaw: mesExamplesRawArray.join(''),
+        };
+        const contextPreset = context.getPresetManager('context')?.getCompletionPresetByName(contextName);
+        let storyString = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_renderStoryString)(storyStringParams, {
+            customInstructSettings: instructPreset,
+            customStoryString: contextPreset?.story_string,
+        });
+        messages.push({ role: 'system', content: storyString, ignoreInstruct: true });
+        addChatToMessages();
+    }
+    else {
+        let oaiMessages = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_setOpenAIMessages)(coreChat);
+        let oaiMessageExamples = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_setOpenAIMessageExamples)(mesExamplesArray);
+        async function addDefaultPreset() {
+            let [prompt, _counts] = await (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_prepareOpenAIMessages)({
+                name2: _config_js__WEBPACK_IMPORTED_MODULE_0__.name2,
+                charDescription: description,
+                charPersonality: personality,
+                Scenario: scenario,
+                worldInfoBefore: worldInfoBefore,
+                worldInfoAfter: worldInfoAfter,
+                extensionPrompts: context.extensionPrompts,
+                bias: '',
+                type: 'normal',
+                quietPrompt: undefined,
+                quietImage: undefined,
+                cyclePrompt: '',
+                systemPromptOverride: system,
+                jailbreakPromptOverride: jailbreak,
+                personaDescription: persona,
+                messages: oaiMessages,
+                messageExamples: oaiMessageExamples,
+            }, false);
+            messages.push(...prompt);
+        }
+        if (!presetName) {
+            warnings.push('No preset name provided. Using default preset.');
+            await addDefaultPreset();
+            return { result: messages, warnings };
+        }
+        const preset = context.getPresetManager('openai')?.getCompletionPresetByName(presetName);
+        if (!preset) {
+            console.warn(`Preset not found: ${presetName}. Using current preset.`);
+            warnings.push(`Preset not found: ${presetName}. Using current preset.`);
+            addDefaultPreset();
+            return { result: messages, warnings };
+        }
+        let promptOrder = preset.prompt_order?.find((prompt) => prompt.character_id === _config_js__WEBPACK_IMPORTED_MODULE_0__.this_chid);
+        if (!promptOrder && preset.prompt_order && preset.prompt_order.length > 0) {
+            promptOrder = preset.prompt_order[0];
+        }
+        if (!promptOrder) {
+            console.warn(`No prompt order found for preset: ${presetName}. Using current preset.`);
+            warnings.push(`No prompt order found for preset: ${presetName}. Using current preset.`);
+            addDefaultPreset();
+            return { result: messages, warnings };
+        }
+        const scenarioText = scenario && preset.scenario_format ? context.substituteParams(preset.scenario_format) : '';
+        const charPersonalityText = personality && preset.personality_format ? context.substituteParams(preset.personality_format) : '';
+        const groupNudge = context.substituteParams(preset.group_nudge_prompt);
+        const impersonationPrompt = preset.impersonation_prompt
+            ? context.substituteParams(preset.impersonation_prompt)
+            : '';
+        const systemPrompts = [];
+        // Create entries for system prompts
+        if (!!ignoreWorldInfo) {
+            systemPrompts.push(...[
+                {
+                    role: 'system',
+                    content: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_formatWorldInfo)(worldInfoBefore, { wiFormat: preset.wi_format }),
+                    identifier: 'worldInfoBefore',
+                },
+                {
+                    role: 'system',
+                    content: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_formatWorldInfo)(worldInfoAfter, { wiFormat: preset.wi_format }),
+                    identifier: 'worldInfoAfter',
+                },
+            ]);
+        }
+        if (!ignoreCharacterFields) {
+            systemPrompts.push(...[
+                { role: 'system', content: description, identifier: 'charDescription' },
+                { role: 'system', content: charPersonalityText, identifier: 'charPersonality' },
+                { role: 'system', content: scenarioText, identifier: 'scenario' },
+            ]);
+        }
+        systemPrompts.push(...[
+            { role: 'system', content: impersonationPrompt, identifier: 'impersonate' },
+            { role: 'system', content: groupNudge, identifier: 'groupNudge' },
+        ]);
+        // Tavern Extras - Summary
+        const summary = context.extensionPrompts['1_memory'];
+        if (summary && summary.value)
+            systemPrompts.push({
+                role: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptRole)(summary.role),
+                content: summary.value,
+                identifier: 'summary',
+                position: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptPosition)(summary.position),
+            });
+        // Authors Note
+        const authorsNote = context.extensionPrompts['2_floating_prompt'];
+        if (!ignoreAuthorNote && authorsNote && authorsNote.value)
+            systemPrompts.push({
+                role: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptRole)(authorsNote.role),
+                content: authorsNote.value,
+                identifier: 'authorsNote',
+                position: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptPosition)(authorsNote.position),
+            });
+        // Vectors Memory
+        const vectorsMemory = context.extensionPrompts['3_vectors'];
+        if (vectorsMemory && vectorsMemory.value)
+            systemPrompts.push({
+                role: 'system',
+                content: vectorsMemory.value,
+                identifier: 'vectorsMemory',
+                position: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptPosition)(vectorsMemory.position),
+            });
+        const vectorsDataBank = context.extensionPrompts['4_vectors_data_bank'];
+        if (vectorsDataBank && vectorsDataBank.value)
+            systemPrompts.push({
+                role: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptRole)(vectorsDataBank.role),
+                content: vectorsDataBank.value,
+                identifier: 'vectorsDataBank',
+                position: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptPosition)(vectorsDataBank.position),
+            });
+        // Smart Context (ChromaDB)
+        const smartContext = context.extensionPrompts['chromadb'];
+        if (smartContext && smartContext.value)
+            systemPrompts.push({
+                role: 'system',
+                content: smartContext.value,
+                identifier: 'smartContext',
+                position: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptPosition)(smartContext.position),
+            });
+        // Persona Description
+        if (!ignoreCharacterFields &&
+            context.powerUserSettings.persona_description &&
+            context.powerUserSettings.persona_description_position === _config_js__WEBPACK_IMPORTED_MODULE_0__.persona_description_positions.IN_PROMPT) {
+            systemPrompts.push({
+                role: 'system',
+                content: context.powerUserSettings.persona_description,
+                identifier: 'personaDescription',
+            });
+        }
+        function getPrompt(identifier) {
+            return systemPrompts.find((prompt) => prompt.identifier === identifier);
+        }
+        promptOrder.order.forEach((prompt) => {
+            if (!prompt.enabled) {
+                return;
+            }
+            const collectionPrompt = getPrompt(prompt.identifier);
+            if (collectionPrompt && collectionPrompt.content) {
+                messages.push({
+                    role: collectionPrompt.role ?? 'system',
+                    content: context.substituteParams(collectionPrompt.content),
+                });
+                return;
+            }
+            if (prompt.identifier === 'chatHistory') {
+                addChatToMessages();
+            }
+        });
+    }
+    const knownExtensionPrompts = [
+        '1_memory',
+        '2_floating_prompt',
+        '3_vectors',
+        '4_vectors_data_bank',
+        'chromadb',
+        'PERSONA_DESCRIPTION',
+        'QUIET_PROMPT',
+        'DEPTH_PROMPT',
+    ];
+    // Anything that is not a known extension prompt
+    for (const key in context.extensionPrompts) {
+        if (Object.hasOwn(context.extensionPrompts, key)) {
+            const prompt = context.extensionPrompts[key];
+            if (knownExtensionPrompts.includes(key))
+                continue;
+            if (!context.extensionPrompts[key].value)
+                continue;
+            if (![_config_js__WEBPACK_IMPORTED_MODULE_0__.extension_prompt_types.BEFORE_PROMPT, _config_js__WEBPACK_IMPORTED_MODULE_0__.extension_prompt_types.IN_PROMPT].includes(prompt.position))
+                continue;
+            const hasFilter = typeof prompt.filter === 'function';
+            if (hasFilter && !(await prompt.filter()))
+                continue;
+            if (prompt.position === _config_js__WEBPACK_IMPORTED_MODULE_0__.extension_prompt_types.BEFORE_PROMPT) {
+                messages = [
+                    ...messages.slice(0, prompt.depth),
+                    {
+                        role: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptRole)(prompt.role) ?? 'system',
+                        content: prompt.value,
+                    },
+                    ...messages.slice(prompt.depth),
+                ];
+            }
+            else if (prompt.position === _config_js__WEBPACK_IMPORTED_MODULE_0__.extension_prompt_types.IN_PROMPT) {
+                messages = [
+                    ...messages.slice(0, messages.length - prompt.depth),
+                    {
+                        role: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptRole)(prompt.role) ?? 'system',
+                        content: prompt.value,
+                    },
+                    ...messages.slice(messages.length - prompt.depth),
+                ];
+            }
+        }
+    }
+    // Inject world info depth.
+    for (const worldInfo of worldInfoDepth) {
+        messages = [
+            ...messages.slice(0, messages.length - worldInfo.depth),
+            { role: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptRole)(worldInfo.role), content: worldInfo.entries.join('\n') },
+            ...messages.slice(messages.length - worldInfo.depth),
+        ];
+    }
+    if (!ignoreCharacterFields) {
+        const groupDepthPrompts = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getGroupDepthPrompts)(_config_js__WEBPACK_IMPORTED_MODULE_0__.selected_group, Number(_config_js__WEBPACK_IMPORTED_MODULE_0__.this_chid));
+        if (_config_js__WEBPACK_IMPORTED_MODULE_0__.selected_group && Array.isArray(groupDepthPrompts) && groupDepthPrompts.length > 0) {
+            groupDepthPrompts
+                .filter((value) => value.text)
+                .forEach((value, _index) => {
+                messages = [
+                    ...messages.slice(0, messages.length - value.depth),
+                    { role: value.role, content: value.text },
+                    ...messages.slice(messages.length - value.depth),
+                ];
+            });
+        }
+        else {
+            const depthPromptText = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_baseChatReplace)(context.characters[_config_js__WEBPACK_IMPORTED_MODULE_0__.this_chid]?.data?.extensions?.depth_prompt?.prompt?.trim(), _config_js__WEBPACK_IMPORTED_MODULE_0__.name1, _config_js__WEBPACK_IMPORTED_MODULE_0__.name2) || '';
+            if (depthPromptText) {
+                const depthPromptDepth = _config_js__WEBPACK_IMPORTED_MODULE_0__.depth_prompt_depth_default;
+                const depthPromptRole = context.characters[_config_js__WEBPACK_IMPORTED_MODULE_0__.this_chid]?.data?.extensions?.depth_prompt?.role ?? _config_js__WEBPACK_IMPORTED_MODULE_0__.depth_prompt_role_default;
+                messages = [
+                    ...messages.slice(0, messages.length - depthPromptDepth),
+                    { role: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptRole)(depthPromptRole), content: depthPromptText },
+                    ...messages.slice(messages.length - depthPromptDepth),
+                ];
+            }
+        }
+    }
+    let authorNoteIndex = -1;
+    if (!ignoreAuthorNote) {
+        // TODO: We should respect interval and world info scanning
+        const authorNote = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getAuthorNote)();
+        if (authorNote.prompt) {
+            authorNote.prompt = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_baseChatReplace)(authorNote.prompt, _config_js__WEBPACK_IMPORTED_MODULE_0__.name1, _config_js__WEBPACK_IMPORTED_MODULE_0__.name2);
+            switch (authorNote.position) {
+                case _config_js__WEBPACK_IMPORTED_MODULE_0__.extension_prompt_types.IN_PROMPT: // After first message
+                    messages = [...messages.slice(0, 1), { role: 'user', content: authorNote.prompt }, ...messages.slice(1)];
+                    authorNoteIndex = 1;
+                    break;
+                case _config_js__WEBPACK_IMPORTED_MODULE_0__.extension_prompt_types.IN_CHAT: // Depth + role in chat
+                    messages = [
+                        ...messages.slice(0, messages.length - authorNote.depth),
+                        { role: (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getPromptRole)(authorNote.role), content: authorNote.prompt },
+                        ...messages.slice(messages.length - authorNote.depth),
+                    ];
+                    authorNoteIndex = messages.length - authorNote.depth - 1;
+                    break;
+                case _config_js__WEBPACK_IMPORTED_MODULE_0__.extension_prompt_types.BEFORE_PROMPT: // Before first message
+                    messages.unshift({ role: 'user', content: authorNote.prompt });
+                    authorNoteIndex = 0;
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    // Add world info to author note
+    if (authorNoteIndex >= 0) {
+        if (anBefore.length > 0) {
+            messages = [
+                ...messages.slice(0, authorNoteIndex),
+                { role: 'system', content: anBefore.join('\n') },
+                ...messages.slice(authorNoteIndex),
+            ];
+            authorNoteIndex++;
+        }
+        if (anAfter.length > 0) {
+            messages = [
+                ...messages.slice(0, authorNoteIndex + 1),
+                { role: 'system', content: anAfter.join('\n') },
+                ...messages.slice(authorNoteIndex + 1),
+            ];
+        }
+    }
+    return { result: messages, warnings };
+}
+//# sourceMappingURL=prompt-builder.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/sortable-list.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/sortable-list.js ***!
+  \******************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   buildSortableList: () => (/* binding */ buildSortableList)
+/* harmony export */ });
+/* harmony import */ var sortablejs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sortablejs */ "./node_modules/sortablejs/modular/sortable.esm.js");
+
+// --- Component Builder ---
+function buildSortableList(selector, options = {}) {
+    const container = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    if (!container) {
+        throw new Error(`Could not find container: ${selector}`);
+    }
+    // --- Options & Defaults ---
+    const showToggleButton = options.showToggleButton ?? false;
+    const showDeleteButton = options.showDeleteButton ?? false;
+    const showSelectInput = options.showSelectInput ?? false;
+    let internalList = [...(options.initialList || [])];
+    let sortableInstance = null;
+    // --- Clear Container & Apply Base Styles ---
+    container.innerHTML = '';
+    container.classList.add('sortable-list-container');
+    const listElement = document.createElement('ul');
+    listElement.className = 'sortable-list';
+    Object.assign(listElement.style, {
+        listStyle: 'none',
+        padding: '0',
+        margin: '0',
+    });
+    container.appendChild(listElement);
+    // --- Helper Functions ---
+    const getItemData = (itemId) => {
+        return internalList.find((item) => item.id === itemId);
+    };
+    const getItemElement = (itemId) => {
+        return listElement.querySelector(`li[data-id="${itemId}"]`);
+    };
+    // Function to create the DOM for a single list item
+    const createItemElement = (itemData) => {
+        const listItem = document.createElement('li');
+        listItem.className = 'sortable-list-item';
+        listItem.dataset.id = itemData.id;
+        Object.assign(listItem.style, {
+            display: 'flex',
+            alignItems: 'center',
+            padding: '8px 12px',
+            border: '1px solid var(--SmartThemeBorderColor, #ccc)',
+            color: 'var(--SmartThemeBodyColor, #333)',
+            marginBottom: '2px',
+        });
+        // 1. Drag Handle
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'drag-handle';
+        dragHandle.innerHTML = '<i class="fas fa-bars"></i>';
+        Object.assign(dragHandle.style, {
+            cursor: 'grab',
+            marginRight: '10px',
+            color: 'var(--SmartThemeBodyColor, #555)',
+            flexShrink: '0',
+        });
+        listItem.appendChild(dragHandle);
+        // 2. Label Container
+        const labelContainer = document.createElement('span');
+        labelContainer.className = 'item-label';
+        labelContainer.style.flexGrow = '1';
+        labelContainer.style.marginRight = '10px';
+        labelContainer.style.overflow = 'hidden';
+        labelContainer.style.textOverflow = 'ellipsis';
+        labelContainer.style.whiteSpace = 'nowrap';
+        if (options.renderLabel) {
+            options.renderLabel(labelContainer, itemData);
+        }
+        else {
+            labelContainer.textContent = itemData.label;
+        }
+        listItem.appendChild(labelContainer);
+        const defaultRightMargin = '10px';
+        // 3. Select Input
+        const shouldShowSelectForItem = itemData.showSelect ?? true;
+        const canSelect = itemData.canSelect ?? true;
+        let selectElement = null;
+        if (showSelectInput && shouldShowSelectForItem) {
+            if (canSelect) {
+                selectElement = document.createElement('select');
+                selectElement.className = 'select-input text_pole';
+                selectElement.style.marginRight = defaultRightMargin;
+                selectElement.style.flexShrink = '0';
+                selectElement.style.width = 'unset';
+                if (itemData.selectOptions && itemData.selectOptions.length > 0) {
+                    itemData.selectOptions.forEach((opt) => {
+                        const optionElement = document.createElement('option');
+                        optionElement.value = opt.value;
+                        optionElement.textContent = opt.label;
+                        if (opt.value === itemData.selectValue) {
+                            optionElement.selected = true;
+                        }
+                        selectElement.appendChild(optionElement);
+                    });
+                }
+                else {
+                    // Add a default placeholder option if no options provided
+                    const placeholderOption = document.createElement('option');
+                    placeholderOption.textContent = '--'; // Simple placeholder
+                    placeholderOption.disabled = true;
+                    placeholderOption.selected = true; // Show placeholder initially
+                    selectElement.appendChild(placeholderOption);
+                    selectElement.disabled = true; // Also disable the select itself
+                }
+                selectElement.addEventListener('change', (e) => {
+                    e.stopPropagation(); // Prevent interference with drag/other clicks
+                    handleSelectChange(itemData.id, e);
+                });
+                listItem.appendChild(selectElement);
+            }
+            else {
+                // Render simple placeholder span for spacing if select is disabled for item
+                const placeholder = document.createElement('span');
+                placeholder.style.marginRight = defaultRightMargin;
+                // Add width/content if text_pole doesn't provide enough default spacing
+                // placeholder.style.width = '...'; // Example if needed
+                placeholder.style.display = 'inline-block';
+                placeholder.style.flexShrink = '0';
+                listItem.appendChild(placeholder);
+            }
+        }
+        else if (showSelectInput && !shouldShowSelectForItem) {
+            // Render placeholder if globally enabled but hidden for this item
+            const placeholder = document.createElement('span');
+            placeholder.style.marginRight = defaultRightMargin;
+            placeholder.style.display = 'inline-block';
+            placeholder.style.flexShrink = '0';
+            listItem.appendChild(placeholder);
+        }
+        // 4. Toggle Button (Optional)
+        const canToggle = itemData.canToggle ?? true;
+        if (showToggleButton && canToggle) {
+            const toggleButtonElement = document.createElement('span');
+            toggleButtonElement.className = 'toggle-button';
+            toggleButtonElement.innerHTML = `<i class="fas ${itemData.enabled ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>`;
+            Object.assign(toggleButtonElement.style, {
+                cursor: 'pointer',
+                marginRight: defaultRightMargin,
+                fontSize: '1.2em',
+                color: itemData.enabled ? 'var(--success-color, #4CAF50)' : 'var(--SmartThemeBodyColor, #555)',
+                flexShrink: '0', // Prevent shrinking
+                // Optional: width: '24px', textAlign: 'center' for alignment
+            });
+            toggleButtonElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleToggle(itemData.id);
+            });
+            listItem.appendChild(toggleButtonElement);
+        }
+        else if (showToggleButton && !canToggle) {
+            const placeholder = document.createElement('span');
+            placeholder.style.marginRight = defaultRightMargin;
+            // placeholder.style.width = '24px'; // Example if needed for alignment
+            placeholder.style.display = 'inline-block';
+            placeholder.style.flexShrink = '0';
+            listItem.appendChild(placeholder);
+        }
+        // 5. Delete Button (Optional)
+        const canDelete = itemData.canDelete ?? true;
+        if (showDeleteButton && canDelete) {
+            const deleteButtonElement = document.createElement('span');
+            deleteButtonElement.className = 'delete-button';
+            deleteButtonElement.innerHTML = '<i class="fas fa-trash-can"></i>';
+            Object.assign(deleteButtonElement.style, {
+                cursor: 'pointer',
+                color: 'var(--error-color, #f44336)',
+                // No margin needed if it's the last element
+                flexShrink: '0', // Prevent shrinking
+                // Optional: width: '18px', textAlign: 'center' for alignment
+            });
+            deleteButtonElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleDelete(itemData.id);
+            });
+            listItem.appendChild(deleteButtonElement);
+        }
+        else if (showDeleteButton && !canDelete) {
+            const placeholder = document.createElement('span');
+            // No margin needed if it's the last element
+            // placeholder.style.width = '18px'; // Example if needed for alignment
+            placeholder.style.display = 'inline-block';
+            placeholder.style.flexShrink = '0';
+            listItem.appendChild(placeholder);
+        }
+        // Apply enabled/disabled visual state to the whole item
+        if (showToggleButton) {
+            listItem.style.opacity = itemData.enabled ? '1' : '0.6';
+        }
+        return listItem;
+    };
+    // Function to render the entire list
+    const renderList = () => {
+        listElement.innerHTML = '';
+        internalList.forEach((itemData) => {
+            const itemElement = createItemElement(itemData);
+            listElement.appendChild(itemElement);
+        });
+    };
+    // Function to update a single item's visuals
+    const updateItemVisuals = (itemId, updatedFields = {}) => {
+        const itemData = getItemData(itemId);
+        const itemElement = getItemElement(itemId);
+        if (!itemData || !itemElement)
+            return;
+        // Determine if a full re-render of the item is safer/required
+        const requiresFullReRender = ('label' in updatedFields && options.renderLabel) ||
+            'selectOptions' in updatedFields ||
+            'showSelect' in updatedFields ||
+            'canSelect' in updatedFields ||
+            'canToggle' in updatedFields ||
+            'canDelete' in updatedFields;
+        if (requiresFullReRender) {
+            const newItemElement = createItemElement(itemData);
+            itemElement.replaceWith(newItemElement);
+            return;
+        }
+        // --- Update specific parts ---
+        if ('label' in updatedFields && !options.renderLabel) {
+            const labelEl = itemElement.querySelector('.item-label');
+            if (labelEl)
+                labelEl.textContent = itemData.label;
+        }
+        if ('selectValue' in updatedFields && showSelectInput) {
+            const selectEl = itemElement.querySelector('.select-input');
+            if (selectEl) {
+                // Ensure value exists, fall back to empty string if null/undefined
+                selectEl.value = itemData.selectValue ?? '';
+                // If the new value isn't actually an option, the browser might select nothing
+                // or the first option. Consider adding validation or handling here if needed.
+            }
+        }
+        if ('enabled' in updatedFields && showToggleButton && (itemData.canToggle ?? true)) {
+            const toggleIcon = itemElement.querySelector('.toggle-button i');
+            const toggleButtonSpan = itemElement.querySelector('.toggle-button');
+            if (toggleIcon) {
+                toggleIcon.className = `fas ${itemData.enabled ? 'fa-toggle-on' : 'fa-toggle-off'}`;
+            }
+            if (toggleButtonSpan) {
+                toggleButtonSpan.style.color = itemData.enabled
+                    ? 'var(--success-color, #4CAF50)'
+                    : 'var(--SmartThemeBodyColor, #555)';
+            }
+        }
+        if ('enabled' in updatedFields && showToggleButton) {
+            itemElement.style.opacity = itemData.enabled ? '1' : '0.6';
+            const selectEl = itemElement.querySelector('.select-input');
+            if (selectEl) {
+                selectEl.disabled = !itemData.enabled || !(itemData.canSelect ?? true);
+            }
+        }
+    };
+    // --- Event Handlers ---
+    const handleToggle = async (itemId) => {
+        const itemIndex = internalList.findIndex((item) => item.id === itemId);
+        if (itemIndex === -1 || !(internalList[itemIndex].canToggle ?? true))
+            return;
+        const item = internalList[itemIndex];
+        const newState = !item.enabled;
+        if (options.onToggle) {
+            try {
+                await Promise.resolve(options.onToggle(itemId, newState));
+            }
+            catch (err) {
+                console.error('onToggle callback failed:', err);
+                return;
+            }
+        }
+        const updates = { enabled: newState };
+        internalList[itemIndex] = { ...item, ...updates };
+        updateItemVisuals(itemId, updates);
+    };
+    const handleDelete = async (itemId) => {
+        const itemIndex = internalList.findIndex((item) => item.id === itemId);
+        if (itemIndex === -1 || !(internalList[itemIndex].canDelete ?? true))
+            return;
+        let shouldRemove = true;
+        if (options.onDelete) {
+            try {
+                shouldRemove = await Promise.resolve(options.onDelete(itemId));
+            }
+            catch (err) {
+                console.error('onDelete callback failed:', err);
+                shouldRemove = false;
+            }
+        }
+        if (shouldRemove) {
+            internalList.splice(itemIndex, 1);
+            getItemElement(itemId)?.remove();
+        }
+    };
+    const handleSelectChange = async (itemId, event) => {
+        const itemIndex = internalList.findIndex((item) => item.id === itemId);
+        if (itemIndex === -1 || !(internalList[itemIndex].canSelect ?? true))
+            return;
+        const item = internalList[itemIndex];
+        const selectElement = event.target;
+        const newValue = selectElement.value;
+        if (options.onSelectChange) {
+            try {
+                await Promise.resolve(options.onSelectChange(itemId, newValue));
+            }
+            catch (err) {
+                console.error('onSelectChange callback failed:', err);
+                selectElement.value = item.selectValue ?? ''; // Revert UI
+                return;
+            }
+        }
+        const updates = { selectValue: newValue };
+        internalList[itemIndex] = { ...item, ...updates };
+        // Don't need updateItemVisuals here unless select change affects other parts visually
+    };
+    // --- SortableJS Initialization ---
+    const initializeSortable = () => {
+        if (sortableInstance) {
+            sortableInstance.destroy();
+        }
+        const sortableOptions = {
+            handle: '.drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            filter: '.select-input, .toggle-button, .delete-button', // Prevent drag on controls
+            preventOnFilter: false,
+            onEnd: (event) => {
+                const { oldIndex, newIndex } = event;
+                if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) {
+                    return;
+                }
+                // Reorder internalList based on the final DOM order
+                const currentIdsOrder = Array.from(listElement.children)
+                    .map((el) => el.dataset.id)
+                    .filter((id) => id !== undefined);
+                internalList.sort((a, b) => {
+                    const indexA = currentIdsOrder.indexOf(a.id);
+                    const indexB = currentIdsOrder.indexOf(b.id);
+                    return indexA - indexB;
+                });
+                const newOrderIds = internalList.map((listItemData) => listItemData.id);
+                if (options.onOrderChange) {
+                    Promise.resolve(options.onOrderChange(newOrderIds)).catch((err) => console.error('onOrderChange callback failed:', err));
+                }
+            },
+            ...(options.sortableJsOptions || {}),
+        };
+        sortableInstance = sortablejs__WEBPACK_IMPORTED_MODULE_0__["default"].create(listElement, sortableOptions);
+    };
+    // --- Initial Render & Setup ---
+    renderList();
+    initializeSortable();
+    // --- Public API ---
+    const api = {
+        /** Gets the current list of items with their data. */
+        getList: () => [...internalList],
+        /** Gets the current order of item IDs. */
+        getOrder: () => internalList.map((item) => item.id),
+        /** Adds a new item to the list. */
+        addItem: (itemData, index) => {
+            // Prevent duplicate IDs
+            if (internalList.some((item) => item.id === itemData.id)) {
+                console.warn(`SortableList: Item with ID "${itemData.id}" already exists. Skipping add.`);
+                return;
+            }
+            const effectiveIndex = index === undefined || index < 0 || index > internalList.length ? internalList.length : index;
+            internalList.splice(effectiveIndex, 0, itemData);
+            const newItemElement = createItemElement(itemData);
+            const elementAtIndex = listElement.children[effectiveIndex];
+            listElement.insertBefore(newItemElement, elementAtIndex ?? null); // Handles appending if index is out of bounds
+            // SortableJS usually adapts, re-init rarely needed for adds/removes unless issues arise
+        },
+        removeItem: (itemId) => {
+            const itemIndex = internalList.findIndex((item) => item.id === itemId);
+            if (itemIndex > -1) {
+                internalList.splice(itemIndex, 1);
+                getItemElement(itemId)?.remove();
+            }
+        },
+        /** Updates the data and visuals for an existing item. */
+        updateItem: (itemId, updates) => {
+            const itemIndex = internalList.findIndex((item) => item.id === itemId);
+            if (itemIndex > -1) {
+                const currentItem = internalList[itemIndex];
+                if ('id' in updates) {
+                    console.warn('SortableList: Cannot change item ID via updateItem.');
+                    delete updates.id;
+                }
+                internalList[itemIndex] = { ...currentItem, ...updates };
+                updateItemVisuals(itemId, updates);
+            }
+        },
+        /** Replaces the entire list content. */
+        setList: (newListData) => {
+            internalList = [...newListData];
+            renderList();
+            initializeSortable();
+        },
+        /** Destroys the SortableJS instance and removes elements. */
+        destroy: () => {
+            if (sortableInstance) {
+                sortableInstance.destroy();
+                sortableInstance = null;
+            }
+            container.innerHTML = '';
+            container.classList.remove('sortable-list-container');
+            internalList = [];
+        },
+        /** Gets the underlying SortableJS instance for advanced manipulation (use with caution). */
+        getSortableInstance: () => sortableInstance,
+    };
+    return api;
+}
+//# sourceMappingURL=sortable-list.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/types/index.js":
+/*!****************************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/types/index.js ***!
+  \****************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   EventNames: () => (/* binding */ EventNames)
+/* harmony export */ });
+var EventNames;
+(function (EventNames) {
+    EventNames["APP_READY"] = "app_ready";
+    EventNames["EXTRAS_CONNECTED"] = "extras_connected";
+    EventNames["MESSAGE_SWIPED"] = "message_swiped";
+    EventNames["MESSAGE_SENT"] = "message_sent";
+    EventNames["MESSAGE_RECEIVED"] = "message_received";
+    EventNames["MESSAGE_EDITED"] = "message_edited";
+    EventNames["MESSAGE_DELETED"] = "message_deleted";
+    EventNames["MESSAGE_UPDATED"] = "message_updated";
+    EventNames["MESSAGE_FILE_EMBEDDED"] = "message_file_embedded";
+    EventNames["MORE_MESSAGES_LOADED"] = "more_messages_loaded";
+    EventNames["IMPERSONATE_READY"] = "impersonate_ready";
+    EventNames["CHAT_CHANGED"] = "chat_id_changed";
+    EventNames["GENERATION_AFTER_COMMANDS"] = "GENERATION_AFTER_COMMANDS";
+    EventNames["GENERATION_STARTED"] = "generation_started";
+    EventNames["GENERATION_STOPPED"] = "generation_stopped";
+    EventNames["GENERATION_ENDED"] = "generation_ended";
+    EventNames["EXTENSIONS_FIRST_LOAD"] = "extensions_first_load";
+    EventNames["EXTENSION_SETTINGS_LOADED"] = "extension_settings_loaded";
+    EventNames["SETTINGS_LOADED"] = "settings_loaded";
+    EventNames["SETTINGS_UPDATED"] = "settings_updated";
+    EventNames["GROUP_UPDATED"] = "group_updated";
+    EventNames["MOVABLE_PANELS_RESET"] = "movable_panels_reset";
+    EventNames["SETTINGS_LOADED_BEFORE"] = "settings_loaded_before";
+    EventNames["SETTINGS_LOADED_AFTER"] = "settings_loaded_after";
+    EventNames["CHATCOMPLETION_SOURCE_CHANGED"] = "chatcompletion_source_changed";
+    EventNames["CHATCOMPLETION_MODEL_CHANGED"] = "chatcompletion_model_changed";
+    EventNames["OAI_PRESET_CHANGED_BEFORE"] = "oai_preset_changed_before";
+    EventNames["OAI_PRESET_CHANGED_AFTER"] = "oai_preset_changed_after";
+    EventNames["OAI_PRESET_EXPORT_READY"] = "oai_preset_export_ready";
+    EventNames["OAI_PRESET_IMPORT_READY"] = "oai_preset_import_ready";
+    EventNames["WORLDINFO_SETTINGS_UPDATED"] = "worldinfo_settings_updated";
+    EventNames["WORLDINFO_UPDATED"] = "worldinfo_updated";
+    EventNames["CHARACTER_EDITED"] = "character_edited";
+    EventNames["CHARACTER_PAGE_LOADED"] = "character_page_loaded";
+    EventNames["CHARACTER_GROUP_OVERLAY_STATE_CHANGE_BEFORE"] = "character_group_overlay_state_change_before";
+    EventNames["CHARACTER_GROUP_OVERLAY_STATE_CHANGE_AFTER"] = "character_group_overlay_state_change_after";
+    EventNames["USER_MESSAGE_RENDERED"] = "user_message_rendered";
+    EventNames["CHARACTER_MESSAGE_RENDERED"] = "character_message_rendered";
+    EventNames["FORCE_SET_BACKGROUND"] = "force_set_background";
+    EventNames["CHAT_DELETED"] = "chat_deleted";
+    EventNames["CHAT_CREATED"] = "chat_created";
+    EventNames["GROUP_CHAT_DELETED"] = "group_chat_deleted";
+    EventNames["GROUP_CHAT_CREATED"] = "group_chat_created";
+    EventNames["GENERATE_BEFORE_COMBINE_PROMPTS"] = "generate_before_combine_prompts";
+    EventNames["GENERATE_AFTER_COMBINE_PROMPTS"] = "generate_after_combine_prompts";
+    EventNames["GENERATE_AFTER_DATA"] = "generate_after_data";
+    EventNames["GROUP_MEMBER_DRAFTED"] = "group_member_drafted";
+    EventNames["GROUP_WRAPPER_STARTED"] = "group_wrapper_started";
+    EventNames["GROUP_WRAPPER_FINISHED"] = "group_wrapper_finished";
+    EventNames["WORLD_INFO_ACTIVATED"] = "world_info_activated";
+    EventNames["TEXT_COMPLETION_SETTINGS_READY"] = "text_completion_settings_ready";
+    EventNames["CHAT_COMPLETION_SETTINGS_READY"] = "chat_completion_settings_ready";
+    EventNames["CHAT_COMPLETION_PROMPT_READY"] = "chat_completion_prompt_ready";
+    EventNames["CHARACTER_FIRST_MESSAGE_SELECTED"] = "character_first_message_selected";
+    // TODO: Naming convention is inconsistent with other events
+    EventNames["CHARACTER_DELETED"] = "characterDeleted";
+    EventNames["CHARACTER_DUPLICATED"] = "character_duplicated";
+    EventNames["CHARACTER_RENAMED"] = "character_renamed";
+    /** @deprecated The event is aliased to STREAM_TOKEN_RECEIVED. */
+    EventNames["SMOOTH_STREAM_TOKEN_RECEIVED"] = "stream_token_received";
+    EventNames["STREAM_TOKEN_RECEIVED"] = "stream_token_received";
+    EventNames["STREAM_REASONING_DONE"] = "stream_reasoning_done";
+    EventNames["FILE_ATTACHMENT_DELETED"] = "file_attachment_deleted";
+    EventNames["WORLDINFO_FORCE_ACTIVATE"] = "worldinfo_force_activate";
+    EventNames["OPEN_CHARACTER_LIBRARY"] = "open_character_library";
+    EventNames["ONLINE_STATUS_CHANGED"] = "online_status_changed";
+    EventNames["IMAGE_SWIPED"] = "image_swiped";
+    EventNames["CONNECTION_PROFILE_LOADED"] = "connection_profile_loaded";
+    EventNames["TOOL_CALLS_PERFORMED"] = "tool_calls_performed";
+    EventNames["TOOL_CALLS_RENDERED"] = "tool_calls_rendered";
+})(EventNames || (EventNames = {}));
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ "./node_modules/sillytavern-utils-lib/dist/world-info-utils.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/sillytavern-utils-lib/dist/world-info-utils.js ***!
+  \*********************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   applyWorldInfoEntry: () => (/* binding */ applyWorldInfoEntry),
+/* harmony export */   getActiveWorldInfo: () => (/* binding */ getActiveWorldInfo)
+/* harmony export */ });
+/* harmony import */ var _config_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config.js */ "./node_modules/sillytavern-utils-lib/dist/config.js");
+
+/**
+ * @returns Entries by world name. <worldName, entries[]>
+ */
+async function getActiveWorldInfo(include, targetCharacterIndex) {
+    function includedType(type) {
+        return include.includes('all') || include.includes(type);
+    }
+    const context = SillyTavern.getContext();
+    let entries = {};
+    const isGlobal = includedType('global');
+    if (isGlobal && _config_js__WEBPACK_IMPORTED_MODULE_0__.selected_world_info?.length) {
+        for (const worldName of _config_js__WEBPACK_IMPORTED_MODULE_0__.selected_world_info) {
+            const worldInfo = await context.loadWorldInfo(worldName);
+            if (!worldInfo) {
+                continue;
+            }
+            if (!entries[worldName]) {
+                entries[worldName] = [];
+            }
+            Object.values(worldInfo.entries).forEach((entry) => {
+                entries[worldName].push(entry);
+            });
+        }
+    }
+    const isChat = includedType('chat');
+    if (isChat) {
+        const worldName = context.chatMetadata[_config_js__WEBPACK_IMPORTED_MODULE_0__.WI_METADATA_KEY];
+        if (worldName && !entries[worldName]) {
+            entries[worldName] = [];
+            const worldInfo = await context.loadWorldInfo(worldName);
+            if (worldInfo) {
+                Object.values(worldInfo.entries).forEach((entry) => {
+                    entries[worldName].push(entry);
+                });
+            }
+        }
+    }
+    const isCharacter = includedType('character');
+    if (isCharacter && targetCharacterIndex) {
+        const character = context.characters[targetCharacterIndex];
+        let worldsToSearch = new Set();
+        const baseWorldName = character?.data?.extensions?.world;
+        if (baseWorldName) {
+            worldsToSearch.add(baseWorldName);
+        }
+        const fileName = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_getCharaFilename)(targetCharacterIndex);
+        const extraCharLore = _config_js__WEBPACK_IMPORTED_MODULE_0__.world_info.charLore?.find((e) => e.name === fileName);
+        if (extraCharLore) {
+            worldsToSearch = new Set([...worldsToSearch, ...extraCharLore.extraBooks]);
+        }
+        for (const worldName of worldsToSearch) {
+            const worldInfo = await context.loadWorldInfo(worldName);
+            if (!worldInfo || entries[worldName]) {
+                continue;
+            }
+            entries[worldName] = [];
+            Object.values(worldInfo.entries).forEach((entry) => {
+                entries[worldName].push(entry);
+            });
+        }
+    }
+    const isPersona = includedType('persona');
+    if (isPersona) {
+        const worldName = context.powerUserSettings.persona_description_lorebook;
+        if (worldName && !entries[worldName]) {
+            entries[worldName] = [];
+            const worldInfo = await context.loadWorldInfo(worldName);
+            if (worldInfo) {
+                Object.values(worldInfo.entries).forEach((entry) => {
+                    entries[worldName].push(entry);
+                });
+            }
+        }
+    }
+    return entries;
+}
+/**
+ * @throws {Error} if entry/world not found
+ */
+async function applyWorldInfoEntry({ entry, selectedWorldName, skipSave = false, skipReload = false, operation = 'auto', }) {
+    const context = SillyTavern.getContext();
+    const worldInfo = await context.loadWorldInfo(selectedWorldName);
+    if (!worldInfo) {
+        throw new Error('Failed to load world info');
+    }
+    const values = Object.values(worldInfo.entries);
+    const lastEntry = values.length > 0 ? values[values.length - 1] : undefined;
+    // Find existing entry with the same key if needed
+    let targetEntry;
+    if (operation === 'update' || operation === 'auto') {
+        const existingEntry = Object.values(worldInfo.entries).find((e) => e.uid === entry.uid);
+        if (existingEntry) {
+            if (operation === 'auto') {
+                // In auto mode, update existing entry
+                targetEntry = existingEntry;
+            }
+            else if (operation === 'update') {
+                targetEntry = existingEntry;
+            }
+        }
+        else if (operation === 'update') {
+            throw new Error('Entry not found for update operation');
+        }
+    }
+    const operationResult = targetEntry ? 'update' : 'add';
+    // Create new entry if needed
+    if (!targetEntry) {
+        targetEntry = (0,_config_js__WEBPACK_IMPORTED_MODULE_0__.st_createWorldInfoEntry)(selectedWorldName, worldInfo);
+        if (!targetEntry) {
+            throw new Error('Failed to create entry');
+        }
+        if (lastEntry) {
+            const newId = targetEntry.uid;
+            Object.assign(targetEntry, lastEntry);
+            targetEntry.uid = newId;
+            targetEntry;
+        }
+    }
+    // Update entry properties
+    targetEntry.key = entry.key;
+    targetEntry.content = entry.content;
+    targetEntry.comment = entry.comment;
+    // Save and update UI only if not skipping
+    if (!skipSave) {
+        await context.saveWorldInfo(selectedWorldName, worldInfo);
+    }
+    if (!skipReload) {
+        context.reloadWorldInfoEditor(selectedWorldName, true);
+    }
+    return {
+        entry: targetEntry,
+        operation: operationResult,
+    };
+}
+//# sourceMappingURL=world-info-utils.js.map
+
+/***/ })
+
+/******/ });
+/************************************************************************/
+/******/ // The module cache
+/******/ var __webpack_module_cache__ = {};
+/******/ 
+/******/ // The require function
+/******/ function __webpack_require__(moduleId) {
+/******/ 	// Check if module is in cache
+/******/ 	var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 	if (cachedModule !== undefined) {
+/******/ 		return cachedModule.exports;
+/******/ 	}
+/******/ 	// Create a new module (and put it into the cache)
+/******/ 	var module = __webpack_module_cache__[moduleId] = {
+/******/ 		// no module.id needed
+/******/ 		// no module.loaded needed
+/******/ 		exports: {}
+/******/ 	};
+/******/ 
+/******/ 	// Execute the module function
+/******/ 	__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 
+/******/ 	// Return the exports of the module
+/******/ 	return module.exports;
+/******/ }
+/******/ 
+/************************************************************************/
+/******/ /* webpack/runtime/define property getters */
+/******/ (() => {
+/******/ 	// define getter functions for harmony exports
+/******/ 	__webpack_require__.d = (exports, definition) => {
+/******/ 		for(var key in definition) {
+/******/ 			if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 			}
+/******/ 		}
+/******/ 	};
+/******/ })();
+/******/ 
+/******/ /* webpack/runtime/hasOwnProperty shorthand */
+/******/ (() => {
+/******/ 	__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ })();
+/******/ 
+/******/ /* webpack/runtime/make namespace object */
+/******/ (() => {
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = (exports) => {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/ })();
+/******/ 
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
+(() => {
+var exports = __webpack_exports__;
+/*!**********************!*\
+  !*** ./src/index.ts ***!
+  \**********************/
+
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _regeneratorRuntime() { "use strict"; var r = _regenerator(), e = r.m(_regeneratorRuntime), t = (Object.getPrototypeOf ? Object.getPrototypeOf(e) : e.__proto__).constructor; function n(r) { var e = "function" == typeof r && r.constructor; return !!e && (e === t || "GeneratorFunction" === (e.displayName || e.name)); } var o = { "throw": 1, "return": 2, "break": 3, "continue": 3 }; function a(r) { var e, t; return function (n) { e || (e = { stop: function stop() { return t(n.a, 2); }, "catch": function _catch() { return n.v; }, abrupt: function abrupt(r, e) { return t(n.a, o[r], e); }, delegateYield: function delegateYield(r, o, a) { return e.resultName = o, t(n.d, _regeneratorValues(r), a); }, finish: function finish(r) { return t(n.f, r); } }, t = function t(r, _t, o) { n.p = e.prev, n.n = e.next; try { return r(_t, o); } finally { e.next = n.n; } }), e.resultName && (e[e.resultName] = n.v, e.resultName = void 0), e.sent = n.v, e.next = n.n; try { return r.call(this, e); } finally { n.p = e.prev, n.n = e.next; } }; } return (_regeneratorRuntime = function _regeneratorRuntime() { return { wrap: function wrap(e, t, n, o) { return r.w(a(e), t, n, o && o.reverse()); }, isGeneratorFunction: n, mark: r.m, awrap: function awrap(r, e) { return new _OverloadYield(r, e); }, AsyncIterator: _regeneratorAsyncIterator, async: function async(r, e, t, o, u) { return (n(e) ? _regeneratorAsyncGen : _regeneratorAsync)(a(r), e, t, o, u); }, keys: _regeneratorKeys, values: _regeneratorValues }; })(); }
+function _regeneratorValues(e) { if (null != e) { var t = e["function" == typeof Symbol && Symbol.iterator || "@@iterator"], r = 0; if (t) return t.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) return { next: function next() { return e && r >= e.length && (e = void 0), { value: e && e[r++], done: !e }; } }; } throw new TypeError(_typeof(e) + " is not iterable"); }
+function _regeneratorKeys(e) { var n = Object(e), r = []; for (var t in n) r.unshift(t); return function e() { for (; r.length;) if ((t = r.pop()) in n) return e.value = t, e.done = !1, e; return e.done = !0, e; }; }
+function _regeneratorAsync(n, e, r, t, o) { var a = _regeneratorAsyncGen(n, e, r, t, o); return a.next().then(function (n) { return n.done ? n.value : a.next(); }); }
+function _regeneratorAsyncGen(r, e, t, o, n) { return new _regeneratorAsyncIterator(_regenerator().w(r, e, t, o), n || Promise); }
+function _regeneratorAsyncIterator(t, e) { function n(r, o, i, f) { try { var c = t[r](o), u = c.value; return u instanceof _OverloadYield ? e.resolve(u.v).then(function (t) { n("next", t, i, f); }, function (t) { n("throw", t, i, f); }) : e.resolve(u).then(function (t) { c.value = t, i(c); }, function (t) { return n("throw", t, i, f); }); } catch (t) { f(t); } } var r; this.next || (_regeneratorDefine2(_regeneratorAsyncIterator.prototype), _regeneratorDefine2(_regeneratorAsyncIterator.prototype, "function" == typeof Symbol && Symbol.asyncIterator || "@asyncIterator", function () { return this; })), _regeneratorDefine2(this, "_invoke", function (t, o, i) { function f() { return new e(function (e, r) { n(t, i, e, r); }); } return r = r ? r.then(f, f) : f(); }, !0); }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _OverloadYield(e, d) { this.v = e, this.k = d; }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+var sillytavern_utils_lib_1 = __webpack_require__(/*! sillytavern-utils-lib */ "./node_modules/sillytavern-utils-lib/dist/index.js");
+var config_1 = __webpack_require__(/*! sillytavern-utils-lib/config */ "./node_modules/sillytavern-utils-lib/dist/config.js");
+var types_1 = __webpack_require__(/*! sillytavern-utils-lib/types */ "./node_modules/sillytavern-utils-lib/dist/types/index.js");
+var extensionName = 'SillyTavern-Roadway';
+var VERSION = '0.4.0';
+var FORMAT_VERSION = 'F_1.0';
+var globalContext = SillyTavern.getContext();
+var KEYS = {
+  EXTENSION: 'roadway',
+  EXTRA: {
+    TARGET: 'roadway_target_chat',
+    RAW_CONTENT: 'roadway_raw_content',
+    OPTIONS: 'roadway_options'
+  }
+};
+var DEFAULT_IMPERSONATE = "Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:\n\n{{roadwaySelected}}";
+var DEFAULT_PROMPT = "You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences, **building upon the established context from our previous conversation.** Your task is to generate an *unpredictable* and *engaging* list of options for **{{user}}**, specifically tailored to their character, the world, and the current situation as established in our previous dialogue. These should be framed as possible actions that **{{user}}** *could* take.\n\nOutput ONLY a numbered list of possible actions. Each action should be a clear, actionable, concise, and *creative* sentence written in plain text suggesting an action **{{user}}** can perform in the game.\n\nPrioritize *varied* actions that span multiple domains:\n\n{Observation/Investigation; Dialogue/Persuasion; Stealth/Intrigue; Combat/Conflict; Crafting/Repair; Knowledge/Lore; Movement/Traversal; Deception/Manipulation; Performance/Entertainment; Technical/Mechanical}.\n\nAvoid obvious or repetitive actions **that {{user}} has already explored or are contrary to the established character/world.** Push the boundaries of the situation. Challenge **{{user}}'s** expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 6 actions. The actions must be written in plain text.\n\nHere are a few example actions to inspire creativity:\n\n1. Attempt to communicate with the forest creatures to learn the location of hidden trails.\n2. Bribe the corrupt city guard with a song and a dance.\n3. Stage a fake ambush to draw out a hidden enemy.";
+var DEFAULT_SETTINGS = {
+  version: VERSION,
+  formatVersion: FORMAT_VERSION,
+  profileId: '',
+  maxContextType: 'profile',
+  maxContextValue: 16384,
+  maxResponseToken: 500,
+  promptPreset: 'default',
+  autoTrigger: false,
+  autoOpen: true,
+  impersonateApi: 'main',
+  showUseActionIcon: true,
+  autoSubmitUseAction: false,
+  promptPresets: {
+    "default": {
+      content: DEFAULT_PROMPT,
+      extractionStrategy: 'bullet',
+      impersonate: DEFAULT_IMPERSONATE
+    }
+  }
+};
+var settingsManager = new sillytavern_utils_lib_1.ExtensionSettingsManager(KEYS.EXTENSION, DEFAULT_SETTINGS);
+function handleUIChanges() {
+  return _handleUIChanges.apply(this, arguments);
+}
+function _handleUIChanges() {
+  _handleUIChanges = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee6() {
+    var _settings$promptPrese7, _settings$promptPrese8;
+    var settingsHtml, settingsContainer, settings, _ref4, select, promptElement, extractionStrategyElement, impersonateSection, impersonateElement, updateExtractionStrategy, maxContextTypeElement, maxContextValueElement, maxContextCustomDiv, maxResponseTokenElement, autoTriggerElement, autoOpenElement, showUseActionElement, autoSubmitUseActionElement, impersonateApiElement, roadwayButton, pendingRequests, formatResponse;
+    return _regeneratorRuntime().wrap(function _callee6$(_context6) {
+      while (1) switch (_context6.prev = _context6.next) {
+        case 0:
+          formatResponse = function _formatResponse(response, options) {
+            var classPrefix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+            var detailsElement = document.createElement('details');
+            var summaryElement = document.createElement('summary');
+            summaryElement.textContent = 'Roadway';
+            detailsElement.appendChild(summaryElement);
+            if (options !== null && options !== void 0 && options.length) {
+              var optionsDiv = document.createElement('div');
+              optionsDiv.classList.add("".concat(classPrefix, "roadway_options"));
+              options.forEach(function (option, _index) {
+                var optionDiv = document.createElement('div');
+                optionDiv.classList.add("".concat(classPrefix, "roadway_option"));
+                var actionsDiv = document.createElement('div');
+                actionsDiv.classList.add("".concat(classPrefix, "option_actions"));
+                // Create impersonate button
+                var impersonateButton = document.createElement('div');
+                impersonateButton.classList.add("".concat(classPrefix, "action_button"), "".concat(classPrefix, "impersonate_action"));
+                impersonateButton.innerHTML = '✍️';
+                impersonateButton.title = 'Impersonate';
+                // Create edit button
+                var editButton = document.createElement('div');
+                editButton.classList.add("".concat(classPrefix, "action_button"), "".concat(classPrefix, "edit_action"));
+                editButton.innerHTML = '✏️';
+                editButton.title = 'Edit';
+                // Create use button (only if enabled in settings)
+                var settings = settingsManager.getSettings();
+                var useButton = document.createElement('div');
+                useButton.classList.add("".concat(classPrefix, "action_button"), "".concat(classPrefix, "use_action"));
+                useButton.innerHTML = '▶️';
+                useButton.title = 'Use option';
+                useButton.style.display = settings.showUseActionIcon ? 'inline-block' : 'none';
+                actionsDiv.appendChild(useButton);
+                actionsDiv.appendChild(impersonateButton);
+                actionsDiv.appendChild(editButton);
+                var contentDiv = document.createElement('div');
+                contentDiv.classList.add("".concat(classPrefix, "option_content"));
+                contentDiv.textContent = option;
+                optionDiv.appendChild(actionsDiv);
+                optionDiv.appendChild(contentDiv);
+                optionsDiv.appendChild(optionDiv);
+              });
+              detailsElement.appendChild(optionsDiv);
+            } else {
+              var preElement = document.createElement('pre');
+              preElement.classList.add("".concat(classPrefix, "roadway_pre"));
+              preElement.textContent = response;
+              detailsElement.appendChild(preElement);
+            }
+            return detailsElement.outerHTML;
+          };
+          updateExtractionStrategy = function _updateExtractionStra() {
+            var _preset$impersonate;
+            var preset = settings.promptPresets[settings.promptPreset];
+            extractionStrategyElement.val(preset === null || preset === void 0 ? void 0 : preset.extractionStrategy);
+            var isNone = (preset === null || preset === void 0 ? void 0 : preset.extractionStrategy) === 'none';
+            impersonateSection.toggle(!isNone);
+            impersonateElement.val((_preset$impersonate = preset === null || preset === void 0 ? void 0 : preset.impersonate) !== null && _preset$impersonate !== void 0 ? _preset$impersonate : '');
+          };
+          _context6.next = 4;
+          return globalContext.renderExtensionTemplateAsync("third-party/".concat(extensionName), 'templates/settings');
+        case 4:
+          settingsHtml = _context6.sent;
+          $('#extensions_settings').append(settingsHtml);
+          settingsContainer = $('.roadway_settings');
+          settings = settingsManager.getSettings();
+          globalContext.ConnectionManagerRequestService.handleDropdown('.roadway_settings .connection_profile', settings.profileId, function (profile) {
+            var _profile$id;
+            settings.profileId = (_profile$id = profile === null || profile === void 0 ? void 0 : profile.id) !== null && _profile$id !== void 0 ? _profile$id : '';
+            settingsManager.saveSettings();
+          });
+          _ref4 = (0, sillytavern_utils_lib_1.buildPresetSelect)('.roadway_settings select.prompt', {
+            label: function label() {
+              return 'prompt';
+            },
+            initialValue: settings.promptPreset,
+            initialList: Object.keys(settings.promptPresets),
+            readOnlyValues: ['default'],
+            onSelectChange: function () {
+              var _onSelectChange = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee3(_previousValue, newValue) {
+                var _settings$promptPrese, _settings$promptPrese2, _settings$promptPrese3, _settings$promptPrese4, _settings$promptPrese5, _settings$promptPrese6;
+                var newPresetValue;
+                return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+                  while (1) switch (_context3.prev = _context3.next) {
+                    case 0:
+                      newPresetValue = newValue !== null && newValue !== void 0 ? newValue : 'default';
+                      settings.promptPreset = newPresetValue;
+                      settingsManager.saveSettings();
+                      promptElement.val((_settings$promptPrese = (_settings$promptPrese2 = settings.promptPresets[newPresetValue]) === null || _settings$promptPrese2 === void 0 ? void 0 : _settings$promptPrese2.content) !== null && _settings$promptPrese !== void 0 ? _settings$promptPrese : '');
+                      extractionStrategyElement.val((_settings$promptPrese3 = settings.promptPresets[newPresetValue]) === null || _settings$promptPrese3 === void 0 ? void 0 : _settings$promptPrese3.extractionStrategy);
+                      impersonateElement.val((_settings$promptPrese4 = (_settings$promptPrese5 = settings.promptPresets[newPresetValue]) === null || _settings$promptPrese5 === void 0 ? void 0 : _settings$promptPrese5.impersonate) !== null && _settings$promptPrese4 !== void 0 ? _settings$promptPrese4 : '');
+                      impersonateSection.css('display', ((_settings$promptPrese6 = settings.promptPresets[newPresetValue]) === null || _settings$promptPrese6 === void 0 ? void 0 : _settings$promptPrese6.extractionStrategy) === 'none' ? 'none' : 'block');
+                    case 7:
+                    case "end":
+                      return _context3.stop();
+                  }
+                }, _callee3);
+              }));
+              function onSelectChange(_x, _x2) {
+                return _onSelectChange.apply(this, arguments);
+              }
+              return onSelectChange;
+            }(),
+            create: {
+              onAfterCreate: function onAfterCreate(value) {
+                var _currentPreset$conten, _currentPreset$extrac, _currentPreset$impers;
+                var currentPreset = settings.promptPresets[settings.promptPreset];
+                settings.promptPresets[value] = {
+                  content: (_currentPreset$conten = currentPreset === null || currentPreset === void 0 ? void 0 : currentPreset.content) !== null && _currentPreset$conten !== void 0 ? _currentPreset$conten : DEFAULT_PROMPT,
+                  extractionStrategy: (_currentPreset$extrac = currentPreset === null || currentPreset === void 0 ? void 0 : currentPreset.extractionStrategy) !== null && _currentPreset$extrac !== void 0 ? _currentPreset$extrac : 'bullet',
+                  impersonate: (_currentPreset$impers = currentPreset === null || currentPreset === void 0 ? void 0 : currentPreset.impersonate) !== null && _currentPreset$impers !== void 0 ? _currentPreset$impers : DEFAULT_IMPERSONATE
+                };
+              }
+            },
+            rename: {
+              onAfterRename: function onAfterRename(previousValue, newValue) {
+                settings.promptPresets[newValue] = settings.promptPresets[previousValue];
+                delete settings.promptPresets[previousValue];
+              }
+            },
+            "delete": {
+              onAfterDelete: function onAfterDelete(value) {
+                delete settings.promptPresets[value];
+              }
+            }
+          }), select = _ref4.select;
+          promptElement = settingsContainer.find('textarea.prompt');
+          promptElement.val((_settings$promptPrese7 = (_settings$promptPrese8 = settings.promptPresets[settings.promptPreset]) === null || _settings$promptPrese8 === void 0 ? void 0 : _settings$promptPrese8.content) !== null && _settings$promptPrese7 !== void 0 ? _settings$promptPrese7 : '');
+          promptElement.on('change', function () {
+            var template = promptElement.val();
+            settings.promptPresets[settings.promptPreset].content = template;
+            settingsManager.saveSettings();
+          });
+          extractionStrategyElement = settingsContainer.find('select.extraction_strategy');
+          impersonateSection = settingsContainer.find('.impersonate_section');
+          impersonateElement = settingsContainer.find('textarea.impersonate');
+          updateExtractionStrategy();
+          extractionStrategyElement.on('change', function () {
+            var value = $(this).val();
+            settings.promptPresets[settings.promptPreset].extractionStrategy = value;
+            settingsManager.saveSettings();
+            var isNone = value === 'none';
+            impersonateSection.toggle(!isNone);
+          });
+          impersonateElement.on('change', function () {
+            settings.promptPresets[settings.promptPreset].impersonate = $(this).val();
+            settingsManager.saveSettings();
+          });
+          // Update extraction strategy when preset changes
+          select.addEventListener('change', updateExtractionStrategy);
+          settingsContainer.find('.restore_default').on('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee4() {
+            var confirm;
+            return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+              while (1) switch (_context4.prev = _context4.next) {
+                case 0:
+                  _context4.next = 2;
+                  return globalContext.Popup.show.confirm('Are you sure you want to restore the default prompt?', 'Restore default');
+                case 2:
+                  confirm = _context4.sent;
+                  if (confirm) {
+                    _context4.next = 5;
+                    break;
+                  }
+                  return _context4.abrupt("return");
+                case 5:
+                  settings.promptPresets['default'] = {
+                    content: DEFAULT_PROMPT,
+                    extractionStrategy: 'bullet',
+                    impersonate: DEFAULT_IMPERSONATE
+                  };
+                  promptElement.val(DEFAULT_PROMPT);
+                  extractionStrategyElement.val('bullet');
+                  impersonateElement.val(DEFAULT_IMPERSONATE);
+                  if (select.value !== 'default') {
+                    select.value = 'default';
+                    select.dispatchEvent(new Event('change'));
+                  } else {
+                    settingsManager.saveSettings();
+                  }
+                case 10:
+                case "end":
+                  return _context4.stop();
+              }
+            }, _callee4);
+          })));
+          maxContextTypeElement = settingsContainer.find('.max_context_type');
+          maxContextValueElement = settingsContainer.find('.max_context_value');
+          maxContextCustomDiv = settingsContainer.find('.max_context_custom');
+          maxContextTypeElement.val(settings.maxContextType);
+          maxContextValueElement.val(settings.maxContextValue);
+          if (settings.maxContextType === 'custom') {
+            maxContextCustomDiv.show();
+          }
+          maxContextTypeElement.on('change', function () {
+            var newType = $(this).val();
+            settings.maxContextType = newType;
+            settingsManager.saveSettings();
+            maxContextCustomDiv.toggle(newType === 'custom');
+          });
+          maxContextValueElement.on('change', function () {
+            settings.maxContextValue = Number($(this).val());
+            settingsManager.saveSettings();
+          });
+          maxResponseTokenElement = settingsContainer.find('.max_response_tokens');
+          maxResponseTokenElement.val(settings.maxResponseToken);
+          maxResponseTokenElement.on('change', function () {
+            settings.maxResponseToken = Number($(this).val());
+            settingsManager.saveSettings();
+          });
+          autoTriggerElement = settingsContainer.find('.auto_trigger');
+          autoTriggerElement.prop('checked', settings.autoTrigger);
+          autoTriggerElement.on('change', function () {
+            settings.autoTrigger = $(this).prop('checked');
+            settingsManager.saveSettings();
+          });
+          autoOpenElement = settingsContainer.find('.auto_open');
+          autoOpenElement.prop('checked', settings.autoOpen);
+          autoOpenElement.on('change', function () {
+            settings.autoOpen = $(this).prop('checked');
+            settingsManager.saveSettings();
+          });
+          showUseActionElement = settingsContainer.find('.show_use_action');
+          showUseActionElement.prop('checked', settings.showUseActionIcon);
+          showUseActionElement.on('change', function () {
+            settings.showUseActionIcon = $(this).prop('checked');
+            settingsManager.saveSettings();
+            // Update visibility of all existing use buttons
+            $('.custom-roadway_options .custom-use_action').toggle(settings.showUseActionIcon);
+          });
+          autoSubmitUseActionElement = settingsContainer.find('.auto_submit_use_action');
+          autoSubmitUseActionElement.prop('checked', settings.autoSubmitUseAction);
+          autoSubmitUseActionElement.on('change', function () {
+            settings.autoSubmitUseAction = $(this).prop('checked');
+            settingsManager.saveSettings();
+          });
+          impersonateApiElement = settingsContainer.find('select.impersonate_api');
+          impersonateApiElement.val(settings.impersonateApi);
+          impersonateApiElement.on('change', function () {
+            settings.impersonateApi = $(this).val();
+            settingsManager.saveSettings();
+          });
+          roadwayButton = $("<div title=\"Generate Roadway\" class=\"mes_button mes_magic_roadway_button fa-solid fa-road interactable\" tabindex=\"0\"></div>");
+          $('#message_template .mes_buttons .extraMesButtons').prepend(roadwayButton);
+          pendingRequests = new Set();
+          $(document).on('click', '.mes_magic_roadway_button', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
+            var _context$extensionSet2;
+            var context, messageBlock, targetMessageId, profile, apiMap, targetMessage, characterId, _settings$promptPrese9, _actions, promptResult, messages, rest, actions, extractionStrategy, innerText, existMessage, newMessage, _detailsElement, detailsElement;
+            return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+              while (1) switch (_context5.prev = _context5.next) {
+                case 0:
+                  context = SillyTavern.getContext();
+                  if (settings.profileId) {
+                    _context5.next = 5;
+                    break;
+                  }
+                  _context5.next = 4;
+                  return (0, config_1.st_echo)('error', 'Please select a connection profile first in the settings.');
+                case 4:
+                  return _context5.abrupt("return");
+                case 5:
+                  if (settings.promptPreset) {
+                    _context5.next = 9;
+                    break;
+                  }
+                  _context5.next = 8;
+                  return (0, config_1.st_echo)('error', 'Please enter a prompt first in the settings.');
+                case 8:
+                  return _context5.abrupt("return");
+                case 9:
+                  messageBlock = $(this).closest('.mes');
+                  targetMessageId = Number(messageBlock.attr('mesid'));
+                  profile = (_context$extensionSet2 = context.extensionSettings.connectionManager) === null || _context$extensionSet2 === void 0 || (_context$extensionSet2 = _context$extensionSet2.profiles) === null || _context$extensionSet2 === void 0 ? void 0 : _context$extensionSet2.find(function (profile) {
+                    return profile.id === settings.profileId;
+                  });
+                  apiMap = profile !== null && profile !== void 0 && profile.api ? context.CONNECT_API_MAP[profile.api] : null;
+                  targetMessage = context.chat.find(function (_mes, index) {
+                    return index === targetMessageId;
+                  });
+                  if (targetMessage) {
+                    _context5.next = 16;
+                    break;
+                  }
+                  return _context5.abrupt("return");
+                case 16:
+                  characterId = config_1.characters.findIndex(function (_char) {
+                    return _char.avatar === targetMessage.original_avatar;
+                  });
+                  characterId = characterId !== -1 ? characterId : undefined;
+                  _context5.prev = 18;
+                  if (!pendingRequests.has(targetMessageId)) {
+                    _context5.next = 23;
+                    break;
+                  }
+                  _context5.next = 22;
+                  return (0, config_1.st_echo)('warning', 'A request for this message is already in progress. Please wait.');
+                case 22:
+                  return _context5.abrupt("return");
+                case 23:
+                  pendingRequests.add(targetMessageId);
+                  $(this).addClass('spinning');
+                  _context5.next = 27;
+                  return (0, sillytavern_utils_lib_1.buildPrompt)(apiMap === null || apiMap === void 0 ? void 0 : apiMap.selected, {
+                    targetCharacterId: characterId,
+                    messageIndexesBetween: {
+                      end: targetMessageId
+                    },
+                    presetName: profile === null || profile === void 0 ? void 0 : profile.preset,
+                    contextName: profile === null || profile === void 0 ? void 0 : profile.context,
+                    instructName: profile === null || profile === void 0 ? void 0 : profile.instruct,
+                    syspromptName: profile === null || profile === void 0 ? void 0 : profile.sysprompt,
+                    maxContext: settings.maxContextType === 'custom' ? settings.maxContextValue : settings.maxContextType === 'profile' ? 'preset' : 'active',
+                    includeNames: !!config_1.selected_group
+                  });
+                case 27:
+                  promptResult = _context5.sent;
+                  messages = promptResult.result;
+                  messages.push({
+                    content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
+                    role: 'system'
+                  });
+                  _context5.next = 32;
+                  return context.ConnectionManagerRequestService.sendRequest(settings.profileId, messages, settings.maxResponseToken);
+                case 32:
+                  rest = _context5.sent;
+                  actions = [];
+                  extractionStrategy = (_settings$promptPrese9 = settings.promptPresets[settings.promptPreset]) === null || _settings$promptPrese9 === void 0 ? void 0 : _settings$promptPrese9.extractionStrategy;
+                  if (!(extractionStrategy === 'bullet')) {
+                    _context5.next = 40;
+                    break;
+                  }
+                  actions = extractBulletPoints(rest.content);
+                  if (!(actions.length === 0)) {
+                    _context5.next = 40;
+                    break;
+                  }
+                  _context5.next = 40;
+                  return (0, config_1.st_echo)('warning', 'Could not extract any bullet points from the response. Using original response.');
+                case 40:
+                  innerText = (_actions = actions) !== null && _actions !== void 0 && _actions.length ? actions.map(function (action, index) {
+                    return "".concat(index + 1, ". ").concat(action);
+                  }).join('\n') : rest.content;
+                  existMessage = context.chat.find(function (mes) {
+                    var _mes$extra;
+                    return ((_mes$extra = mes.extra) === null || _mes$extra === void 0 ? void 0 : _mes$extra[KEYS.EXTRA.TARGET]) === targetMessageId;
+                  });
+                  newMessage = existMessage !== null && existMessage !== void 0 ? existMessage : {
+                    mes: formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined),
+                    name: config_1.systemUserName,
+                    force_avatar: config_1.system_avatar,
+                    is_system: true,
+                    is_user: false,
+                    extra: _defineProperty(_defineProperty(_defineProperty({
+                      isSmallSys: true
+                    }, KEYS.EXTRA.TARGET, targetMessageId), KEYS.EXTRA.RAW_CONTENT, innerText), KEYS.EXTRA.OPTIONS, actions)
+                  };
+                  if (existMessage) {
+                    newMessage.mes = formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined);
+                    newMessage.extra[KEYS.EXTRA.RAW_CONTENT] = rest.content;
+                    newMessage.extra[KEYS.EXTRA.OPTIONS] = actions;
+                    _detailsElement = $("[mesid=\"".concat(targetMessageId + 1, "\"] .mes_text"));
+                    _detailsElement.html(formatResponse(innerText, extractionStrategy === 'bullet' ? actions : undefined, 'custom-'));
+                  } else {
+                    context.chat.push(newMessage);
+                    context.addOneMessage(newMessage, {
+                      insertAfter: targetMessageId
+                    });
+                  }
+                  detailsElement = $("[mesid=\"".concat(targetMessageId + 1, "\"] .mes_text details"));
+                  if (settings.autoOpen && !detailsElement.attr('open')) {
+                    detailsElement.attr('open', '');
+                  }
+                  attachRoadwayOptionHandlers(targetMessageId + 1);
+                  _context5.next = 49;
+                  return context.saveChat();
+                case 49:
+                  _context5.next = 56;
+                  break;
+                case 51:
+                  _context5.prev = 51;
+                  _context5.t0 = _context5["catch"](18);
+                  console.error(_context5.t0);
+                  _context5.next = 56;
+                  return (0, config_1.st_echo)('error', "Error: ".concat(_context5.t0));
+                case 56:
+                  _context5.prev = 56;
+                  pendingRequests["delete"](targetMessageId);
+                  $('.mes_magic_roadway_button').removeClass('spinning');
+                  return _context5.finish(56);
+                case 60:
+                case "end":
+                  return _context5.stop();
+              }
+            }, _callee5, this, [[18, 51, 56, 60]]);
+          })));
+        case 51:
+        case "end":
+          return _context6.stop();
+      }
+    }, _callee6);
+  }));
+  return _handleUIChanges.apply(this, arguments);
+}
+function extractBulletPoints(text) {
+  var matches = text.match(/^(?:\d+\.(?:\s+|(?=\S))|-\s+)(.*)$/gm) || [];
+  return matches.map(function (line) {
+    return line.replace(/^(?:\d+\.(?:\s+|(?=\S))|-\s+)/, '').trim();
+  });
+}
+var generator = new sillytavern_utils_lib_1.Generator();
+var lastRequestId;
+function attachRoadwayOptionHandlers(roadwayMessageId) {
+  var optionsContainer = $("[mesid=\"".concat(roadwayMessageId, "\"] .custom-roadway_options"));
+  optionsContainer.find('.custom-action_button').off();
+  var context = SillyTavern.getContext();
+  // Handle impersonate action
+  optionsContainer.find('.custom-impersonate_action').on('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+    var _message$extra;
+    var parentOption, index, message, settings, preset, impersonate, _context$extensionSet, profile, apiMap, promptResult, messages, streamingEnabled, maxResponseToken, _preset, _preset2, _ref2, _preset2$streaming, _preset2$genamt, textInputElement, abortController;
+    return _regeneratorRuntime().wrap(function _callee$(_context) {
+      while (1) switch (_context.prev = _context.next) {
+        case 0:
+          parentOption = $(this).closest('.custom-roadway_option');
+          index = optionsContainer.find('.custom-roadway_option').index(parentOption);
+          message = context.chat.find(function (mes, index) {
+            return roadwayMessageId === index;
+          });
+          if (message) {
+            _context.next = 5;
+            break;
+          }
+          return _context.abrupt("return");
+        case 5:
+          settings = settingsManager.getSettings();
+          preset = settings.promptPresets[context.extensionSettings[KEYS.EXTENSION].promptPreset];
+          if (!(!preset || !preset.impersonate)) {
+            _context.next = 11;
+            break;
+          }
+          _context.next = 10;
+          return (0, config_1.st_echo)('error', 'Preset not found. Please check the extension settings.');
+        case 10:
+          return _context.abrupt("return");
+        case 11:
+          impersonate = globalContext.substituteParams(preset.impersonate, undefined, undefined, undefined, undefined, undefined, {
+            roadwaySelected: (_message$extra = message.extra) === null || _message$extra === void 0 || (_message$extra = _message$extra[KEYS.EXTRA.OPTIONS]) === null || _message$extra === void 0 ? void 0 : _message$extra[index]
+          }, undefined);
+          if (!(settings.impersonateApi === 'profile')) {
+            _context.next = 49;
+            break;
+          }
+          if (settings.profileId) {
+            _context.next = 17;
+            break;
+          }
+          _context.next = 16;
+          return (0, config_1.st_echo)('error', 'Please select a connection profile first in the settings.');
+        case 16:
+          return _context.abrupt("return");
+        case 17:
+          profile = (_context$extensionSet = context.extensionSettings.connectionManager) === null || _context$extensionSet === void 0 || (_context$extensionSet = _context$extensionSet.profiles) === null || _context$extensionSet === void 0 ? void 0 : _context$extensionSet.find(function (profile) {
+            return profile.id === settings.profileId;
+          });
+          apiMap = profile !== null && profile !== void 0 && profile.api ? context.CONNECT_API_MAP[profile.api] : null;
+          if (apiMap !== null && apiMap !== void 0 && apiMap.selected) {
+            _context.next = 22;
+            break;
+          }
+          (0, config_1.st_echo)('error', 'Please select an API in the connection profile.');
+          return _context.abrupt("return");
+        case 22:
+          globalContext.deactivateSendButtons();
+          _context.prev = 23;
+          _context.next = 26;
+          return (0, sillytavern_utils_lib_1.buildPrompt)(apiMap.selected, {
+            presetName: profile === null || profile === void 0 ? void 0 : profile.preset,
+            contextName: profile === null || profile === void 0 ? void 0 : profile.context,
+            instructName: profile === null || profile === void 0 ? void 0 : profile.instruct,
+            syspromptName: profile === null || profile === void 0 ? void 0 : profile.sysprompt,
+            maxContext: settings.maxContextType === 'custom' ? settings.maxContextValue : settings.maxContextType === 'profile' ? 'preset' : 'active',
+            includeNames: !!config_1.selected_group
+          });
+        case 26:
+          promptResult = _context.sent;
+          messages = promptResult.result;
+          messages.push({
+            role: 'system',
+            content: impersonate
+          });
+          streamingEnabled = true;
+          maxResponseToken = settings.maxResponseToken;
+          if (apiMap.selected === 'openai') {
+            _preset = globalContext.getPresetManager('openai').getCompletionPresetByName(profile === null || profile === void 0 ? void 0 : profile.preset);
+            if (_preset) {
+              streamingEnabled = _preset.stream_openai;
+              maxResponseToken = _preset.openai_max_tokens;
+            }
+          } else if (apiMap.selected === 'textgenerationwebui') {
+            _preset2 = globalContext.getPresetManager('textgenerationwebui').getCompletionPresetByName(profile === null || profile === void 0 ? void 0 : profile.preset);
+            if (_preset2) {
+              streamingEnabled = (_ref2 = (_preset2$streaming = _preset2.streaming) !== null && _preset2$streaming !== void 0 ? _preset2$streaming : context.textCompletionSettings.streaming) !== null && _ref2 !== void 0 ? _ref2 : false;
+              maxResponseToken = (_preset2$genamt = _preset2.genamt) !== null && _preset2$genamt !== void 0 ? _preset2$genamt : maxResponseToken;
+            }
+          }
+          textInputElement = $('#send_textarea');
+          abortController = new AbortController();
+          _context.next = 36;
+          return generator.generateRequest({
+            profileId: settings.profileId,
+            prompt: messages,
+            maxTokens: maxResponseToken,
+            custom: {
+              stream: streamingEnabled,
+              signal: streamingEnabled ? abortController.signal : undefined
+            }
+          }, {
+            abortController: streamingEnabled ? abortController : undefined,
+            onStart: function onStart(uuid) {
+              lastRequestId = uuid;
+              globalContext.eventSource.emit(types_1.EventNames.GENERATION_STARTED, 'impersonate', {
+                signal: streamingEnabled ? abortController.signal : undefined
+              });
+            },
+            onEntry: function onEntry(data) {
+              if (streamingEnabled && data) {
+                textInputElement.val(data.text);
+                textInputElement.trigger('input');
+                textInputElement.trigger('change');
+              }
+            },
+            onFinish: function onFinish(data, error) {
+              if (!streamingEnabled && data) {
+                textInputElement.val(data.content);
+                textInputElement.trigger('input');
+                textInputElement.trigger('change');
+              }
+              if (error) {
+                (0, config_1.st_echo)('error', "Error: ".concat(error));
+              }
+              globalContext.activateSendButtons();
+            }
+          });
+        case 36:
+          _context.next = 43;
+          break;
+        case 38:
+          _context.prev = 38;
+          _context.t0 = _context["catch"](23);
+          console.error(_context.t0);
+          _context.next = 43;
+          return (0, config_1.st_echo)('error', "Error: ".concat(_context.t0));
+        case 43:
+          _context.prev = 43;
+          globalContext.activateSendButtons();
+          lastRequestId = undefined;
+          return _context.finish(43);
+        case 47:
+          _context.next = 50;
+          break;
+        case 49:
+          (0, config_1.st_runCommandCallback)('impersonate', undefined, impersonate);
+        case 50:
+        case "end":
+          return _context.stop();
+      }
+    }, _callee, this, [[23, 38, 43, 47]]);
+  })));
+  // Handle use action
+  optionsContainer.find('.custom-use_action').on('click', function () {
+    var parentOption = $(this).closest('.custom-roadway_option');
+    var contentDiv = parentOption.find('.custom-option_content');
+    var text = contentDiv.text();
+    if (text) {
+      $('#send_textarea').val(text);
+      $('#send_textarea').trigger('input');
+      if (settingsManager.getSettings().autoSubmitUseAction) {
+        $('#send_but').trigger('click');
+      }
+      var useButton = $(this);
+      useButton.html('✓');
+      setTimeout(function () {
+        useButton.html('▶️');
+      }, 1000);
+    }
+  });
+  // Handle edit action
+  optionsContainer.find('.custom-edit_action').on('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
+    var parentOption, contentDiv, originalText, input;
+    return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+      while (1) switch (_context2.prev = _context2.next) {
+        case 0:
+          parentOption = $(this).closest('.custom-roadway_option');
+          contentDiv = parentOption.find('.custom-option_content');
+          originalText = contentDiv.text(); // Create input for editing
+          input = $('<textarea>').val(originalText).css({
+            width: '100%',
+            minHeight: '50px',
+            resize: 'vertical',
+            backgroundColor: 'var(--SmartThemeBlurTintColor)',
+            color: 'var(--SmartThemeBodyColor)',
+            border: '1px solid var(--SmartThemeBorderColor)',
+            borderRadius: 'var(--avatar-base-border-radius)',
+            padding: 'calc(var(--mainFontSize) * 0.5)'
+          });
+          contentDiv.empty().append(input);
+          input.trigger('focus');
+          // Handle save on blur
+          input.on('blur', function () {
+            var _message$extra2;
+            var newText = input.val();
+            contentDiv.text(newText);
+            // Update the stored options
+            var message = context.chat.find(function (_mes, index) {
+              return roadwayMessageId === index;
+            });
+            if (message !== null && message !== void 0 && (_message$extra2 = message.extra) !== null && _message$extra2 !== void 0 && _message$extra2[KEYS.EXTRA.OPTIONS]) {
+              var index = optionsContainer.find('.custom-roadway_option').index(parentOption);
+              message.extra[KEYS.EXTRA.OPTIONS][index] = newText;
+              context.saveChat();
+            }
+          });
+          // Handle save on enter (shift+enter for new line)
+          input.on('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              input.trigger('blur');
+            }
+          });
+        case 8:
+        case "end":
+          return _context2.stop();
+      }
+    }, _callee2, this);
+  })));
+}
+function initializeEvents() {
+  // If last message is roadway, add event listener
+  globalContext.eventSource.on(types_1.EventNames.CHAT_CHANGED, function () {
+    var _lastMessage$extra;
+    var context = SillyTavern.getContext();
+    if (!context.chat.length) {
+      return;
+    }
+    $('.custom-roadway_options .custom-use_action').toggle(settingsManager.getSettings().showUseActionIcon);
+    var lastMessage = context.chat[context.chat.length - 1];
+    if (typeof ((_lastMessage$extra = lastMessage.extra) === null || _lastMessage$extra === void 0 ? void 0 : _lastMessage$extra[KEYS.EXTRA.TARGET]) === 'number') {
+      attachRoadwayOptionHandlers(context.chat.length - 1);
+    }
+  });
+  var lastRenderedMessageId = -1;
+  // Auto trigger when new character message is received
+  // @ts-ignore
+  globalContext.eventSource.makeFirst(types_1.EventNames.CHARACTER_MESSAGE_RENDERED, function (messageId, type) {
+    lastRenderedMessageId = messageId;
+    var settings = settingsManager.getSettings();
+    if (!settings.autoTrigger || type === 'group_chat' || config_1.selected_group) {
+      return;
+    }
+    // Simulate clicking the roadway button for this message
+    var messageBlock = $("[mesid=\"".concat(messageId, "\"]"));
+    messageBlock.find('.mes_magic_roadway_button').trigger('click');
+  });
+  var allowed_group_types = ['normal', 'continue', 'swipe'];
+  // @ts-ignore
+  globalContext.eventSource.makeFirst(types_1.EventNames.GROUP_WRAPPER_FINISHED, function (params) {
+    var settings = settingsManager.getSettings();
+    if (!settings.autoTrigger || lastRenderedMessageId === -1 || !allowed_group_types.includes(params.type)) {
+      return;
+    }
+    // Simulate clicking the roadway button for this message
+    var messageBlock = $("[mesid=\"".concat(lastRenderedMessageId, "\"]"));
+    messageBlock.find('.mes_magic_roadway_button').trigger('click');
+  });
+  $('#mes_stop').on('click', function () {
+    if (lastRequestId) {
+      generator.abortRequest(lastRequestId);
+    }
+  });
+}
+function importCheck() {
+  if (!globalContext.ConnectionManagerRequestService) {
+    return false;
+  }
+  if (!globalContext.getCharacterCardFields) {
+    return false;
+  }
+  if (!globalContext.getWorldInfoPrompt) {
+    return false;
+  }
+  return true;
+}
+function main() {
+  handleUIChanges();
+  initializeEvents();
+}
+if (!importCheck()) {
+  var errorStr = '[Roadway Error] Make sure ST is updated.';
+  (0, config_1.st_echo)('error', errorStr);
+} else {
+  settingsManager.initializeSettings().then(function (result) {
+    if (result.version.changed) {
+      // 0.3.0 to 0.4.0
+      if (result.oldSettings.version < '0.4.0' && result.newSettings.version === '0.4.0') {
+        (0, config_1.st_echo)('info', '[Roadway] Added impersonate with connection profile api. Check extension settings.');
+      }
+    }
+    main();
+  })["catch"](function (error) {
+    (0, config_1.st_echo)('error', error);
+    globalContext.Popup.show.confirm('Data migration failed. Do you want to reset the roadway data?', 'Roadway').then(function (result) {
+      if (result) {
+        settingsManager.resetSettings();
+        main();
+      }
+    });
+  });
+}
+})();
+
+var __webpack_exports___esModule = __webpack_exports__.__esModule;
+export { __webpack_exports___esModule as __esModule };
+
+//# sourceMappingURL=index.js.map

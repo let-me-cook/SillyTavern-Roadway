@@ -104,6 +104,24 @@
                     Automatically send message on "use" action
                 </label>
             </div>
+            <div style="margin-top: 10px; display: flex; flex-direction: column">
+                <label class="checkbox_label" for="no_ass_mode">
+                    <input type="checkbox" id="no_ass_mode" class="no_ass_mode" />
+                    No-Ass mode (squash user/assistant turns)
+                </label>
+            </div>
+            <div class="no_ass_mode_options" style="margin-top: 10px">
+                <div>
+                    <label>Placement</label>
+                </div>
+                <select class="text_pole no_ass_mode_placement" title="Select placement">
+                    <option value="prependUser">Prepend to user message</option>
+                    <option value="appendUser">Append to user message</option>
+                    <option value="prependAssistant">Prepend to assistant message</option>
+                    <option value="appendAssistant">Append to assistant message</option>
+                    <option value="variable">Use {{squashedMessages}} variable</option>
+                </select>
+            </div>
         </div>
     </div>
 </div>
