@@ -1,4 +1,4 @@
-import { buildPrompt, buildPresetSelect, ExtensionSettingsManager, Generator } from 'sillytavern-utils-lib';
+import { buildPrompt, buildPresetSelect, ExtensionSettingsManager, Generator, Message } from 'sillytavern-utils-lib';
 import {
   characters,
   selected_group,
@@ -45,6 +45,7 @@ interface ExtensionSettings {
   impersonateApi: 'main' | 'profile';
   showUseActionIcon: boolean;
   autoSubmitUseAction: boolean;
+  useNoAss: boolean;
 }
 
 const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
@@ -80,6 +81,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   impersonateApi: 'main',
   showUseActionIcon: true,
   autoSubmitUseAction: false,
+  useNoAss: false,
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
@@ -274,6 +276,13 @@ async function handleUIChanges(): Promise<void> {
     settingsManager.saveSettings();
   });
 
+  const useNoAssElement = settingsContainer.find('.use_no_ass');
+  useNoAssElement.prop('checked', settings.useNoAss);
+  useNoAssElement.on('change', function () {
+    settings.useNoAss = $(this).prop('checked');
+    settingsManager.saveSettings();
+  });
+
   const impersonateApiElement = settingsContainer.find('select.impersonate_api');
   impersonateApiElement.val(settings.impersonateApi);
   impersonateApiElement.on('change', function () {
@@ -338,11 +347,55 @@ async function handleUIChanges(): Promise<void> {
               : 'active',
         includeNames: !!selected_group,
       });
-      const messages = promptResult.result;
-      messages.push({
-        content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
-        role: 'system',
-      });
+
+	  function noAss(
+		roleplayMessages: Message[], 
+		roadwayInstruction: string, 
+		roadwayRole: "system" | "user", 
+		formattedRoleplayMessagePosition: "append_top" | "append_bottom"
+	) {
+		let formattedRoleplayMessages = roleplayMessages.filter((value) => {
+			value.role != "system"
+		}).map((message) => {
+			if (message.role == "user") {
+				return `{{user}}: ${message}`
+			} else if (message.role == "assistant") { 
+				return `{{assistant}}: ${message}`
+			}
+		}).join("\n\n")
+
+		if (formattedRoleplayMessagePosition == "append_bottom" ){
+			return {
+				content: roadwayInstruction + "\n" + formattedRoleplayMessages,
+				role: roadwayRole,
+			}
+		} else {
+			return {
+				content: formattedRoleplayMessages + roadwayInstruction,
+				role: roadwayRole,
+			}
+		}
+	  }
+
+	  var messages = []
+	  if (settings.useNoAss) {
+		messages = [];
+		messages.push(
+			noAss(
+				promptResult.result, 
+				context.substituteParams(settings.promptPresets[settings.promptPreset].content), 
+				"user", 
+				"append_bottom"
+			)
+		)
+	  } else {
+		messages = promptResult.result;
+		messages.push({
+			content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
+			role: 'user',
+		});
+	  }
+
       const rest = (await context.ConnectionManagerRequestService.sendRequest(
         settings.profileId,
         messages,
