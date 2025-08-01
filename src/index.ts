@@ -371,7 +371,7 @@ async function handleUIChanges(): Promise<void> {
 			}
 		} else {
 			return {
-				content: formattedRoleplayMessages + roadwayInstruction,
+				content: formattedRoleplayMessages + "\n" + roadwayInstruction,
 				role: roadwayRole,
 			}
 		}
@@ -379,7 +379,7 @@ async function handleUIChanges(): Promise<void> {
 
 	  var messages = []
 	  if (settings.useNoAss) {
-		messages = [];
+		console.log("[Roadway NoAss] useNoAss path")
 		messages.push(
 			noAss(
 				promptResult.result, 
@@ -389,6 +389,7 @@ async function handleUIChanges(): Promise<void> {
 			)
 		)
 	  } else {
+		console.log("[Roadway NoAss] not useNoAss path")
 		messages = promptResult.result;
 		messages.push({
 			content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
@@ -396,6 +397,7 @@ async function handleUIChanges(): Promise<void> {
 		});
 	  }
 
+	  console.log("[Roadway NoAss] messages: ", messages)
       const rest = (await context.ConnectionManagerRequestService.sendRequest(
         settings.profileId,
         messages,
