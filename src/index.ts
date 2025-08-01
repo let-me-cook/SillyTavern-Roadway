@@ -386,7 +386,7 @@ async function handleUIChanges(): Promise<void> {
           };
         } else {
           return {
-            content: context.substituteParams(roadwayInstruction).replace("{{roadwayNoAssMessages}}", formattedRoleplayMessages),
+            content: context.substituteParams(roadwayInstruction.replace("{{roadwayNoAssMessages}}", formattedRoleplayMessages)),
             role: roadwayRole,
           };
         }
