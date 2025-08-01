@@ -369,7 +369,7 @@ async function handleUIChanges(): Promise<void> {
             if (message.role === 'user') {
               return `{{user}}: ${message.content}`;
             } else if (message.role === 'assistant') {
-              return `{{assistant}}: ${message.content}`;
+              return `{{char}}: ${message.content}`;
             }
           })
           .join('\n\n');
