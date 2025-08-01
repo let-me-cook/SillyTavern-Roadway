@@ -379,7 +379,7 @@ async function handleUIChanges(): Promise<void> {
 
 	  var messages = []
 	  if (settings.useNoAss) {
-		console.log("[Roadway NoAss] useNoAss path")
+		await st_echo("warning", "[Roadway NoAss] useNoAss path")
 		messages.push(
 			noAss(
 				promptResult.result, 
@@ -389,7 +389,7 @@ async function handleUIChanges(): Promise<void> {
 			)
 		)
 	  } else {
-		console.log("[Roadway NoAss] not useNoAss path")
+		await st_echo("warning", "[Roadway NoAss] not useNoAss path")
 		messages = promptResult.result;
 		messages.push({
 			content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
