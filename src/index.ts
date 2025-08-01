@@ -357,52 +357,53 @@ async function handleUIChanges(): Promise<void> {
         includeNames: !!selected_group,
       });
 
-	  function noAss(
-		roleplayMessages: Message[], 
-		roadwayInstruction: string, 
-		roadwayRole: "system" | "user", 
-		formattedRoleplayMessagePosition: "append_top" | "append_bottom"
-	) {
-    let formattedRoleplayMessages = roleplayMessages.filter((value) => {
-      return value.role != "system";
-    }).map((message) => {
-      if (message.role == "user") {
-        return `{{user}}: ${message}`
-      } else if (message.role == "assistant") { 
-        return `{{assistant}}: ${message}`
+      function noAss(
+        roleplayMessages: Message[],
+        roadwayInstruction: string,
+        roadwayRole: 'system' | 'user',
+        formattedRoleplayMessagePosition: 'append_top' | 'append_bottom',
+      ) {
+        const formattedRoleplayMessages = roleplayMessages
+          .filter((value) => value.role !== 'system')
+          .map((message) => {
+            if (message.role === 'user') {
+              return `{{user}}: ${message.content}`;
+            } else if (message.role === 'assistant') {
+              return `{{assistant}}: ${message.content}`;
+            }
+          })
+          .join('\n\n');
+
+        if (formattedRoleplayMessagePosition === 'append_bottom') {
+          return {
+            content: context.substituteParams(roadwayInstruction + '\n' + formattedRoleplayMessages),
+            role: roadwayRole,
+          };
+        } else {
+          return {
+            content: context.substituteParams(formattedRoleplayMessages + '\n' + roadwayInstruction),
+            role: roadwayRole,
+          };
+        }
       }
-    }).join("\n\n")
 
-		if (formattedRoleplayMessagePosition == "append_bottom" ){
-			return {
-				content: roadwayInstruction + "\n" + formattedRoleplayMessages,
-				role: roadwayRole,
-			}
-		} else {
-			return {
-				content: formattedRoleplayMessages + "\n" + roadwayInstruction,
-				role: roadwayRole,
-			}
-		}
-	  }
-
-	  var messages = []
-	  if (settings.useNoAss) {
-		messages.push(
-			noAss(
-				promptResult.result, 
-				context.substituteParams(settings.promptPresets[settings.promptPreset].content), 
-				"user", 
-				settings.formattedRoleplayMessagePosition
-			)
-		)
-	  } else {
-		messages = promptResult.result;
-		messages.push({
-			content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
-			role: 'user',
-		});
-	  }
+      const messages = [];
+      if (settings.useNoAss) {
+        messages.push(
+          noAss(
+            promptResult.result,
+            settings.promptPresets[settings.promptPreset].content,
+            'user',
+            settings.formattedRoleplayMessagePosition,
+          ),
+        );
+      } else {
+        messages.push(...promptResult.result);
+        messages.push({
+          content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
+          role: 'user',
+        });
+      }
 
       const rest = (await context.ConnectionManagerRequestService.sendRequest(
         settings.profileId,
