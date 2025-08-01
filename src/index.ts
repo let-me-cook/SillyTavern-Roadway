@@ -46,7 +46,7 @@ interface ExtensionSettings {
   showUseActionIcon: boolean;
   autoSubmitUseAction: boolean;
   useNoAss: boolean;
-  formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessage}})';
+  formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})';
 }
 
 const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
@@ -83,7 +83,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   showUseActionIcon: true,
   autoSubmitUseAction: false,
   useNoAss: true,
-  formattedRoleplayMessagePosition: 'to_var({{roadwayNoAssMessage}})',
+  formattedRoleplayMessagePosition: 'to_var({{roadwayNoAssMessages}})',
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
@@ -288,7 +288,7 @@ async function handleUIChanges(): Promise<void> {
   const formattedRoleplayMessagePositionElement = settingsContainer.find('.formatted_roleplay_message_position');
   formattedRoleplayMessagePositionElement.val(settings.formattedRoleplayMessagePosition);
   formattedRoleplayMessagePositionElement.on('change', function () {
-    settings.formattedRoleplayMessagePosition = $(this).val() as 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessage}})';
+    settings.formattedRoleplayMessagePosition = $(this).val() as 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})';
     settingsManager.saveSettings();
   });
 
@@ -361,7 +361,7 @@ async function handleUIChanges(): Promise<void> {
         roleplayMessages: Message[],
         roadwayInstruction: string,
         roadwayRole: 'system' | 'user',
-        formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessage}})',
+        formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})',
       ) {
         const formattedRoleplayMessages = roleplayMessages
           .filter((value) => value.role !== 'system')
@@ -386,10 +386,7 @@ async function handleUIChanges(): Promise<void> {
           };
         } else {
           return {
-            content: context.substituteParams(roadwayInstruction),
-            extra: {
-              roadwayNoAssMessage: formattedRoleplayMessages,
-            },
+            content: context.substituteParams(roadwayInstruction).replace("{{roadwayNoAssMessages}}", formattedRoleplayMessages),
             role: roadwayRole,
           };
         }
