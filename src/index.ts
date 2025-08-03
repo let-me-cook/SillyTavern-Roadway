@@ -357,41 +357,6 @@ async function handleUIChanges(): Promise<void> {
         includeNames: !!selected_group,
       });
 
-      function noAss(
-        roleplayMessages: Message[],
-        roadwayInstruction: string,
-        roadwayRole: 'system' | 'user',
-        formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})',
-      ) {
-        const formattedRoleplayMessages = roleplayMessages
-          .filter((value) => value.role !== 'system')
-          .map((message) => {
-            if (message.role === 'user') {
-              return `{{user}}: ${message.content}`;
-            } else if (message.role === 'assistant') {
-              return `{{char}}: ${message.content}`;
-            }
-          })
-          .join('\n\n');
-
-        if (formattedRoleplayMessagePosition === 'append_bottom') {
-          return {
-            content: context.substituteParams(roadwayInstruction + '\n' + formattedRoleplayMessages),
-            role: roadwayRole,
-          };
-        } else if (formattedRoleplayMessagePosition === 'append_top') {
-          return {
-            content: context.substituteParams(formattedRoleplayMessages + '\n' + roadwayInstruction),
-            role: roadwayRole,
-          };
-        } else {
-          return {
-            content: context.substituteParams(roadwayInstruction.replace("{{roadwayNoAssMessages}}", formattedRoleplayMessages)),
-            role: roadwayRole,
-          };
-        }
-      }
-
       const messages = [];
       if (settings.useNoAss) {
         messages.push(
@@ -541,6 +506,42 @@ function extractBulletPoints(text: string): string[] {
   });
 }
 
+function noAss(
+  roleplayMessages: Message[],
+  roadwayInstruction: string,
+  roadwayRole: 'system' | 'user',
+  formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})',
+) {
+  const context = SillyTavern.getContext();
+  const formattedRoleplayMessages = roleplayMessages
+    .filter((value) => value.role !== 'system')
+    .map((message) => {
+      if (message.role === 'user') {
+        return `{{user}}: ${message.content}`;
+      } else if (message.role === 'assistant') {
+        return `{{char}}: ${message.content}`;
+      }
+    })
+    .join('\n\n');
+
+  if (formattedRoleplayMessagePosition === 'append_bottom') {
+    return {
+      content: context.substituteParams(roadwayInstruction + '\n' + formattedRoleplayMessages),
+      role: roadwayRole,
+    };
+  } else if (formattedRoleplayMessagePosition === 'append_top') {
+    return {
+      content: context.substituteParams(formattedRoleplayMessages + '\n' + roadwayInstruction),
+      role: roadwayRole,
+    };
+  } else {
+    return {
+      content: context.substituteParams(roadwayInstruction.replace('{{roadwayNoAssMessages}}', formattedRoleplayMessages)),
+      role: roadwayRole,
+    };
+  }
+}
+
 const generator = new Generator();
 let lastRequestId: string | undefined;
 function attachRoadwayOptionHandlers(roadwayMessageId: number) {
@@ -609,11 +610,18 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
                 : 'active',
           includeNames: !!selected_group,
         });
-        const messages = promptResult.result;
-        messages.push({
-          role: 'system',
-          content: impersonate,
-        });
+        const messages = [];
+        if (settings.useNoAss) {
+          messages.push(
+            noAss(promptResult.result, impersonate, 'system', settings.formattedRoleplayMessagePosition),
+          );
+        } else {
+          messages.push(...promptResult.result);
+          messages.push({
+            role: 'system',
+            content: impersonate,
+          });
+        }
 
         let streamingEnabled = true;
         let maxResponseToken = settings.maxResponseToken;
