@@ -12,7 +12,7 @@ import { ChatCompletionPreset } from 'sillytavern-utils-lib/types/chat-completio
 import { TextCompletionPreset } from 'sillytavern-utils-lib/types/text-completion';
 
 const extensionName = 'SillyTavern-Roadway';
-const VERSION = '0.4.0';
+const VERSION = '0.4.1';
 const FORMAT_VERSION = 'F_1.0';
 const globalContext = SillyTavern.getContext();
 
@@ -46,6 +46,7 @@ interface ExtensionSettings {
   showUseActionIcon: boolean;
   autoSubmitUseAction: boolean;
   useNoAss: boolean;
+  noAssRole: 'system' | 'user';
   formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})';
 }
 
@@ -83,6 +84,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   showUseActionIcon: true,
   autoSubmitUseAction: false,
   useNoAss: true,
+  noAssRole: 'user',
   formattedRoleplayMessagePosition: 'to_var({{roadwayNoAssMessages}})',
   promptPresets: {
     default: {
@@ -288,7 +290,17 @@ async function handleUIChanges(): Promise<void> {
   const formattedRoleplayMessagePositionElement = settingsContainer.find('.formatted_roleplay_message_position');
   formattedRoleplayMessagePositionElement.val(settings.formattedRoleplayMessagePosition);
   formattedRoleplayMessagePositionElement.on('change', function () {
-    settings.formattedRoleplayMessagePosition = $(this).val() as 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})';
+    settings.formattedRoleplayMessagePosition = $(this).val() as
+      | 'append_top'
+      | 'append_bottom'
+      | 'to_var({{roadwayNoAssMessages}})';
+    settingsManager.saveSettings();
+  });
+
+  const noAssRoleElement = settingsContainer.find('.no_ass_role');
+  noAssRoleElement.val(settings.noAssRole);
+  noAssRoleElement.on('change', function () {
+    settings.noAssRole = $(this).val() as 'system' | 'user';
     settingsManager.saveSettings();
   });
 
@@ -363,7 +375,7 @@ async function handleUIChanges(): Promise<void> {
           noAss(
             promptResult.result,
             settings.promptPresets[settings.promptPreset].content,
-            'user',
+            settings.noAssRole,
             settings.formattedRoleplayMessagePosition,
           ),
         );
@@ -506,7 +518,7 @@ function extractBulletPoints(text: string): string[] {
   });
 }
 
-function noAss(
+export function noAss(
   roleplayMessages: Message[],
   roadwayInstruction: string,
   roadwayRole: 'system' | 'user',
@@ -536,7 +548,9 @@ function noAss(
     };
   } else {
     return {
-      content: context.substituteParams(roadwayInstruction.replace('{{roadwayNoAssMessages}}', formattedRoleplayMessages)),
+      content: context.substituteParams(
+        roadwayInstruction.replace('{{roadwayNoAssMessages}}', formattedRoleplayMessages),
+      ),
       role: roadwayRole,
     };
   }
@@ -612,9 +626,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
         });
         const messages = [];
         if (settings.useNoAss) {
-          messages.push(
-            noAss(promptResult.result, impersonate, 'system', settings.formattedRoleplayMessagePosition),
-          );
+          messages.push(noAss(promptResult.result, impersonate, 'system', settings.formattedRoleplayMessagePosition));
         } else {
           messages.push(...promptResult.result);
           messages.push({
