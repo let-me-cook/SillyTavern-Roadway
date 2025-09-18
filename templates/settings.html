@@ -40,7 +40,7 @@
                 <textarea class="text_pole textarea_compact impersonate" rows="4"></textarea>
             </div>
 
-            <h3>Global Settings</h3>
+            <h4>General Settings</h4>
 
             <div>
                 <label>Max Context</label>
@@ -104,28 +104,33 @@
                     Automatically send message on "use" action
                 </label>
             </div>
-            <div style="margin-top: 10px; display: flex; flex-direction: column">
-                <label class="checkbox_label" for="use_no_ass">
-                    <input type="checkbox" id="use_no_ass" class="use_no_ass" />
-                    Use noAss function
-                </label>
-            </div>
-            <div style="margin-top: 10px">
-                <label>Formatted Roleplay Message Position</label>
-            </div>
-            <select class="text_pole formatted_roleplay_message_position" title="Select position">
-                <option value="append_top">Append Top</option>
-                <option value="append_bottom">Append Bottom</option>
-                <option value="to_var({{roadwayNoAssMessages}})">To Variable ({{roadwayNoAssMessages}})</option>
-            </select>
 
-            <div style="margin-top: 10px">
-                <label>No Assistant Prompt Role</label>
-            </div>
-            <select class="text_pole no_ass_role" title="Select role for no-assistant prompt">
-                <option value="user">User</option>
-                <option value="system">System</option>
-            </select>
+            <details style="margin-top: 15px">
+                <summary style="cursor: pointer; font-weight: bold; margin-bottom: 10px">noAss Settings</summary>
+
+                <div style="margin-top: 10px; display: flex; flex-direction: column">
+                    <label class="checkbox_label" for="use_no_ass">
+                        <input type="checkbox" id="use_no_ass" class="use_no_ass" />
+                        Use noAss function
+                    </label>
+                </div>
+                <div style="margin-top: 10px">
+                    <label>Formatted Roleplay Message Position</label>
+                </div>
+                <select class="text_pole formatted_roleplay_message_position" title="Select position">
+                    <option value="append_top">Append Top</option>
+                    <option value="append_bottom">Append Bottom</option>
+                    <option value="to_var({{roadwayNoAssMessages}})">To Variable ({{roadwayNoAssMessages}})</option>
+                </select>
+
+                <div style="margin-top: 10px">
+                    <label>No Assistant Prompt Role</label>
+                </div>
+                <select class="text_pole no_ass_role" title="Select role for no-assistant prompt">
+                    <option value="user">User</option>
+                    <option value="system">System</option>
+                </select>
+            </details>
         </div>
     </div>
 </div>
