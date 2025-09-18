@@ -170,6 +170,12 @@ async function handleUIChanges(): Promise<void> {
       onAfterRename: (previousValue, newValue) => {
         settings.promptPresets[newValue] = settings.promptPresets[previousValue];
         delete settings.promptPresets[previousValue];
+
+        // Update the current preset if it was the renamed one
+        if (settings.promptPreset === previousValue) {
+          settings.promptPreset = newValue;
+          settingsManager.saveSettings();
+        }
       },
     },
     delete: {
@@ -546,10 +552,11 @@ export function noAss(
   roadwayInstruction: string,
   roadwayRole: 'system' | 'user',
   formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})',
+  messageFilter: ('user' | 'assistant')[] = ['user', 'assistant'],
 ) {
   const context = SillyTavern.getContext();
   const formattedRoleplayMessages = roleplayMessages
-    .filter((value) => value.role !== 'system')
+    .filter((value) => value.role !== 'system' && messageFilter.includes(value.role as 'user' | 'assistant'))
     .map((message) => {
       if (message.role === 'user') {
         return `{{user}}: ${message.content}`;
@@ -649,7 +656,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
         });
         const messages = [];
         if (settings.useNoAss) {
-          messages.push(noAss(promptResult.result, impersonate, 'system', settings.formattedRoleplayMessagePosition));
+          messages.push(noAss(promptResult.result, impersonate, 'system', settings.formattedRoleplayMessagePosition, ['user']));
         } else {
           messages.push(...promptResult.result);
           messages.push({
