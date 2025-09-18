@@ -140,7 +140,6 @@ async function handleUIChanges(): Promise<void> {
   );
 
   const { select } = buildPresetSelect('.roadway_settings select.prompt', {
-    label: (value) => value,
     initialValue: settings.promptPreset,
     initialList: Object.keys(settings.promptPresets),
     readOnlyValues: ['default'],
