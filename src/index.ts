@@ -50,25 +50,48 @@ interface ExtensionSettings {
   formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})';
 }
 
-const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
+const DEFAULT_IMPERSONATE = `
+Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is user description: 
 
-{{roadwaySelected}}`;
+{{persona}}
 
-const DEFAULT_PROMPT = `You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences, **building upon the established context from our previous conversation.** Your task is to generate an *unpredictable* and *engaging* list of options for **{{user}}**, specifically tailored to their character, the world, and the current situation as established in our previous dialogue. These should be framed as possible actions that **{{user}}** *could* take.
+Write one single paragraph. This is what {{user}}'s focus:
 
-Output ONLY a numbered list of possible actions. Each action should be a clear, actionable, concise, and *creative* sentence written in plain text suggesting an action **{{user}}** can perform in the game.
+{{roadwaySelected}}
+`.trim();
 
-Prioritize *varied* actions that span multiple domains:
+const DEFAULT_PROMPT = `
+**Modified Prompt:**
+[You are an AI brainstorming partner, helping to create immersive and surprising roleplaying experiences, building upon the established context from our previous conversation. Your task is to generate an engaging list of potential dialogue or action responses for the {{user}}, specifically tailored to their {{user}} character to the world, and the current situation as established in our previous dialogue.
+Output **ONLY** a numbered list of 10 possible action or dialogue replies. Each dialogue or action option should be a clear, concise, and creative sentence written in plain text that directly addresses the current situation in the text.
 
-{Observation/Investigation; Dialogue/Persuasion; Stealth/Intrigue; Combat/Conflict; Crafting/Repair; Knowledge/Lore; Movement/Traversal; Deception/Manipulation; Performance/Entertainment; Technical/Mechanical}.
+Here's the recent chat history :
 
-Avoid obvious or repetitive actions **that {{user}} has already explored or are contrary to the established character/world.** Push the boundaries of the situation. Challenge **{{user}}'s** expectations. Do not include greetings, farewells, polite thanks, or options that break character. Generate *exactly* 6 actions. The actions must be written in plain text.
+{{roadwayNoAssMessages}}
 
-Here are a few example actions to inspire creativity:
+Try to act like the {{user}} themselves, and think about what they would do in this situation. Consider their personality, background, and motivations. Avoid generic or overly safe options. Instead, focus on actions that are bold, unexpected, or that introduce new elements to the story. This is {{user}}'s description:
+{{persona}}
 
-1. Attempt to communicate with the forest creatures to learn the location of hidden trails.
-2. Bribe the corrupt city guard with a song and a dance.
-3. Stage a fake ambush to draw out a hidden enemy.`;
+Prioritize varied action or dialogue that spans multiple domains, **including NSFW/Sensual interactions**:
+{Observation/Investigation; Persuasion; Knowledge/Lore; Deception/Manipulation; Performance/Entertainment; Technical; Emotional; Understated; NSFW/Sensual; Provocative Challenge}.
+- NSFW/Sensual options should explore intimate, erotic, or physically charged interactions that align with the characters’ chemistry and escalating tension.
+- Avoid obvious or repetitive dialogue that has already been explored or contradicts the character’s voice (confident/dominant/teasing).
+- Push boundaries: Use the established scenario to craft bold, immersive dialogue or action replies that challenge the player’s expectations.
+- Do NOT include greetings, farewells, or polite phrases when generating dialogue reply. Focus on advancing tension, power dynamics, or narrative stakes.
+Generate exactly 10 choices. The actions must be written in plain text.]
+---
+**Example Output Structure (NSFW integrated):**
+1. "Your pulse just jumped—tell me where else I should trace that heartbeat."
+2. *Let my bulge pokes her sweet spot through the clothes*
+3. "Bite back? Prove it. Unless you’re all bark and no *bite*."
+4. *Show off my boner poking through my clothes*
+5. "Program’s glitching. Your grip’s softer than your threats."
+6. *Follow her to the bedroom and undress*
+7. *[Pulling their hips flush]* "Artillery’s loaded. Care to fire the first shot?"
+8. *Hug her from behind and speak lewdly to her ear*
+9. "Teeth are cute. But I’m more interested in your… *trigger discipline*."
+10. *Pull out and cum outside, shooting semen on her back*
+`.trim();
 
 const DEFAULT_SETTINGS: ExtensionSettings = {
   version: VERSION,
@@ -117,7 +140,7 @@ async function handleUIChanges(): Promise<void> {
   );
 
   const { select } = buildPresetSelect('.roadway_settings select.prompt', {
-    label: () => 'prompt',
+    label: () => settings.promptPreset,
     initialValue: settings.promptPreset,
     initialList: Object.keys(settings.promptPresets),
     readOnlyValues: ['default'],
