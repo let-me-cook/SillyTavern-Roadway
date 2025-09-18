@@ -139,26 +139,13 @@ async function handleUIChanges(): Promise<void> {
     },
   );
 
-  const selectElement = $('.roadway_settings select.prompt').get(0) as HTMLSelectElement;
-  if (selectElement) {
-    // Clear existing options
-    selectElement.innerHTML = '';
-
-    // Add options manually
-    Object.keys(settings.promptPresets).forEach(presetName => {
-      const option = document.createElement('option');
-      option.value = presetName;
-      option.textContent = presetName; // Set to preset name explicitly
-      option.setAttribute('data-selectr-label', presetName);
-      selectElement.appendChild(option);
-    });
-
-    // Set initial value
-    selectElement.value = settings.promptPreset;
-
-    // Add change event
-    selectElement.addEventListener('change', () => {
-      const newPresetValue = selectElement.value || 'default';
+  const { select } = buildPresetSelect('.roadway_settings select.prompt', {
+    label: (value) => value,
+    initialValue: settings.promptPreset,
+    initialList: Object.keys(settings.promptPresets),
+    readOnlyValues: ['default'],
+    onSelectChange: async (_previousValue, newValue) => {
+      const newPresetValue = newValue ?? 'default';
       settings.promptPreset = newPresetValue;
       settingsManager.saveSettings();
       promptElement.val(settings.promptPresets[newPresetValue]?.content ?? '');
@@ -168,10 +155,29 @@ async function handleUIChanges(): Promise<void> {
         'display',
         settings.promptPresets[newPresetValue]?.extractionStrategy === 'none' ? 'none' : 'block',
       );
-    });
-  }
-
-  console.log('ROADWAY DEBUG: Manual select setup complete');
+    },
+    create: {
+      onAfterCreate: (value) => {
+        const currentPreset = settings.promptPresets[settings.promptPreset];
+        settings.promptPresets[value] = {
+          content: currentPreset?.content ?? DEFAULT_PROMPT,
+          extractionStrategy: currentPreset?.extractionStrategy ?? 'bullet',
+          impersonate: currentPreset?.impersonate ?? DEFAULT_IMPERSONATE,
+        };
+      },
+    },
+    rename: {
+      onAfterRename: (previousValue, newValue) => {
+        settings.promptPresets[newValue] = settings.promptPresets[previousValue];
+        delete settings.promptPresets[previousValue];
+      },
+    },
+    delete: {
+      onAfterDelete: (value) => {
+        delete settings.promptPresets[value];
+      },
+    },
+  });
 
   const promptElement = settingsContainer.find('textarea.prompt');
   promptElement.val(settings.promptPresets[settings.promptPreset]?.content ?? '');
@@ -208,7 +214,7 @@ async function handleUIChanges(): Promise<void> {
   });
 
   // Update extraction strategy when preset changes
-  selectElement.addEventListener('change', updateExtractionStrategy);
+  select.addEventListener('change', updateExtractionStrategy);
 
   settingsContainer.find('.restore_default').on('click', async function () {
     const confirm = await globalContext.Popup.show.confirm(
@@ -227,9 +233,9 @@ async function handleUIChanges(): Promise<void> {
     promptElement.val(DEFAULT_PROMPT);
     extractionStrategyElement.val('bullet');
     impersonateElement.val(DEFAULT_IMPERSONATE);
-    if (selectElement.value !== 'default') {
-      selectElement.value = 'default';
-      selectElement.dispatchEvent(new Event('change'));
+    if (select.value !== 'default') {
+      select.value = 'default';
+      select.dispatchEvent(new Event('change'));
     } else {
       settingsManager.saveSettings();
     }
@@ -540,11 +546,10 @@ export function noAss(
   roadwayInstruction: string,
   roadwayRole: 'system' | 'user',
   formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})',
-  messageFilter: ('user' | 'assistant')[] = ['user', 'assistant'],
 ) {
   const context = SillyTavern.getContext();
   const formattedRoleplayMessages = roleplayMessages
-    .filter((value) => value.role !== 'system' && messageFilter.includes(value.role as 'user' | 'assistant'))
+    .filter((value) => value.role !== 'system')
     .map((message) => {
       if (message.role === 'user') {
         return `{{user}}: ${message.content}`;
@@ -644,7 +649,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
         });
         const messages = [];
         if (settings.useNoAss) {
-          messages.push(noAss(promptResult.result, impersonate, 'system', settings.formattedRoleplayMessagePosition, ['user']));
+          messages.push(noAss(promptResult.result, impersonate, 'system', settings.formattedRoleplayMessagePosition));
         } else {
           messages.push(...promptResult.result);
           messages.push({
