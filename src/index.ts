@@ -397,6 +397,7 @@ async function handleUIChanges(): Promise<void> {
         messages.push(
           noAss(
             promptResult.result,
+            false,
             settings.promptPresets[settings.promptPreset].content,
             settings.noAssRole,
             settings.formattedRoleplayMessagePosition,
@@ -543,6 +544,7 @@ function extractBulletPoints(text: string): string[] {
 
 export function noAss(
   roleplayMessages: Message[],
+  isImpersonate: boolean,
   roadwayInstruction: string,
   roadwayRole: 'system' | 'user',
   formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})',
@@ -554,6 +556,15 @@ export function noAss(
       if (message.role === 'user') {
         return `{{user}}: ${message.content}`;
       } else if (message.role === 'assistant') {
+        if (isImpersonate) {
+          // If the latest assistant message
+          if (message === roleplayMessages[roleplayMessages.length - 1]) {
+            return `{{char}}: ${message.content}\n{{user}}:`;
+          }
+
+          return ``;
+        }
+
         return `{{char}}: ${message.content}`;
       }
     })
@@ -654,12 +665,13 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
 
         if (settings.useNoAss) {
           st_echo('info', `Impersonating with noAss`);
-          messages.push(noAss(promptResult.result, impersonate, 'system', settings.formattedRoleplayMessagePosition));
+          messages.push(noAss(promptResult.result, true, impersonate, 'system', settings.formattedRoleplayMessagePosition));
+          console.log('noAss messages', messages);
         } else {
           st_echo('info', `Impersonating without noAss`);
           messages.push(...promptResult.result);
           messages.push({
-            role: 'system',
+            role: 'user',
             content: impersonate,
           });
         }
