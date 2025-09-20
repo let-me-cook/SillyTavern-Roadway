@@ -616,6 +616,9 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       },
       undefined,
     );
+
+    st_echo('info', `impersonateApi ${settings.impersonateApi}`);
+
     if (settings.impersonateApi === 'profile') {
       if (!settings.profileId) {
         await st_echo('error', 'Please select a connection profile first in the settings.');
