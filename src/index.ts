@@ -553,6 +553,7 @@ export function noAss(
   const formattedRoleplayMessages = roleplayMessages
     .filter((value) => value.role !== 'system')
     .map((message, index) => {
+      console.log(`[Roadway Impersonation] message role: ${message.role}, index: ${index}`, message);
       if (message.role === 'user') {
         return `{{user}}: ${message.content}`;
       } else if (message.role === 'assistant') {
@@ -565,6 +566,7 @@ export function noAss(
           return `{{char}} ${index + 1}: Skipped for clarity.`;
         }
 
+        return `{{char}}: ${message.content}`;
       }
     })
     .join('\n\n')
