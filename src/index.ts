@@ -557,12 +557,14 @@ export function noAss(
         return `{{user}}: ${message.content}`;
       } else if (message.role === 'assistant') {
         if (isImpersonate) {
-          return ``;
+          // If the latest assistant message, include it
+          if (index === roleplayMessages.length - 1) {
+            return `{{char}} (latest reply): ${message.content}`;
+          }
+
+          return `{{char}} ${index + 1}: Skipped for clarity.`;
         }
 
-        if (index === roleplayMessages.length - 1) {
-          return `{{char}} (latest reply): ${message.content}`;
-        }
       }
     })
     .join('\n\n')
