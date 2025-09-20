@@ -666,7 +666,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
 
         if (settings.useNoAss) {
           st_echo('info', `Impersonating with noAss`);
-          messages.push(noAss(promptResult.result, true, impersonate, 'system', settings.formattedRoleplayMessagePosition));
+          messages.push(noAss(promptResult.result, true, impersonate, 'user', settings.formattedRoleplayMessagePosition));
           console.log('noAss messages', messages);
         } else {
           st_echo('info', `Impersonating without noAss`);
