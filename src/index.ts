@@ -550,10 +550,14 @@ export function noAss(
   formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})',
 ) {
   const context = SillyTavern.getContext();
+  roleplayMessages
+    .forEach((value, index) => {
+      console.log(`Message ${index}: role=${value.role}, content=${value.content}`);
+    })
+
   const formattedRoleplayMessages = roleplayMessages
     .filter((value) => value.role !== 'system')
     .map((message, index) => {
-      console.log(`[Roadway Impersonation] message role: ${message.role}, index: ${index}`, message);
       if (message.role === 'user') {
         return `{{user}}: ${message.content}`;
       } else if (message.role === 'assistant') {
