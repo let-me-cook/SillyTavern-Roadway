@@ -552,20 +552,17 @@ export function noAss(
   const context = SillyTavern.getContext();
   const formattedRoleplayMessages = roleplayMessages
     .filter((value) => value.role !== 'system')
-    .map((message) => {
+    .map((message, index) => {
       if (message.role === 'user') {
         return `{{user}}: ${message.content}`;
       } else if (message.role === 'assistant') {
         if (isImpersonate) {
-          // If the latest assistant message
-          if (message === roleplayMessages[roleplayMessages.length - 1]) {
-            return `{{char}}: ${message.content}\n{{user}}:`;
-          }
-
           return ``;
         }
 
-        return `{{char}}: ${message.content}`;
+        if (index === roleplayMessages.length - 1) {
+          return `{{char}} (latest reply): ${message.content}`;
+        }
       }
     })
     .join('\n\n')
