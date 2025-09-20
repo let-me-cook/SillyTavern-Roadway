@@ -552,7 +552,7 @@ export function noAss(
   const context = SillyTavern.getContext();
   roleplayMessages
     .forEach((value, index) => {
-      console.log(`Message ${index}: role=${value.role}, content=${value.content}`);
+      console.log(`[ROADWAY] Message ${index}: role=${value.role}, content=${value.content}`);
     })
 
   const formattedRoleplayMessages = roleplayMessages
