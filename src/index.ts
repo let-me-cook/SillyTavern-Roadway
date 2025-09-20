@@ -569,7 +569,7 @@ export function noAss(
       }
     })
     .join('\n\n')
-    .replace(/[\n\r]/g, '');
+    .trim();
 
   if (formattedRoleplayMessagePosition === 'append_bottom') {
     return {
@@ -648,6 +648,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       }
 
       globalContext.deactivateSendButtons();
+
       try {
         const promptResult = await buildPrompt(apiMap.selected, {
           presetName: profile?.preset,
