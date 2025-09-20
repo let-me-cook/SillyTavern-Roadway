@@ -559,7 +559,7 @@ export function noAss(
         if (isImpersonate) {
           // If the latest assistant message, include it
           if (index === roleplayMessages.length - 1) {
-            return `{{char}} (latest reply): ${message.content}`;
+            return `{{char}} ${index + 1} (latest reply): ${message.content}`;
           }
 
           return `{{char}} ${index + 1}: Skipped for clarity.`;
