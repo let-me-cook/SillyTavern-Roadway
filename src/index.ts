@@ -568,7 +568,8 @@ export function noAss(
         return `{{char}}: ${message.content}`;
       }
     })
-    .join('\n\n');
+    .join('\n\n')
+    .replace(/[\n\r]/g, '');
 
   if (formattedRoleplayMessagePosition === 'append_bottom') {
     return {
