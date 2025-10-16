@@ -51,7 +51,13 @@ interface ExtensionSettings {
 }
 
 const DEFAULT_IMPERSONATE = `
-Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is user description: 
+Your task this time is to write your response as if you were {{user}}, impersonating their style. 
+
+Here's the recent chat history :
+
+{{roadwayNoAssMessages}}
+
+Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is user description: 
 
 {{persona}}
 
@@ -393,22 +399,53 @@ async function handleUIChanges(): Promise<void> {
       });
 
       const messages = [];
-      if (settings.useNoAss) {
-        messages.push(
-          noAss(
-            promptResult.result,
-            false,
-            settings.promptPresets[settings.promptPreset].content,
-            settings.noAssRole,
-            settings.formattedRoleplayMessagePosition,
-          ),
+
+      const isNoAssed = isAlreadyNoAssed(promptResult.result);
+
+      if (isNoAssed && settings.useNoAss) {
+        if (promptResult.result.length > 2) {
+          throw new Error(
+            '[ROADWAY] The selected message appears to be already NoAssed, but there are more than 2 messages in the context.'
+          )
+        }
+
+        let noAssMessages = extractNoAssMessage(promptResult.result[1]);
+        let finalContent = context.substituteParams(settings.promptPresets[settings.promptPreset].content.replace('{{roadwayNoAssMessages}}', noAssMessages))
+        // const noAssMessage = {
+        //   content: context.substituteParams(
+        //     impersonate.replace('{{roadwayNoAssMessages}}', limitedRoadwayMessages),
+        //   ),
+        //   role: settings.noAssRole,
+        // } as Message
+
+        // messages.push(promptResult.result[0]);
+        messages.push({
+          content: finalContent,
+          role: settings.noAssRole,
+        });
+
+        console.log('[ROADWAY] isNoAssed && settings.useNoAss Generated NoAss message: ', messages);
+      } else if (!isNoAssed && settings.useNoAss) {
+        const noAssMessage = getNoAssMessage(
+          promptResult.result,
+          context.substituteParams(settings.promptPresets[settings.promptPreset].content),
+          settings.noAssRole,
+          settings.formattedRoleplayMessagePosition,
         );
+
+        // messages.push(promptResult.result[0])
+        messages.push(noAssMessage);
+
+        console.log('[ROADWAY] !isNoAssed && settings.useNoAss Generated NoAss message: ', messages);
       } else {
+        // Default behavior, just add the prompt at the end
         messages.push(...promptResult.result);
         messages.push({
           content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
           role: 'user',
         });
+
+        console.log('[ROADWAY] !isNoAssed && !settings.useNoAss Generated NoAss message: ', messages);
       }
 
       const rest = (await context.ConnectionManagerRequestService.sendRequest(
@@ -542,39 +579,85 @@ function extractBulletPoints(text: string): string[] {
   });
 }
 
-export function noAss(
-  roleplayMessages: Message[],
-  isImpersonate: boolean,
+function escapeRegExp(str: string): string {
+  // The `$&` in the replacement string inserts the whole matched string.
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function isAlreadyNoAssed(messages: Message[]) {
+  const context = SillyTavern.getContext();
+
+  let charName = context.substituteParams('{{char}}');
+  let userName = context.substituteParams('{{user}}');
+
+  // If there's only 2 messages (system + user), it's probably noAssed
+  if (messages.length <= 2) {
+    // Check further, if the user part of the message contains `charName: someString`, it's 100% noAssed
+    const userMessage = messages.find((mes) => mes.role === 'user');
+    if (
+      userMessage &&
+      new RegExp(`(${charName}|${userName}):.+\n\n`).test(userMessage.content)
+    ) {
+      return true;
+    }
+  } else {
+    return false;
+  }
+}
+
+function extractNoAssMessage(noAssMessage: Message): string {
+  const context = SillyTavern.getContext();
+  const charName = escapeRegExp(context.substituteParams('{{char}}'));
+
+  // This pattern is designed to find the BIGGEST block starting
+  // with the character's name and ending with the character's name.
+  const regexString =
+    // Start of string or a newline, followed by charName
+    `(?:^|\\n)(${charName}\\s*:.*\\n` +
+    // The corrected, GREEDY match for everything in between
+    `[\\s\\S]*` +
+    // The final charName line, ending with a newline or end of string
+    `${charName}\\s*:.*(?:\\n|$))`;
+
+  console.log(`[ROADWAY] Final RegExp: /${regexString}/`);
+
+  const regexp = new RegExp(regexString);
+  const match = noAssMessage.content.match(regexp);
+
+  console.log("[ROADWAY] FULL MSG: \n\n", noAssMessage.content);
+
+  // The main capture group is now group 1
+  if (match && match[1]) {
+    const extractedChat = match[1].trim();
+    console.log("[ROADWAY] Chat history found: ", extractedChat);
+    return extractedChat;
+  } else {
+    console.log('[ROADWAY] No matches found for noAss extraction.');
+    return "";
+  }
+}
+
+
+export function getNoAssMessage(
+  multiTurnMessages: Message[],
   roadwayInstruction: string,
   roadwayRole: 'system' | 'user',
   formattedRoleplayMessagePosition: 'append_top' | 'append_bottom' | 'to_var({{roadwayNoAssMessages}})',
-) {
+): Message {
   const context = SillyTavern.getContext();
-  roleplayMessages
-    .forEach((value, index) => {
-      console.log(`[ROADWAY] Message ${index}: role=${value.role}, content=${value.content}`);
-    })
 
-  const formattedRoleplayMessages = roleplayMessages
+  const formattedRoleplayMessages = multiTurnMessages
     .filter((value) => value.role !== 'system')
     .map((message, index) => {
       if (message.role === 'user') {
         return `{{user}}: ${message.content}`;
       } else if (message.role === 'assistant') {
-        if (isImpersonate) {
-          // If the latest assistant message, include it
-          if (index === roleplayMessages.length - 1) {
-            return `{{char}} ${index + 1} (latest reply): ${message.content}`;
-          }
-
-          return `{{char}} ${index + 1}: Skipped for clarity.`;
-        }
-
         return `{{char}}: ${message.content}`;
       }
     })
     .join('\n\n')
     .trim();
+
 
   if (formattedRoleplayMessagePosition === 'append_bottom') {
     return {
@@ -634,8 +717,6 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       undefined,
     );
 
-    st_echo('info', `impersonateApi ${settings.impersonateApi}`);
-
     if (settings.impersonateApi === 'profile') {
       if (!settings.profileId) {
         await st_echo('error', 'Please select a connection profile first in the settings.');
@@ -671,16 +752,45 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
         const messages = [];
 
         if (settings.useNoAss) {
-          st_echo('info', `Impersonating with noAss`);
-          messages.push(noAss(promptResult.result, true, impersonate, 'user', settings.formattedRoleplayMessagePosition));
-          console.log('noAss messages', messages);
+          var noAssMessage: Message;
+          if (!isAlreadyNoAssed(promptResult.result)) {
+            noAssMessage = getNoAssMessage(
+              promptResult.result,
+              impersonate,
+              settings.noAssRole,
+              settings.formattedRoleplayMessagePosition,
+            )
+          } else {
+            if (promptResult.result.length > 2) {
+              throw new Error(
+                '[ROADWAY] The selected message appears to be already NoAssed, but there are more than 2 messages in the context.'
+              )
+            }
+
+            const fullRoadwayMessages = promptResult.result[1].content;
+            const meioContentLines = fullRoadwayMessages.split('\n\n');
+            const limitedRoadwayMessages = meioContentLines.slice(-5).join('\n\n');
+
+            noAssMessage = {
+              content: context.substituteParams(
+                impersonate.replace('{{roadwayNoAssMessages}}', limitedRoadwayMessages),
+              ),
+              role: settings.noAssRole,
+            } as Message
+          }
+
+          // messages.push(promptResult.result[0], noAssMessage);
+          messages.push(noAssMessage);
+          console.log('[ROADWAY] settings.useNoAss impersonate generated messages: ', messages);
         } else {
-          st_echo('info', `Impersonating without noAss`);
-          messages.push(...promptResult.result);
+          // Default behavior
+          // messages.push(...promptResult.result);
           messages.push({
             role: 'user',
             content: impersonate,
           });
+
+          console.log('[ROADWAY] !settings.useNoAss messages: ', messages);
         }
 
         let streamingEnabled = true;
