@@ -43,6 +43,7 @@ interface ExtensionSettings {
   autoOpen: boolean;
   promptPresets: Record<string, PromptPreset>;
   impersonateApi: 'main' | 'profile';
+  impersonateProfileId: string;
   showUseActionIcon: boolean;
   autoSubmitUseAction: boolean;
 }
@@ -78,6 +79,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   autoTrigger: false,
   autoOpen: true,
   impersonateApi: 'main',
+  impersonateProfileId: '',
   showUseActionIcon: true,
   autoSubmitUseAction: false,
   promptPresets: {
@@ -274,11 +276,26 @@ async function handleUIChanges(): Promise<void> {
   });
 
   const impersonateApiElement = settingsContainer.find('select.impersonate_api');
+  const impersonateProfileSection = settingsContainer.find('.impersonate_profile_section');
   impersonateApiElement.val(settings.impersonateApi);
+  if (settings.impersonateApi === 'profile') {
+    impersonateProfileSection.show();
+  }
   impersonateApiElement.on('change', function () {
-    settings.impersonateApi = $(this).val() as 'main' | 'profile';
+    const value = $(this).val() as 'main' | 'profile';
+    settings.impersonateApi = value;
     settingsManager.saveSettings();
+    impersonateProfileSection.toggle(value === 'profile');
   });
+
+  globalContext.ConnectionManagerRequestService.handleDropdown(
+    '.roadway_settings .impersonate_connection_profile',
+    settings.impersonateProfileId,
+    (profile) => {
+      settings.impersonateProfileId = profile?.id ?? '';
+      settingsManager.saveSettings();
+    },
+  );
 
   const roadwayButton = $(
     `<div title="Generate Roadway" class="mes_button mes_magic_roadway_button fa-solid fa-road interactable" tabindex="0"></div>`,
@@ -511,13 +528,13 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
       undefined,
     );
     if (settings.impersonateApi === 'profile') {
-      if (!settings.profileId) {
-        await st_echo('error', 'Please select a connection profile first in the settings.');
+      if (!settings.impersonateProfileId) {
+        await st_echo('error', 'Please select an impersonation connection profile in the settings.');
         return;
       }
 
       const profile = context.extensionSettings.connectionManager?.profiles?.find(
-        (profile) => profile.id === settings.profileId,
+        (profile) => profile.id === settings.impersonateProfileId,
       );
 
       const apiMap = profile?.api ? context.CONNECT_API_MAP[profile.api] : null;
@@ -571,7 +588,7 @@ function attachRoadwayOptionHandlers(roadwayMessageId: number) {
         const abortController = new AbortController();
         await generator.generateRequest(
           {
-            profileId: settings.profileId,
+            profileId: settings.impersonateProfileId,
             prompt: messages,
             maxTokens: maxResponseToken,
             custom: {
