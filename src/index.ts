@@ -46,6 +46,7 @@ interface ExtensionSettings {
   impersonateProfileId: string;
   showUseActionIcon: boolean;
   autoSubmitUseAction: boolean;
+  messageRole: 'user' | 'system' | 'assistant';
 }
 
 const DEFAULT_IMPERSONATE = `Your task this time is to write your response as if you were {{user}}, impersonating their style. Use {{user}}'s dialogue and actions so far as a guideline for how they would likely act. Don't ever write as {{char}}. Only talk and act as {{user}}. This is what {{user}}'s focus:
@@ -82,6 +83,7 @@ const DEFAULT_SETTINGS: ExtensionSettings = {
   impersonateProfileId: '',
   showUseActionIcon: true,
   autoSubmitUseAction: false,
+  messageRole: 'system',
   promptPresets: {
     default: {
       content: DEFAULT_PROMPT,
@@ -111,6 +113,11 @@ async function handleUIChanges(): Promise<void> {
       settingsManager.saveSettings();
     },
   );
+
+  const promptElement = settingsContainer.find('textarea.prompt');
+  const extractionStrategyElement = settingsContainer.find('select.extraction_strategy');
+  const impersonateSection = settingsContainer.find('.impersonate_section');
+  const impersonateElement = settingsContainer.find('textarea.impersonate');
 
   const { select } = buildPresetSelect('.roadway_settings select.prompt', {
     initialValue: settings.promptPreset,
@@ -151,17 +158,12 @@ async function handleUIChanges(): Promise<void> {
     },
   });
 
-  const promptElement = settingsContainer.find('textarea.prompt');
   promptElement.val(settings.promptPresets[settings.promptPreset]?.content ?? '');
   promptElement.on('change', function () {
     const template = promptElement.val() as string;
     settings.promptPresets[settings.promptPreset].content = template;
     settingsManager.saveSettings();
   });
-
-  const extractionStrategyElement = settingsContainer.find('select.extraction_strategy');
-  const impersonateSection = settingsContainer.find('.impersonate_section');
-  const impersonateElement = settingsContainer.find('textarea.impersonate');
 
   function updateExtractionStrategy() {
     const preset = settings.promptPresets[settings.promptPreset];
@@ -275,6 +277,12 @@ async function handleUIChanges(): Promise<void> {
     settingsManager.saveSettings();
   });
 
+  const messageRoleElement = settingsContainer.find('.message_role');
+  messageRoleElement.val(settings.messageRole);
+  messageRoleElement.on('change', function () {
+    settings.messageRole = $(this).val() as 'user' | 'system' | 'assistant';
+    settingsManager.saveSettings();
+  });
   const impersonateApiElement = settingsContainer.find('select.impersonate_api');
   const impersonateProfileSection = settingsContainer.find('.impersonate_profile_section');
   impersonateApiElement.val(settings.impersonateApi);
@@ -357,7 +365,7 @@ async function handleUIChanges(): Promise<void> {
       const messages = promptResult.result;
       messages.push({
         content: context.substituteParams(settings.promptPresets[settings.promptPreset].content),
-        role: 'system',
+        role: settings.messageRole,
       });
       const rest = (await context.ConnectionManagerRequestService.sendRequest(
         settings.profileId,
