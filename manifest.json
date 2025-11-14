@@ -1,11 +1,11 @@
 {
-    "display_name": "Roadway",
+    "display_name": "Roadway (let-me-cook's fork)",
     "loading_order": 300,
     "requires": [],
     "optional": [],
     "js": "dist/index.js",
     "css": "dist/style.css",
-    "author": "bmen25124",
+    "author": "bmen25124;let-me-cook",
     "version": "0.4.0",
-    "homePage": "https://github.com/bmen25124/SillyTavern-Roadway"
+    "homePage": "https://github.com/let-me-cook/SillyTavern-Roadway"
 }
